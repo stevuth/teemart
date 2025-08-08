@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 60 50% 97%; /* Off-white #FAFAF0 */
+    --background: 58 100% 91%; /* Cream #FFFDD0 */
     --foreground: 34 10% 20%;
     --card: 0 0% 100%;
     --card-foreground: 34 10% 20%;
@@ -12,7 +12,7 @@
     --popover-foreground: 34 10% 20%;
     --primary: 34 44% 55%; /* #C6A67B */
     --primary-foreground: 34 10% 10%;
-    --secondary: 58 100% 91%; /* Cream #FFFDD0 */
+    --secondary: 60 50% 97%; /* Off-white #FAFAF0 */
     --secondary-foreground: 34 10% 20%;
     --muted: 60 50% 94%;
     --muted-foreground: 34 10% 40%;
