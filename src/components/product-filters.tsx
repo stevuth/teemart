@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useMemo } from "react"
@@ -19,41 +20,40 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { categories, conditions, locations, Category, Condition } from "@/lib/types"
-import { Car, Home, Laptop, Lamp, Phone, Filter, Trash2 } from "lucide-react"
+import { conditions, locations, Condition, DatePostedOption, datePostedOptions } from "@/lib/types"
+import { Filter, Trash2 } from "lucide-react"
 
 export type FilterValues = {
   search: string
-  category: Category | ''
   priceRange: [number, number]
   location: string
   condition: Condition | ''
+  datePosted: DatePostedOption
 }
 
 type ProductFiltersProps = {
-  filters: FilterValues
+  filters: Omit<FilterValues, 'category'>
   onFilterChange: (newFilters: Partial<FilterValues>) => void
   onClear: () => void;
-}
-
-const categoryIcons: Record<Category, React.ElementType> = {
-  Cars: Car,
-  Electronics: Laptop,
-  'Real Estate': Home,
-  Furniture: Lamp,
-  Phones: Phone,
 }
 
 export function ProductFilters({ filters, onFilterChange, onClear }: ProductFiltersProps) {
 
   const isAnyFilterActive = useMemo(() => {
     return filters.search !== '' ||
-           filters.category !== '' ||
            filters.priceRange[0] !== 0 ||
            filters.priceRange[1] !== 150000000 ||
            filters.location !== '' ||
-           filters.condition !== '';
+           filters.condition !== '' ||
+           filters.datePosted !== 'any';
   }, [filters]);
+
+  const datePostedLabels: Record<DatePostedOption, string> = {
+    any: 'Any Time',
+    today: 'Today',
+    last7days: 'Last 7 Days',
+    last30days: 'Last 30 Days'
+  }
 
   return (
     <Card className="sticky top-20">
@@ -124,6 +124,21 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
                 {conditions.map((cond) => (
                   <SelectItem key={cond} value={cond}>
                     {cond}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date-posted">Date Posted</Label>
+             <Select value={filters.datePosted} onValueChange={(value: string) => onFilterChange({ datePosted: value as DatePostedOption })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select date" />
+              </SelectTrigger>
+              <SelectContent>
+                 {datePostedOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {datePostedLabels[option]}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -7,6 +7,7 @@ export type Product = {
   location: string;
   condition: Condition;
   description: string;
+  postedDate: string; // ISO 8601 date string
   'data-ai-hint'?: string;
 };
 
@@ -14,7 +15,10 @@ export const categories = ['Cars', 'Electronics', 'Real Estate', 'Furniture', 'P
 export type Category = (typeof categories)[number];
 
 
-export const conditions = ['New', 'Used - Like New', 'Used - Good', 'Used - Fair'] as const;
+export const conditions = ['New', 'Used', 'Refurbished'] as const;
 export type Condition = (typeof conditions)[number];
 
 export const locations: string[] = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano'];
+
+export const datePostedOptions = ['any', 'today', 'last7days', 'last30days'] as const;
+export type DatePostedOption = typeof datePostedOptions[number];

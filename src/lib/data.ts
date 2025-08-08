@@ -1,4 +1,7 @@
 import type { Product } from './types';
+import { subDays } from 'date-fns';
+
+const now = new Date();
 
 export const products: Product[] = [
   {
@@ -8,8 +11,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Cars',
     location: 'Lagos',
-    condition: 'Used - Good',
+    condition: 'Used',
     description: 'A clean, well-maintained 2018 Toyota Corolla with automatic transmission and excellent fuel economy.',
+    postedDate: subDays(now, 2).toISOString(),
     "data-ai-hint": 'sedan car'
   },
   {
@@ -19,8 +23,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Phones',
     location: 'Abuja',
-    condition: 'Used - Like New',
+    condition: 'Used',
     description: '128GB iPhone 12 Pro in Pacific Blue. No scratches, perfect working condition, with original box.',
+    postedDate: now.toISOString(),
     "data-ai-hint": 'smartphone iphone'
   },
   {
@@ -30,8 +35,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Real Estate',
     location: 'Lagos',
-    condition: 'Used - Good',
+    condition: 'Used',
     description: 'Spacious 3-bedroom apartment with modern finishing in a serene and secure estate in Lekki Phase 1.',
+    postedDate: subDays(now, 10).toISOString(),
     "data-ai-hint": 'modern apartment'
   },
   {
@@ -41,8 +47,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Furniture',
     location: 'Port Harcourt',
-    condition: 'Used - Good',
+    condition: 'Used',
     description: 'Comfortable 6-seater L-shaped sofa. Grey fabric, comes with four throw pillows. Less than 2 years old.',
+    postedDate: subDays(now, 5).toISOString(),
     "data-ai-hint": 'living room'
   },
   {
@@ -52,8 +59,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Electronics',
     location: 'Ibadan',
-    condition: 'Used - Like New',
+    condition: 'Refurbished',
     description: 'Experience stunning 4K visuals with this Samsung smart TV. All apps working perfectly. Comes with remote.',
+    postedDate: subDays(now, 40).toISOString(),
     "data-ai-hint": 'television livingroom'
   },
   {
@@ -63,8 +71,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Cars',
     location: 'Abuja',
-    condition: 'Used - Good',
+    condition: 'Used',
     description: 'Foreign used Honda Accord, accident-free, with leather seats and reverse camera.',
+    postedDate: subDays(now, 1).toISOString(),
     "data-ai-hint": 'family car'
   },
   {
@@ -74,8 +83,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Real Estate',
     location: 'Abuja',
-    condition: 'Used - Like New',
+    condition: 'New',
     description: 'Luxurious 4-bedroom semi-detached duplex in a prime Maitama location. Features a BQ and ample parking space.',
+    postedDate: subDays(now, 60).toISOString(),
     "data-ai-hint": 'luxury house'
   },
   {
@@ -85,8 +95,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Phones',
     location: 'Lagos',
-    condition: 'Used - Good',
+    condition: 'Used',
     description: 'Phantom Black Galaxy S21 Ultra, 256GB. Minor signs of use but works perfectly. Great camera quality.',
+    postedDate: subDays(now, 8).toISOString(),
     "data-ai-hint": 'android smartphone'
   },
   {
@@ -96,8 +107,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Electronics',
     location: 'Kano',
-    condition: 'Used - Like New',
+    condition: 'Used',
     description: '13-inch HP Spectre x360, Core i7, 16GB RAM, 512GB SSD. Convertible and touchscreen. Ideal for professionals.',
+    postedDate: subDays(now, 25).toISOString(),
     "data-ai-hint": 'laptop workspace'
   },
   {
@@ -107,8 +119,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Furniture',
     location: 'Lagos',
-    condition: 'Used - Fair',
+    condition: 'Used',
     description: 'Wooden dining table with 6 matching chairs. Shows some signs of wear but is sturdy and functional.',
+    postedDate: subDays(now, 3).toISOString(),
     "data-ai-hint": 'dining room'
   },
   {
@@ -118,8 +131,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Electronics',
     location: 'Ibadan',
-    condition: 'Used - Good',
+    condition: 'Used',
     description: 'Canon 80D camera body with 18-55mm kit lens. Perfect for enthusiast photographers and videographers.',
+    postedDate: subDays(now, 15).toISOString(),
     "data-ai-hint": 'camera gear'
   },
   {
@@ -129,8 +143,9 @@ export const products: Product[] = [
     image: 'https://placehold.co/600x400',
     category: 'Cars',
     location: 'Port Harcourt',
-    condition: 'Used - Like New',
+    condition: 'Used',
     description: 'Tokunbo Lexus RX 350, pristine condition. Fully loaded with panoramic roof and Mark Levinson sound system.',
+    postedDate: subDays(now, 90).toISOString(),
     "data-ai-hint": 'luxury suv'
   }
 ];

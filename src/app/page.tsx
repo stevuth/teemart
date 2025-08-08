@@ -8,11 +8,8 @@ import { Marketplace } from '@/components/marketplace';
 import { products } from '@/lib/data';
 import { Hero } from '@/components/hero';
 import { CategoryShowcase } from '@/components/category-showcase';
-import type { Category } from '@/lib/types';
-import { ProductFilters, type FilterValues } from '@/components/product-filters';
-import { Button } from '@/components/ui/button';
-import { ListFilter } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import type { Category, DatePostedOption } from '@/lib/types';
+import type { FilterValues } from '@/components/product-filters';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
@@ -20,7 +17,8 @@ export default function Home() {
     priceRange: [0, 150000000],
     location: '',
     condition: '',
-    search: ''
+    search: '',
+    datePosted: 'any',
   });
 
   const handleCategorySelect = (category: Category | '') => {
@@ -40,12 +38,13 @@ export default function Home() {
       priceRange: [0, 150000000],
       location: '',
       condition: '',
-      search: ''
+      search: '',
+      datePosted: 'any',
     });
     setSelectedCategory('');
   };
 
-  const currentFilters: FilterValues = {
+  const currentFilters = {
     ...filters,
     category: selectedCategory,
   };

@@ -2,14 +2,20 @@
 "use client";
 
 import { useState, useMemo, useCallback } from 'react';
-import type { Product, Category } from '@/lib/types';
-import { ProductFilters, type FilterValues } from '@/components/product-filters';
+import type { Product, Category, DatePostedOption } from '@/lib/types';
+import { ProductFilters } from '@/components/product-filters';
+import type { FilterValues as ProductFilterValues } from '@/components/product-filters';
 import { ProductCard } from './product-card';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { ListFilter } from 'lucide-react';
+import { subDays, isToday, isWithinInterval } from 'date-fns';
 
+type FilterValues = Omit<ProductFilterValues, 'category'> & {
+    category: Category | '';
+    datePosted: DatePostedOption;
+}
 
 type MarketplaceProps = {
   products: Product[];
@@ -44,6 +50,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
   }, [toast]);
 
   const filteredProducts = useMemo(() => {
+    const now = new Date();
     return products.filter(product => {
       if (filters.search && !product.name.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
@@ -60,6 +67,20 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
       if (filters.condition && product.condition !== filters.condition) {
         return false;
       }
+      
+      if(filters.datePosted && filters.datePosted !== 'any') {
+        const productDate = new Date(product.postedDate);
+        if(filters.datePosted === 'today' && !isToday(productDate)) {
+          return false;
+        }
+        if(filters.datePosted === 'last7days' && !isWithinInterval(productDate, { start: subDays(now, 7), end: now })) {
+            return false;
+        }
+        if(filters.datePosted === 'last30days' && !isWithinInterval(productDate, { start: subDays(now, 30), end: now })) {
+            return false;
+        }
+      }
+
       return true;
     });
   }, [products, filters]);
@@ -70,7 +91,8 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
            filters.priceRange[0] !== 0 ||
            filters.priceRange[1] !== 150000000 ||
            filters.location !== '' ||
-           filters.condition !== '';
+           filters.condition !== '' ||
+           filters.datePosted !== 'any';
   }, [filters]);
 
   return (
