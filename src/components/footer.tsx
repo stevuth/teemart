@@ -42,8 +42,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-secondary border-t text-card-foreground">
-      <div className="bg-background">
+    <footer className="bg-gradient-to-t from-secondary via-background to-background border-t text-card-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
             
@@ -100,13 +99,10 @@ export function Footer() {
             </div>
 
             </div>
+            <div className="py-6 border-t">
+              <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
+            </div>
         </div>
-      </div>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-6 border-t">
-          <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
-        </div>
-      </div>
     </footer>
   );
 }
