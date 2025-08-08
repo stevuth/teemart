@@ -1,9 +1,9 @@
 "use client"
 
+import { useMemo } from "react"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -18,15 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { categories, conditions, locations, Category } from "@/lib/types"
+import { categories, conditions, locations, Category, Condition } from "@/lib/types"
 import { Car, Home, Laptop, Lamp, Phone, Filter, Trash2 } from "lucide-react"
 
 export type FilterValues = {
   search: string
-  category: string
+  category: Category | ''
   priceRange: [number, number]
   location: string
-  condition: string
+  condition: Condition | ''
 }
 
 type ProductFiltersProps = {
@@ -44,16 +44,15 @@ const categoryIcons: Record<Category, React.ElementType> = {
 }
 
 export function ProductFilters({ filters, onFilterChange, onClear }: ProductFiltersProps) {
-  const handlePriceChange = (value: [number, number]) => {
-    onFilterChange({ priceRange: value })
-  }
 
-  const isAnyFilterActive = Object.values(filters).some(value => {
-    if (Array.isArray(value)) {
-      return value[0] !== 0 || value[1] !== 150000000;
-    }
-    return value !== '';
-  });
+  const isAnyFilterActive = useMemo(() => {
+    return filters.search !== '' ||
+           filters.category !== '' ||
+           filters.priceRange[0] !== 0 ||
+           filters.priceRange[1] !== 150000000 ||
+           filters.location !== '' ||
+           filters.condition !== '';
+  }, [filters]);
 
   return (
     <Card className="sticky top-20">
@@ -107,7 +106,7 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
             max={150000000}
             step={100000}
             value={filters.priceRange}
-            onValueChange={handlePriceChange}
+            onValueChange={(value) => onFilterChange({ priceRange: value as [number, number] })}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{filters.priceRange[0].toLocaleString()}</span>
@@ -134,7 +133,7 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
         
         <div className="space-y-2">
           <Label htmlFor="condition">Condition</Label>
-           <Select value={filters.condition} onValueChange={(value) => onFilterChange({ condition: value === "all" ? "" : value })}>
+           <Select value={filters.condition} onValueChange={(value: string) => onFilterChange({ condition: value === "all" ? "" : value as Condition })}>
             <SelectTrigger>
               <SelectValue placeholder="Select condition" />
             </SelectTrigger>

@@ -3,16 +3,18 @@ export type Product = {
   name: string;
   price: number;
   image: string;
-  category: 'Cars' | 'Electronics' | 'Real Estate' | 'Furniture' | 'Phones';
+  category: Category;
   location: string;
-  condition: 'New' | 'Used - Like New' | 'Used - Good' | 'Used - Fair';
+  condition: Condition;
   description: string;
+  'data-ai-hint'?: string;
 };
 
-export type Category = Product['category'];
+export const categories = ['Cars', 'Electronics', 'Real Estate', 'Furniture', 'Phones'] as const;
+export type Category = (typeof categories)[number];
 
-export const categories: Category[] = ['Cars', 'Electronics', 'Real Estate', 'Furniture', 'Phones'];
 
-export const conditions: Product['condition'][] = ['New', 'Used - Like New', 'Used - Good', 'Used - Fair'];
+export const conditions = ['New', 'Used - Like New', 'Used - Good', 'Used - Fair'] as const;
+export type Condition = (typeof conditions)[number];
 
 export const locations: string[] = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano'];

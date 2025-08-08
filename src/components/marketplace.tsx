@@ -9,14 +9,16 @@ import { Button } from './ui/button';
 import { ListFilter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 
+const INITIAL_FILTERS: FilterValues = {
+  category: '',
+  priceRange: [0, 150000000],
+  location: '',
+  condition: '',
+  search: ''
+};
+
 export function Marketplace({ products }: { products: Product[] }) {
-  const [filters, setFilters] = useState<FilterValues>({
-    category: '',
-    priceRange: [0, 150000000],
-    location: '',
-    condition: '',
-    search: ''
-  });
+  const [filters, setFilters] = useState<FilterValues>(INITIAL_FILTERS);
 
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -66,17 +68,11 @@ export function Marketplace({ products }: { products: Product[] }) {
     });
   }, [products, filters]);
 
-  const clearFilters = () => {
-    setFilters({
-        category: '',
-        priceRange: [0, 150000000],
-        location: '',
-        condition: '',
-        search: ''
-    })
-  }
+  const clearFilters = useCallback(() => {
+    setFilters(INITIAL_FILTERS);
+  }, []);
 
-  const filtersActive = filters.category || filters.location || filters.condition || filters.priceRange[0] !== 0 || filters.priceRange[1] !== 150000000;
+  const filtersActive = useMemo(() => JSON.stringify(filters) !== JSON.stringify(INITIAL_FILTERS), [filters]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
