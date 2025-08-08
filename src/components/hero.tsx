@@ -6,7 +6,7 @@ import { Search } from 'lucide-react';
 export function Hero() {
   return (
     <section 
-      className="w-full bg-cover bg-center bg-no-repeat pt-24 pb-20 sm:pt-32 sm:pb-28 relative"
+      className="w-full bg-contain bg-center bg-no-repeat pt-16 pb-12 sm:bg-cover sm:pt-32 sm:pb-28 relative"
       style={{ backgroundImage: "url('https://i.postimg.cc/PrLZMxC0/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png')" }}
     >
       <div className="absolute inset-0 bg-black/50" />
