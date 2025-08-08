@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { categories, conditions, locations, Category, Condition } from "@/lib/types"
 import { Car, Home, Laptop, Lamp, Phone, Filter, Trash2 } from "lucide-react"
 
@@ -67,87 +68,89 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
           </Button>
         )}
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="search">Search by name</Label>
-          <Input
-            id="search"
-            placeholder="e.g., Toyota Camry"
-            value={filters.search}
-            onChange={(e) => onFilterChange({ search: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-3">
-          <Label>Category</Label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
-            {categories.map((category) => {
-              const Icon = categoryIcons[category]
-              return (
-                <Button
-                  key={category}
-                  variant={filters.category === category ? "secondary" : "outline"}
-                  className="flex flex-col h-auto p-2 gap-1 items-center justify-center text-center"
-                  onClick={() => onFilterChange({ category: filters.category === category ? '' : category })}
-                >
-                  <Icon className="h-6 w-6 mb-1" />
-                  <span className="text-xs font-normal whitespace-normal leading-tight">{category}</span>
-                </Button>
-              )
-            })}
+      <ScrollArea className="h-[calc(100vh-10rem)]">
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="search">Search by name</Label>
+            <Input
+              id="search"
+              placeholder="e.g., Toyota Camry"
+              value={filters.search}
+              onChange={(e) => onFilterChange({ search: e.target.value })}
+            />
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="price">Price Range (₦)</Label>
-          <Slider
-            id="price"
-            min={0}
-            max={150000000}
-            step={100000}
-            value={filters.priceRange}
-            onValueChange={(value) => onFilterChange({ priceRange: value as [number, number] })}
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{filters.priceRange[0].toLocaleString()}</span>
-            <span>{filters.priceRange[1].toLocaleString()}</span>
+          <div className="space-y-3">
+            <Label>Category</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
+              {categories.map((category) => {
+                const Icon = categoryIcons[category]
+                return (
+                  <Button
+                    key={category}
+                    variant={filters.category === category ? "secondary" : "outline"}
+                    className="flex flex-col h-auto p-2 gap-1 items-center justify-center text-center"
+                    onClick={() => onFilterChange({ category: filters.category === category ? '' : category })}
+                  >
+                    <Icon className="h-6 w-6 mb-1" />
+                    <span className="text-xs font-normal whitespace-normal leading-tight">{category}</span>
+                  </Button>
+                )
+              })}
+            </div>
           </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Select value={filters.location} onValueChange={(value) => onFilterChange({ location: value === "all" ? "" : value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Locations</SelectItem>
-              {locations.map((loc) => (
-                <SelectItem key={loc} value={loc}>
-                  {loc}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="condition">Condition</Label>
-           <Select value={filters.condition} onValueChange={(value: string) => onFilterChange({ condition: value === "all" ? "" : value as Condition })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select condition" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Conditions</SelectItem>
-              {conditions.map((cond) => (
-                <SelectItem key={cond} value={cond}>
-                  {cond}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </CardContent>
+
+          <div className="space-y-2">
+            <Label htmlFor="price">Price Range (₦)</Label>
+            <Slider
+              id="price"
+              min={0}
+              max={150000000}
+              step={100000}
+              value={filters.priceRange}
+              onValueChange={(value) => onFilterChange({ priceRange: value as [number, number] })}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{filters.priceRange[0].toLocaleString()}</span>
+              <span>{filters.priceRange[1].toLocaleString()}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Select value={filters.location} onValueChange={(value) => onFilterChange({ location: value === "all" ? "" : value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {locations.map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="condition">Condition</Label>
+             <Select value={filters.condition} onValueChange={(value: string) => onFilterChange({ condition: value === "all" ? "" : value as Condition })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select condition" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Conditions</SelectItem>
+                {conditions.map((cond) => (
+                  <SelectItem key={cond} value={cond}>
+                    {cond}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </ScrollArea>
     </Card>
   )
 }
