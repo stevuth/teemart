@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 export function Hero() {
   return (
-    <section className="w-full bg-gradient-to-b from-secondary/50 via-background to-background pt-16 pb-12 sm:pt-24 sm:pb-20">
+    <section className="w-full bg-gradient-to-b from-secondary via-background to-background pt-16 pb-12 sm:pt-24 sm:pb-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-tight">
