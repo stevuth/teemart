@@ -112,7 +112,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
                           Filters
                       </Button>
                   </SheetTrigger>
-                  <SheetContent>
+                  <SheetContent side="bottom" className="h-[90%]">
                       <ProductFilters filters={filters} onFilterChange={onFilterChange} onClear={onClearFilters} />
                   </SheetContent>
               </Sheet>
