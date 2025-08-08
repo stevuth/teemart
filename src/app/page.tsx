@@ -9,13 +9,47 @@ import { products } from '@/lib/data';
 import { Hero } from '@/components/hero';
 import { CategoryShowcase } from '@/components/category-showcase';
 import type { Category } from '@/lib/types';
+import { ProductFilters, type FilterValues } from '@/components/product-filters';
+import { Button } from '@/components/ui/button';
+import { ListFilter } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
+  const [filters, setFilters] = useState<Omit<FilterValues, 'category'>>({
+    priceRange: [0, 150000000],
+    location: '',
+    condition: '',
+    search: ''
+  });
 
   const handleCategorySelect = (category: Category | '') => {
     setSelectedCategory(category);
   };
+  
+  const handleFilterChange = (newFilters: Partial<FilterValues>) => {
+    if (newFilters.category !== undefined) {
+      handleCategorySelect(newFilters.category);
+    }
+    const { category, ...rest } = newFilters;
+    setFilters(prev => ({ ...prev, ...rest }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      priceRange: [0, 150000000],
+      location: '',
+      condition: '',
+      search: ''
+    });
+    setSelectedCategory('');
+  };
+
+  const currentFilters: FilterValues = {
+    ...filters,
+    category: selectedCategory,
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -29,7 +63,9 @@ export default function Home() {
             />
             <Marketplace 
               products={products} 
-              selectedCategory={selectedCategory}
+              filters={currentFilters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
               onCategoryChange={handleCategorySelect}
             />
         </div>

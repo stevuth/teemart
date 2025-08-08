@@ -1,42 +1,27 @@
 
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { Product, Category } from '@/lib/types';
 import { ProductFilters, type FilterValues } from '@/components/product-filters';
 import { ProductCard } from './product-card';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { ListFilter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { ListFilter } from 'lucide-react';
 
-const INITIAL_FILTERS: Omit<FilterValues, 'category'> = {
-  priceRange: [0, 150000000],
-  location: '',
-  condition: '',
-  search: ''
-};
 
 type MarketplaceProps = {
   products: Product[];
-  selectedCategory: Category | '';
+  filters: FilterValues;
+  onFilterChange: (newFilters: Partial<FilterValues>) => void;
+  onClearFilters: () => void;
   onCategoryChange: (category: Category | '') => void;
 };
 
-export function Marketplace({ products, selectedCategory, onCategoryChange }: MarketplaceProps) {
-  const [filters, setFilters] = useState<Omit<FilterValues, 'category'>>(INITIAL_FILTERS);
-
+export function Marketplace({ products, filters, onFilterChange, onClearFilters, onCategoryChange }: MarketplaceProps) {
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-
-  const handleFilterChange = useCallback((newFilters: Partial<FilterValues>) => {
-    if (newFilters.category !== undefined) {
-        onCategoryChange(newFilters.category);
-    }
-    
-    const { category, ...rest } = newFilters;
-    setFilters(prev => ({ ...prev, ...rest }));
-  }, [onCategoryChange]);
 
   const toggleWatchlist = useCallback((product: Product) => {
     setWatchlist(prev => {
@@ -58,74 +43,64 @@ export function Marketplace({ products, selectedCategory, onCategoryChange }: Ma
     });
   }, [toast]);
 
-  const currentFilters: FilterValues = useMemo(() => ({
-    ...filters,
-    category: selectedCategory,
-  }), [filters, selectedCategory]);
-
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      if (currentFilters.search && !product.name.toLowerCase().includes(currentFilters.search.toLowerCase())) {
+      if (filters.search && !product.name.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
-      if (currentFilters.category && product.category !== currentFilters.category) {
+      if (filters.category && product.category !== filters.category) {
         return false;
       }
-      if (product.price < currentFilters.priceRange[0] || product.price > currentFilters.priceRange[1]) {
+      if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
         return false;
       }
-      if (currentFilters.location && product.location !== currentFilters.location) {
+      if (filters.location && product.location !== filters.location) {
         return false;
       }
-      if (currentFilters.condition && product.condition !== currentFilters.condition) {
+      if (filters.condition && product.condition !== filters.condition) {
         return false;
       }
       return true;
     });
-  }, [products, currentFilters]);
-
-  const clearFilters = useCallback(() => {
-    setFilters(INITIAL_FILTERS);
-    onCategoryChange('');
-  }, [onCategoryChange]);
+  }, [products, filters]);
 
   const filtersActive = useMemo(() => {
-    return currentFilters.search !== '' ||
-           currentFilters.category !== '' ||
-           currentFilters.priceRange[0] !== 0 ||
-           currentFilters.priceRange[1] !== 150000000 ||
-           currentFilters.location !== '' ||
-           currentFilters.condition !== '';
-  }, [currentFilters]);
+    return filters.search !== '' ||
+           filters.category !== '' ||
+           filters.priceRange[0] !== 0 ||
+           filters.priceRange[1] !== 150000000 ||
+           filters.location !== '' ||
+           filters.condition !== '';
+  }, [filters]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 pt-8">
       <div className="hidden lg:block lg:col-span-1">
-        <ProductFilters filters={currentFilters} onFilterChange={handleFilterChange} onClear={clearFilters} />
+        <ProductFilters filters={filters} onFilterChange={onFilterChange} onClear={onClearFilters} />
       </div>
-
+      
       <div className="lg:col-span-3">
         <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold tracking-tight">Used Products For Sale</h1>
             <div className='lg:hidden'>
-                <Sheet>
-                    <SheetTrigger asChild>
-                        <Button variant="outline" size="sm">
-                            <ListFilter className="mr-2 h-4 w-4" />
-                            Filters
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent>
-                        <ProductFilters filters={currentFilters} onFilterChange={handleFilterChange} onClear={clearFilters} />
-                    </SheetContent>
-                </Sheet>
+              <Sheet>
+                  <SheetTrigger asChild>
+                      <Button variant="outline" size="sm">
+                          <ListFilter className="mr-2 h-4 w-4" />
+                          Filters
+                      </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                      <ProductFilters filters={filters} onFilterChange={onFilterChange} onClear={onClearFilters} />
+                  </SheetContent>
+              </Sheet>
             </div>
         </div>
 
         {filtersActive && (
             <div className="mb-4 flex items-center gap-2 text-sm">
                 <span>{filteredProducts.length} results found.</span>
-                <Button variant="link" size="sm" onClick={clearFilters} className="p-0 h-auto">Clear filters</Button>
+                <Button variant="link" size="sm" onClick={onClearFilters} className="p-0 h-auto">Clear filters</Button>
             </div>
         )}
         
@@ -144,7 +119,7 @@ export function Marketplace({ products, selectedCategory, onCategoryChange }: Ma
           <div className="text-center py-16 border-2 border-dashed rounded-lg">
             <h3 className="text-xl font-medium text-muted-foreground">No products found</h3>
             <p className="text-muted-foreground mt-2">Try adjusting your filters or clearing them to see all products.</p>
-            <Button onClick={clearFilters} className="mt-4">Clear All Filters</Button>
+            <Button onClick={onClearFilters} className="mt-4">Clear All Filters</Button>
           </div>
         )}
       </div>
