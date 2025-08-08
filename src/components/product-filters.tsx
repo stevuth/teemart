@@ -69,7 +69,7 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
         )}
       </CardHeader>
       <ScrollArea className="h-[calc(100vh-10rem)]">
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pt-6">
           <div className="space-y-2">
             <Label htmlFor="search">Search by name</Label>
             <Input
@@ -78,26 +78,6 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
               value={filters.search}
               onChange={(e) => onFilterChange({ search: e.target.value })}
             />
-          </div>
-
-          <div className="space-y-3">
-            <Label>Category</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
-              {categories.map((category) => {
-                const Icon = categoryIcons[category]
-                return (
-                  <Button
-                    key={category}
-                    variant={filters.category === category ? "secondary" : "outline"}
-                    className="flex flex-col h-auto p-2 gap-1 items-center justify-center text-center"
-                    onClick={() => onFilterChange({ category: filters.category === category ? '' : category })}
-                  >
-                    <Icon className="h-6 w-6 mb-1" />
-                    <span className="text-xs font-normal whitespace-normal leading-tight">{category}</span>
-                  </Button>
-                )
-              })}
-            </div>
           </div>
 
           <div className="space-y-2">
