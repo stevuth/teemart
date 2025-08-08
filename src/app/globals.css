@@ -16,7 +16,7 @@
     --secondary-foreground: 34 10% 20%;
     --muted: 60 50% 94%;
     --muted-foreground: 34 10% 40%;
-    --accent: 34 44% 70%; /* Light Brown #D2B48C */
+    --accent: 0 0% 85%; /* Gray */
     --accent-foreground: 34 10% 20%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -39,8 +39,8 @@
     --secondary-foreground: 60 50% 97%;
     --muted: 34 10% 25%;
     --muted-foreground: 60 50% 80%;
-    --accent: 34 44% 70%;
-    --accent-foreground: 34 10% 10%;
+    --accent: 0 0% 30%; /* Dark Gray */
+    --accent-foreground: 60 50% 97%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 34 10% 30%;
