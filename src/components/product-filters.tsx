@@ -117,12 +117,12 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
         
         <div className="space-y-2">
           <Label htmlFor="location">Location</Label>
-          <Select value={filters.location} onValueChange={(value) => onFilterChange({ location: value })}>
+          <Select value={filters.location} onValueChange={(value) => onFilterChange({ location: value === "all" ? "" : value })}>
             <SelectTrigger>
               <SelectValue placeholder="Select location" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Locations</SelectItem>
+              <SelectItem value="all">All Locations</SelectItem>
               {locations.map((loc) => (
                 <SelectItem key={loc} value={loc}>
                   {loc}
@@ -134,12 +134,12 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
         
         <div className="space-y-2">
           <Label htmlFor="condition">Condition</Label>
-           <Select value={filters.condition} onValueChange={(value) => onFilterChange({ condition: value })}>
+           <Select value={filters.condition} onValueChange={(value) => onFilterChange({ condition: value === "all" ? "" : value })}>
             <SelectTrigger>
               <SelectValue placeholder="Select condition" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Conditions</SelectItem>
+              <SelectItem value="all">All Conditions</SelectItem>
               {conditions.map((cond) => (
                 <SelectItem key={cond} value={cond}>
                   {cond}
