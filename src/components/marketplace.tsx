@@ -1,7 +1,8 @@
+
 "use client";
 
-import { useState, useMemo, useCallback } from 'react';
-import type { Product } from '@/lib/types';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import type { Product, Category } from '@/lib/types';
 import { ProductFilters, type FilterValues } from '@/components/product-filters';
 import { ProductCard } from './product-card';
 import { useToast } from '@/hooks/use-toast';
@@ -9,23 +10,33 @@ import { Button } from './ui/button';
 import { ListFilter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 
-const INITIAL_FILTERS: FilterValues = {
-  category: '',
+const INITIAL_FILTERS: Omit<FilterValues, 'category'> = {
   priceRange: [0, 150000000],
   location: '',
   condition: '',
   search: ''
 };
 
-export function Marketplace({ products }: { products: Product[] }) {
-  const [filters, setFilters] = useState<FilterValues>(INITIAL_FILTERS);
+type MarketplaceProps = {
+  products: Product[];
+  selectedCategory: Category | '';
+  onCategoryChange: (category: Category | '') => void;
+};
+
+export function Marketplace({ products, selectedCategory, onCategoryChange }: MarketplaceProps) {
+  const [filters, setFilters] = useState<Omit<FilterValues, 'category'>>(INITIAL_FILTERS);
 
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const handleFilterChange = useCallback((newFilters: Partial<FilterValues>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  }, []);
+    if (newFilters.category !== undefined) {
+        onCategoryChange(newFilters.category);
+    }
+    
+    const { category, ...rest } = newFilters;
+    setFilters(prev => ({ ...prev, ...rest }));
+  }, [onCategoryChange]);
 
   const toggleWatchlist = useCallback((product: Product) => {
     setWatchlist(prev => {
@@ -47,37 +58,50 @@ export function Marketplace({ products }: { products: Product[] }) {
     });
   }, [toast]);
 
+  const currentFilters: FilterValues = useMemo(() => ({
+    ...filters,
+    category: selectedCategory,
+  }), [filters, selectedCategory]);
+
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      if (filters.search && !product.name.toLowerCase().includes(filters.search.toLowerCase())) {
+      if (currentFilters.search && !product.name.toLowerCase().includes(currentFilters.search.toLowerCase())) {
         return false;
       }
-      if (filters.category && product.category !== filters.category) {
+      if (currentFilters.category && product.category !== currentFilters.category) {
         return false;
       }
-      if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
+      if (product.price < currentFilters.priceRange[0] || product.price > currentFilters.priceRange[1]) {
         return false;
       }
-      if (filters.location && product.location !== filters.location) {
+      if (currentFilters.location && product.location !== currentFilters.location) {
         return false;
       }
-      if (filters.condition && product.condition !== filters.condition) {
+      if (currentFilters.condition && product.condition !== currentFilters.condition) {
         return false;
       }
       return true;
     });
-  }, [products, filters]);
+  }, [products, currentFilters]);
 
   const clearFilters = useCallback(() => {
     setFilters(INITIAL_FILTERS);
-  }, []);
+    onCategoryChange('');
+  }, [onCategoryChange]);
 
-  const filtersActive = useMemo(() => JSON.stringify(filters) !== JSON.stringify(INITIAL_FILTERS), [filters]);
+  const filtersActive = useMemo(() => {
+    return currentFilters.search !== '' ||
+           currentFilters.category !== '' ||
+           currentFilters.priceRange[0] !== 0 ||
+           currentFilters.priceRange[1] !== 150000000 ||
+           currentFilters.location !== '' ||
+           currentFilters.condition !== '';
+  }, [currentFilters]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 pt-8">
       <div className="hidden lg:block lg:col-span-1">
-        <ProductFilters filters={filters} onFilterChange={handleFilterChange} onClear={clearFilters} />
+        <ProductFilters filters={currentFilters} onFilterChange={handleFilterChange} onClear={clearFilters} />
       </div>
 
       <div className="lg:col-span-3">
@@ -92,7 +116,7 @@ export function Marketplace({ products }: { products: Product[] }) {
                         </Button>
                     </SheetTrigger>
                     <SheetContent>
-                        <ProductFilters filters={filters} onFilterChange={handleFilterChange} onClear={clearFilters} />
+                        <ProductFilters filters={currentFilters} onFilterChange={handleFilterChange} onClear={clearFilters} />
                     </SheetContent>
                 </Sheet>
             </div>
