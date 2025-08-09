@@ -10,6 +10,7 @@ import { Hero } from '@/components/hero';
 import { CategoryShowcase } from '@/components/category-showcase';
 import type { Category, DatePostedOption } from '@/lib/types';
 import type { FilterValues } from '@/components/product-filters';
+import { ProductFilters } from '@/components/product-filters';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
@@ -55,18 +56,31 @@ export default function Home() {
       <Header />
       <Hero />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-card rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
-            <CategoryShowcase 
-              selectedCategory={selectedCategory} 
-              onCategorySelect={handleCategorySelect} 
-            />
-            <Marketplace 
-              products={products} 
-              filters={currentFilters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearFilters}
-              onCategoryChange={handleCategorySelect}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-4 lg:gap-8">
+          <aside className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-20">
+              <ProductFilters 
+                filters={currentFilters}
+                onApply={handleFilterChange}
+                onClear={clearFilters}
+              />
+            </div>
+          </aside>
+          <div className="lg:col-span-3">
+            <div className="bg-card rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
+                <CategoryShowcase 
+                  selectedCategory={selectedCategory} 
+                  onCategorySelect={handleCategorySelect} 
+                />
+                <Marketplace 
+                  products={products} 
+                  filters={currentFilters}
+                  onFilterChange={handleFilterChange}
+                  onClearFilters={clearFilters}
+                  onCategoryChange={handleCategorySelect}
+                />
+            </div>
+          </div>
         </div>
       </main>
       <Footer />

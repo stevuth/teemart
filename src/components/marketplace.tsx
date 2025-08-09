@@ -8,8 +8,8 @@ import type { FilterValues as ProductFilterValues } from '@/components/product-f
 import { ProductCard } from './product-card';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Dialog, DialogTrigger, DialogContent } from './ui/dialog';
-import { ListFilter } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent, DialogClose, Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetFooter } from './ui/sheet';
+import { ListFilter, X } from 'lucide-react';
 import { subDays, isToday, isWithinInterval } from 'date-fns';
 
 type FilterValues = ProductFilterValues;
@@ -102,22 +102,24 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
     <div className="pt-8">
         <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold tracking-tight">Used Products For Sale</h1>
-            <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline">
-                        <ListFilter className="mr-2 h-4 w-4" />
-                        Filter
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md p-0">
-                    <ProductFilters 
-                        filters={filters} 
-                        onApply={handleApplyFilters}
-                        onClear={onClearFilters}
-                        onClose={() => setIsFilterModalOpen(false)} 
-                    />
-                </DialogContent>
-            </Dialog>
+            <div className="lg:hidden">
+              <Sheet open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
+                  <SheetTrigger asChild>
+                      <Button variant="outline">
+                          <ListFilter className="mr-2 h-4 w-4" />
+                          Filter
+                      </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="p-0">
+                      <ProductFilters 
+                          filters={filters} 
+                          onApply={handleApplyFilters}
+                          onClear={onClearFilters}
+                          onClose={() => setIsFilterModalOpen(false)} 
+                      />
+                  </SheetContent>
+              </Sheet>
+            </div>
         </div>
 
         {filtersActive && (

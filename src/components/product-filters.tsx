@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { conditions, locations, Condition, DatePostedOption, datePostedOptions, Category, categories } from "@/lib/types"
 import { X, RotateCcw } from "lucide-react"
 
@@ -31,7 +30,7 @@ type ProductFiltersProps = {
   filters: FilterValues
   onApply: (newFilters: FilterValues) => void
   onClear: () => void;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export function ProductFilters({ filters: initialFilters, onApply, onClear, onClose }: ProductFiltersProps) {
@@ -43,15 +42,16 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
   }
 
   const handleReset = () => {
-    onClear();
-    setCurrentFilters({
+    const defaultFilters = {
       search: '',
-      priceRange: [0, 150000000],
+      priceRange: [0, 150000000] as [number, number],
       location: '',
-      condition: '',
-      datePosted: 'any',
-      category: '',
-    });
+      condition: '' as Condition | '',
+      datePosted: 'any' as DatePostedOption,
+      category: '' as Category | '',
+    };
+    setCurrentFilters(defaultFilters);
+    onClear();
   }
 
   const datePostedLabels: Record<DatePostedOption, string> = {
@@ -62,17 +62,19 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
   }
 
   return (
-    <>
-      <DialogHeader className="p-6 pb-4 border-b bg-muted/50 rounded-t-lg">
+    <div className="flex flex-col h-full bg-card rounded-xl shadow-sm border">
+      <div className="p-6 pb-4 border-b">
         <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">Filter Results</DialogTitle>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
-                <X className="h-4 w-4" />
-            </Button>
+            <h2 className="text-xl font-bold">Filter Results</h2>
+            {onClose && (
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8 lg:hidden">
+                  <X className="h-4 w-4" />
+              </Button>
+            )}
         </div>
-      </DialogHeader>
+      </div>
 
-      <ScrollArea className="h-[60vh] sm:h-auto sm:max-h-[60vh] bg-card">
+      <ScrollArea className="flex-grow bg-card">
         <div className="p-6 space-y-8">
           <div className="space-y-4">
             <Label className="text-base font-semibold">Category</Label>
@@ -166,7 +168,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
           </div>
         </div>
       </ScrollArea>
-      <DialogFooter className="p-6 pt-4 border-t flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 w-full bg-muted/50 rounded-b-lg">
+      <div className="p-6 pt-4 border-t flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 w-full">
             <Button variant="outline" onClick={handleReset} className="sm:w-auto w-full">
                 <RotateCcw className="mr-2 h-4 w-4"/>
                 Reset Filters
@@ -174,7 +176,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
             <Button onClick={() => onApply(currentFilters)} className="sm:w-auto w-full">
                 Apply Filters
             </Button>
-      </DialogFooter>
-    </>
+      </div>
+    </div>
   )
 }
