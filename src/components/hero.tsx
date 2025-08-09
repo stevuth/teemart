@@ -20,10 +20,10 @@ export function Hero() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
         <div className="max-w-7xl mx-auto animate-fade-in text-center sm:text-left">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
-            Discover Great Deals Near You
+            Buy More, Sell Faster with TeeMart
           </h1>
-          <p className="mt-4 text-lg sm:text-xl text-gray-200 mb-6 max-w-lg">
-            Shop electronics, cars, real estate, furniture, and more — all in one place.
+          <p className="mt-4 text-lg sm:text-xl text-gray-200 mb-6 max-w-2xl">
+            Your all-in-one Nigerian marketplace for phones, cars, electronics, furniture, and real estate properties. Start your journey now and find great deals or post your ad today!
           </p>
           <div className="mt-8">
             <Button size="lg" className="h-12 text-base rounded-lg font-semibold px-8">
