@@ -64,7 +64,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Contact
             </Button>
-            <Button size="sm" className="w-full">
+            <Button size="sm" variant="default" className="w-full">
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Buy
             </Button>

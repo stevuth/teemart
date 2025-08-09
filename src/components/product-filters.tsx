@@ -114,7 +114,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
                 {(['', ...conditions] as const).map(cond => (
                     <Button 
                         key={cond || 'all'}
-                        variant={currentFilters.condition === cond ? 'secondary' : 'outline'}
+                        variant={currentFilters.condition === cond ? 'default' : 'secondary'}
                         onClick={() => handleFilterChange({ condition: cond as Condition | '' })}
                     >
                         {cond || 'All'}

@@ -105,7 +105,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
             <div className="lg:hidden">
               <Sheet open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
                   <SheetTrigger asChild>
-                      <Button variant="outline">
+                      <Button>
                           <ListFilter className="mr-2 h-4 w-4" />
                           Filter
                       </Button>

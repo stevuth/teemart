@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Heart, User, Store } from 'lucide-react';
@@ -18,14 +19,14 @@ export function Header() {
 
           <div className="flex items-center gap-2">
             <div className="hidden sm:block">
-              <Button variant="outline">
+              <Button>
                 Sell Product
               </Button>
             </div>
-            <Button variant="ghost" size="icon" aria-label="Watchlist">
+            <Button size="icon" aria-label="Watchlist">
               <Heart className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" aria-label="Profile">
+            <Button size="icon" aria-label="Profile">
               <User className="h-5 w-5" />
             </Button>
           </div>
