@@ -8,14 +8,11 @@ import type { FilterValues as ProductFilterValues } from '@/components/product-f
 import { ProductCard } from './product-card';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Dialog, DialogTrigger, DialogContent } from './ui/dialog';
 import { ListFilter } from 'lucide-react';
 import { subDays, isToday, isWithinInterval } from 'date-fns';
 
-type FilterValues = Omit<ProductFilterValues, 'category'> & {
-    category: Category | '';
-    datePosted: DatePostedOption;
-}
+type FilterValues = ProductFilterValues;
 
 type MarketplaceProps = {
   products: Product[];
@@ -28,6 +25,7 @@ type MarketplaceProps = {
 export function Marketplace({ products, filters, onFilterChange, onClearFilters, onCategoryChange }: MarketplaceProps) {
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const toggleWatchlist = useCallback((product: Product) => {
     setWatchlist(prev => {
@@ -94,29 +92,32 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
            filters.condition !== '' ||
            filters.datePosted !== 'any';
   }, [filters]);
+  
+  const handleApplyFilters = (newFilters: FilterValues) => {
+    onFilterChange(newFilters);
+    setIsFilterModalOpen(false);
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 pt-8">
-      <div className="hidden lg:block lg:col-span-1">
-        <ProductFilters filters={filters} onFilterChange={onFilterChange} onClear={onClearFilters} />
-      </div>
-      
-      <div className="lg:col-span-3">
+    <div className="pt-8">
         <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold tracking-tight">Used Products For Sale</h1>
-            <div className='lg:hidden'>
-              <Sheet>
-                  <SheetTrigger asChild>
-                      <Button variant="outline" size="sm">
-                          <ListFilter className="mr-2 h-4 w-4" />
-                          Filters
-                      </Button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[90%]">
-                      <ProductFilters filters={filters} onFilterChange={onFilterChange} onClear={onClearFilters} />
-                  </SheetContent>
-              </Sheet>
-            </div>
+            <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <ListFilter className="mr-2 h-4 w-4" />
+                        Filter
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md p-0">
+                    <ProductFilters 
+                        filters={filters} 
+                        onApply={handleApplyFilters}
+                        onClear={onClearFilters}
+                        onClose={() => setIsFilterModalOpen(false)} 
+                    />
+                </DialogContent>
+            </Dialog>
         </div>
 
         {filtersActive && (
@@ -145,6 +146,5 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
           </div>
         )}
       </div>
-    </div>
   );
 }

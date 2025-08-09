@@ -1,13 +1,7 @@
 
 "use client"
 
-import { useMemo } from "react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useState, useMemo } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
@@ -20,8 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { conditions, locations, Condition, DatePostedOption, datePostedOptions } from "@/lib/types"
-import { Filter, Trash2 } from "lucide-react"
+import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { conditions, locations, Condition, DatePostedOption, datePostedOptions, Category, categories } from "@/lib/types"
+import { X, RotateCcw } from "lucide-react"
 
 export type FilterValues = {
   search: string
@@ -29,24 +24,35 @@ export type FilterValues = {
   location: string
   condition: Condition | ''
   datePosted: DatePostedOption
+  category: Category | ''
 }
 
 type ProductFiltersProps = {
-  filters: Omit<FilterValues, 'category'>
-  onFilterChange: (newFilters: Partial<FilterValues>) => void
+  filters: FilterValues
+  onApply: (newFilters: FilterValues) => void
   onClear: () => void;
+  onClose: () => void;
 }
 
-export function ProductFilters({ filters, onFilterChange, onClear }: ProductFiltersProps) {
+export function ProductFilters({ filters: initialFilters, onApply, onClear, onClose }: ProductFiltersProps) {
 
-  const isAnyFilterActive = useMemo(() => {
-    return filters.search !== '' ||
-           filters.priceRange[0] !== 0 ||
-           filters.priceRange[1] !== 150000000 ||
-           filters.location !== '' ||
-           filters.condition !== '' ||
-           filters.datePosted !== 'any';
-  }, [filters]);
+  const [currentFilters, setCurrentFilters] = useState(initialFilters);
+
+  const handleFilterChange = (newValues: Partial<FilterValues>) => {
+    setCurrentFilters(prev => ({...prev, ...newValues}));
+  }
+
+  const handleReset = () => {
+    onClear();
+    setCurrentFilters({
+      search: '',
+      priceRange: [0, 150000000],
+      location: '',
+      condition: '',
+      datePosted: 'any',
+      category: '',
+    });
+  }
 
   const datePostedLabels: Record<DatePostedOption, string> = {
     any: 'Any Time',
@@ -56,50 +62,69 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
   }
 
   return (
-    <Card className="sticky top-20">
-      <CardHeader className="flex-row items-center justify-between">
-        <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            <CardTitle>Filters</CardTitle>
+    <>
+      <DialogHeader className="p-6 pb-4 border-b">
+        <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-bold">Filter Results</DialogTitle>
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
+                <X className="h-4 w-4" />
+            </Button>
         </div>
-        {isAnyFilterActive && (
-          <Button variant="ghost" size="sm" onClick={onClear} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground">
-            <Trash2 className="h-4 w-4" /> Clear
-          </Button>
-        )}
-      </CardHeader>
-      <ScrollArea className="h-[calc(100vh-10rem)]">
-        <CardContent className="space-y-6 pt-6">
-          <div className="space-y-2">
-            <Label htmlFor="search">Search by name</Label>
-            <Input
-              id="search"
-              placeholder="e.g., Toyota Camry"
-              value={filters.search}
-              onChange={(e) => onFilterChange({ search: e.target.value })}
-            />
+      </DialogHeader>
+
+      <ScrollArea className="h-[60vh] sm:h-auto sm:max-h-[60vh]">
+        <div className="p-6 space-y-8">
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Category</Label>
+            <Select value={currentFilters.category} onValueChange={(value: string) => handleFilterChange({ category: value === "all" ? "" : value as Category })}>
+                <SelectTrigger className="h-12 text-base">
+                    <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                        {cat}
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="price">Price Range (₦)</Label>
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Price Range (₦)</Label>
             <Slider
-              id="price"
               min={0}
               max={150000000}
               step={100000}
-              value={filters.priceRange}
-              onValueChange={(value) => onFilterChange({ priceRange: value as [number, number] })}
+              value={currentFilters.priceRange}
+              onValueChange={(value) => handleFilterChange({ priceRange: value as [number, number] })}
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{filters.priceRange[0].toLocaleString()}</span>
-              <span>{filters.priceRange[1].toLocaleString()}</span>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>₦{currentFilters.priceRange[0].toLocaleString()}</span>
+              <span>₦{currentFilters.priceRange[1].toLocaleString()}</span>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Select value={filters.location} onValueChange={(value) => onFilterChange({ location: value === "all" ? "" : value })}>
-              <SelectTrigger>
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Condition</Label>
+            <div className="flex gap-2">
+                {(['', ...conditions] as const).map(cond => (
+                    <Button 
+                        key={cond || 'all'}
+                        variant={currentFilters.condition === cond ? 'secondary' : 'outline'}
+                        onClick={() => handleFilterChange({ condition: cond as Condition | '' })}
+                    >
+                        {cond || 'All'}
+                    </Button>
+                ))}
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Location</Label>
+            <Select value={currentFilters.location} onValueChange={(value) => handleFilterChange({ location: value === "all" ? "" : value })}>
+              <SelectTrigger className="h-12 text-base">
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
               <SelectContent>
@@ -113,26 +138,10 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="condition">Condition</Label>
-             <Select value={filters.condition} onValueChange={(value: string) => onFilterChange({ condition: value === "all" ? "" : value as Condition })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select condition" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Conditions</SelectItem>
-                {conditions.map((cond) => (
-                  <SelectItem key={cond} value={cond}>
-                    {cond}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="date-posted">Date Posted</Label>
-             <Select value={filters.datePosted} onValueChange={(value: string) => onFilterChange({ datePosted: value as DatePostedOption })}>
-              <SelectTrigger>
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Date Posted</Label>
+             <Select value={currentFilters.datePosted} onValueChange={(value: string) => handleFilterChange({ datePosted: value as DatePostedOption })}>
+              <SelectTrigger className="h-12 text-base">
                 <SelectValue placeholder="Select date" />
               </SelectTrigger>
               <SelectContent>
@@ -144,8 +153,28 @@ export function ProductFilters({ filters, onFilterChange, onClear }: ProductFilt
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
+
+           <div className="space-y-4">
+            <Label className="text-base font-semibold" htmlFor="search">Search by name</Label>
+            <Input
+              id="search"
+              placeholder="e.g., Toyota Camry"
+              className="h-12 text-base"
+              value={currentFilters.search}
+              onChange={(e) => handleFilterChange({ search: e.target.value })}
+            />
+          </div>
+        </div>
       </ScrollArea>
-    </Card>
+      <DialogFooter className="p-6 pt-4 border-t flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 w-full">
+            <Button variant="outline" onClick={handleReset} className="sm:w-auto w-full">
+                <RotateCcw className="mr-2 h-4 w-4"/>
+                Reset Filters
+            </Button>
+            <Button onClick={() => onApply(currentFilters)} className="sm:w-auto w-full">
+                Apply Filters
+            </Button>
+      </DialogFooter>
+    </>
   )
 }
