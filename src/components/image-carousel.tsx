@@ -9,9 +9,9 @@ import Fade from 'embla-carousel-fade'
 import { cn } from '@/lib/utils'
 
 const images = [
-  { src: "https://placehold.co/1920x1080", alt: "Modern living room", "data-ai-hint": "modern living room" },
-  { src: "https://placehold.co/1920x1080", alt: "Sleek sports car on a city street", "data-ai-hint": "sleek car" },
-  { src: "https://placehold.co/1920x1080", alt: "Family enjoying a new home", "data-ai-hint": "happy family home" },
+  { src: "https://picsum.photos/1920/1080?random=1", alt: "Modern living room", "data-ai-hint": "modern living room" },
+  { src: "https://picsum.photos/1920/1080?random=2", alt: "Sleek sports car on a city street", "data-ai-hint": "sleek car" },
+  { src: "https://picsum.photos/1920/1080?random=3", alt: "Family enjoying a new home", "data-ai-hint": "happy family home" },
 ]
 
 export function ImageCarousel() {
