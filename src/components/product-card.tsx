@@ -62,7 +62,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
         <div className="w-full flex flex-col xxs:flex-row gap-2">
             <Button variant="outline" size="sm" className="flex-1 text-xs">
                 <MessageCircle className="mr-2 h-4 w-4" />
-                Chat
+                Contact Seller
             </Button>
             <Button size="sm" className="flex-1 text-xs">
                 <ShoppingCart className="mr-2 h-4 w-4" />
