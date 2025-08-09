@@ -22,6 +22,10 @@ type FeaturedProductsCarouselProps = {
 }
 
 export function FeaturedProductsCarousel({ products }: FeaturedProductsCarouselProps) {
+  const plugin = React.useRef(
+    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
+  );
+
   return (
     <section className="w-full py-12 md:py-16 lg:py-20 bg-secondary/50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,12 +35,9 @@ export function FeaturedProductsCarousel({ products }: FeaturedProductsCarouselP
             align: "start",
             loop: true,
           }}
-          plugins={[
-            Autoplay({
-              delay: 5000,
-              stopOnInteraction: true,
-            })
-          ]}
+          plugins={[plugin.current]}
+          onMouseEnter={plugin.current.stop}
+          onMouseLeave={plugin.current.reset}
           className="w-full"
         >
           <CarouselContent>
