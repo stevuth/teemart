@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Heart, User, Store } from 'lucide-react';
+import { ShoppingCart, User, Store } from 'lucide-react';
 
 export function Header() {
   return (
@@ -18,13 +18,11 @@ export function Header() {
           <div className="flex-1" />
 
           <div className="flex items-center gap-2">
-            <div className="hidden sm:block">
-              <Button>
-                Sell Product
-              </Button>
-            </div>
-            <Button size="icon" aria-label="Watchlist">
-              <Heart className="h-5 w-5" />
+            <Button>
+              Sell Product
+            </Button>
+            <Button size="icon" aria-label="Cart">
+              <ShoppingCart className="h-5 w-5" />
             </Button>
             <Button size="icon" aria-label="Profile">
               <User className="h-5 w-5" />
