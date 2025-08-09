@@ -5,15 +5,15 @@
 @layer base {
   :root {
     --background: 54 100% 85%; /* Yellowish */
-    --foreground: 34 10% 20%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
-    --card-foreground: 34 10% 20%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 34 10% 20%;
-    --primary: 0 0% 20%; /* Deep Gray */
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 100%; /* White */
-    --secondary-foreground: 34 10% 20%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 50%; /* Gray */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 90%; /* Light Gray */
+    --secondary-foreground: 0 0% 0%;
     --muted: 54 90% 92%;
     --muted-foreground: 34 10% 40%;
     --accent: 0 0% 85%; /* Gray */
@@ -21,8 +21,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 54 80% 85%;
-    --input: 0 0% 100%;
-    --ring: 0 0% 20%;
+    --input: 0 0% 95%;
+    --ring: 0 0% 50%;
     --radius: 0.8rem;
   }
  
