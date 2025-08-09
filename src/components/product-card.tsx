@@ -7,8 +7,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MapPin, MessageCircle, ShoppingCart } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { MapPin, MessageCircle, ShoppingCart } from 'lucide-react';
 
 type ProductCardProps = {
   product: Product;
@@ -30,15 +29,6 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
             data-ai-hint={product['data-ai-hint']}
           />
         </Link>
-        <Button
-          size="icon"
-          variant="secondary"
-          className="absolute top-2 right-2 h-8 w-8 rounded-full"
-          onClick={() => onWatchlistToggle(product)}
-          aria-label={inWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}
-        >
-          <Heart className={cn("h-4 w-4", inWatchlist ? "text-red-500 fill-current" : "text-foreground")} />
-        </Button>
       </CardHeader>
       <CardContent className="p-3 sm:p-4 flex-grow">
         <div className="flex justify-between items-start gap-2 mb-2">
