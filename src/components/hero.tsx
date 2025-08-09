@@ -13,7 +13,7 @@ export function Hero() {
         src="https://i.postimg.cc/qBNSw40W/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png"
         alt="Modern living room"
         fill
-        className="object-cover"
+        className="object-contain sm:object-cover"
         priority
         data-ai-hint="modern living room"
       />
