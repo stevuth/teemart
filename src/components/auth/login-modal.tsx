@@ -57,7 +57,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Login to TeeMart</DialogTitle>
         </DialogHeader>

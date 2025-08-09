@@ -70,7 +70,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Create an Account</DialogTitle>
         </DialogHeader>
