@@ -110,12 +110,13 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
           
           <div className="space-y-4">
             <Label className="text-base font-semibold">Condition</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
                 {(['', ...conditions] as const).map(cond => (
                     <Button 
                         key={cond || 'all'}
                         variant={currentFilters.condition === cond ? 'default' : 'secondary'}
                         onClick={() => handleFilterChange({ condition: cond as Condition | '' })}
+                        className="rounded-full"
                     >
                         {cond || 'All'}
                     </Button>
@@ -168,12 +169,12 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
           </div>
         </div>
       </ScrollArea>
-      <div className="p-6 pt-4 border-t flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 w-full">
-            <Button variant="outline" onClick={handleReset} className="sm:w-auto w-full">
+      <div className="p-6 pt-4 border-t flex flex-col sm:flex-row gap-2 justify-between">
+            <Button variant="secondary" onClick={handleReset} className="w-full sm:w-auto mb-2 sm:mb-0">
                 <RotateCcw className="mr-2 h-4 w-4"/>
                 Reset Filters
             </Button>
-            <Button onClick={() => onApply(currentFilters)} className="sm:w-auto w-full">
+            <Button onClick={() => onApply(currentFilters)} className="w-full sm:w-auto">
                 Apply Filters
             </Button>
       </div>
