@@ -26,7 +26,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
             alt={product.name}
             width={600}
             height={400}
-            className="w-full h-36 sm:h-48 object-cover"
+            className="w-full h-32 sm:h-40 object-cover"
             data-ai-hint={product['data-ai-hint']}
           />
         </Link>
