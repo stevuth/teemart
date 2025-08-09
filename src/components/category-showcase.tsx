@@ -1,43 +1,62 @@
 
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { categories, Category } from "@/lib/types"
-import { Car, Home, Laptop, Lamp, Phone } from "lucide-react"
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import type { Category } from '@/lib/types';
+import { categories } from '@/lib/types';
+import { Car, Home as HomeIcon, Laptop, Lamp, Phone } from 'lucide-react';
 
 type CategoryShowcaseProps = {
-  selectedCategory: Category | ''
-  onCategorySelect: (category: Category | '') => void
-}
+  selectedCategory: Category | '';
+  onCategorySelect: (category: Category | '') => void;
+};
 
-const categoryIcons: Record<Category, React.ElementType> = {
-  Cars: Car,
-  Electronics: Laptop,
-  'Real Estate': Home,
-  Furniture: Lamp,
-  Phones: Phone,
-}
+const categoryDetails: Record<Category, { icon: React.ElementType, image: string, hint: string }> = {
+  Cars: { icon: Car, image: 'https://placehold.co/400x400', hint: 'modern car' },
+  Electronics: { icon: Laptop, image: 'https://placehold.co/400x400', hint: 'laptop workspace' },
+  'Real Estate': { icon: HomeIcon, image: 'https://placehold.co/400x400', hint: 'modern house' },
+  Furniture: { icon: Lamp, image: 'https://placehold.co/400x400', hint: 'stylish furniture' },
+  Phones: { icon: Phone, image: 'https://placehold.co/400x400', hint: 'smartphone screen' },
+};
 
 export function CategoryShowcase({ selectedCategory, onCategorySelect }: CategoryShowcaseProps) {
   return (
     <div className="pb-8 border-b">
-        <h2 className="text-2xl font-bold tracking-tight mb-6 text-center">Browse by Category</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+      <h2 className="text-2xl font-bold tracking-tight mb-6 text-center">Browse by Category</h2>
+      <div className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto pb-4 -mb-4 hide-scrollbar">
         {categories.map((category) => {
-            const Icon = categoryIcons[category]
-            return (
-            <Button
-                key={category}
-                variant={selectedCategory === category ? "secondary" : "outline"}
-                className="flex flex-col h-28 p-4 gap-2 items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={() => onCategorySelect(selectedCategory === category ? '' : category)}
+          const { icon: Icon, image, hint } = categoryDetails[category];
+          const isSelected = selectedCategory === category;
+
+          return (
+            <div
+              key={category}
+              onClick={() => onCategorySelect(isSelected ? '' : category)}
+              className={cn(
+                'group relative flex-shrink-0 w-40 h-28 md:w-full md:h-32 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
+                'shadow-md hover:shadow-xl',
+                isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+              )}
             >
-                <Icon className="h-8 w-8 mb-1 text-primary" />
-                <span className="text-sm font-semibold whitespace-normal leading-tight">{category}</span>
-            </Button>
-            )
+              <Image
+                src={image}
+                alt={category}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                data-ai-hint={hint}
+              />
+              <div className={cn(
+                  "absolute inset-0 flex flex-col items-center justify-center p-2 text-center text-white bg-black/50 transition-colors duration-300",
+                  isSelected ? "bg-primary/70" : "group-hover:bg-black/60"
+              )}>
+                <Icon className="h-8 w-8 mb-1 drop-shadow-lg" />
+                <span className="text-sm font-semibold whitespace-normal leading-tight drop-shadow-lg">{category}</span>
+              </div>
+            </div>
+          );
         })}
-        </div>
+      </div>
     </div>
-  )
+  );
 }
