@@ -63,7 +63,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
 
   return (
     <>
-      <DialogHeader className="p-6 pb-4 border-b">
+      <DialogHeader className="p-6 pb-4 border-b bg-muted/50 rounded-t-lg">
         <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold">Filter Results</DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
@@ -72,7 +72,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
         </div>
       </DialogHeader>
 
-      <ScrollArea className="h-[60vh] sm:h-auto sm:max-h-[60vh]">
+      <ScrollArea className="h-[60vh] sm:h-auto sm:max-h-[60vh] bg-card">
         <div className="p-6 space-y-8">
           <div className="space-y-4">
             <Label className="text-base font-semibold">Category</Label>
@@ -166,7 +166,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
           </div>
         </div>
       </ScrollArea>
-      <DialogFooter className="p-6 pt-4 border-t flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 w-full">
+      <DialogFooter className="p-6 pt-4 border-t flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 w-full bg-muted/50 rounded-b-lg">
             <Button variant="outline" onClick={handleReset} className="sm:w-auto w-full">
                 <RotateCcw className="mr-2 h-4 w-4"/>
                 Reset Filters
