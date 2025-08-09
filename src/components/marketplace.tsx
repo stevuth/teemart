@@ -12,7 +12,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogClose, Sheet, SheetTrigger,
 import { ListFilter, X } from 'lucide-react';
 import { subDays, isToday, isWithinInterval } from 'date-fns';
 
-type FilterValues = ProductFilterValues;
+type FilterValues = ProductFilterValues & { search: string };
 
 type MarketplaceProps = {
   products: Product[];
@@ -93,7 +93,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
            filters.datePosted !== 'any';
   }, [filters]);
   
-  const handleApplyFilters = (newFilters: FilterValues) => {
+  const handleApplyFilters = (newFilters: ProductFilterValues) => {
     onFilterChange(newFilters);
     setIsFilterModalOpen(false);
   }

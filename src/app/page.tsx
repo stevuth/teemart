@@ -15,11 +15,11 @@ import { SearchSection } from '@/components/search-section';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
   const [filters, setFilters] = useState<Omit<FilterValues, 'category'>>({
     priceRange: [0, 150000000],
     location: '',
     condition: '',
-    search: '',
     datePosted: 'any',
   });
 
@@ -40,15 +40,16 @@ export default function Home() {
       priceRange: [0, 150000000],
       location: '',
       condition: '',
-      search: '',
       datePosted: 'any',
     });
     setSelectedCategory('');
+    setGlobalSearchTerm('');
   };
 
-  const currentFilters = {
+  const currentFilters: FilterValues & { search: string } = {
     ...filters,
     category: selectedCategory,
+    search: globalSearchTerm,
   };
   
   const featuredProducts = products.slice(0, 5);
@@ -57,7 +58,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <ProductHeroCarousel products={featuredProducts} />
-      <SearchSection onSearch={(searchTerm) => handleFilterChange({ search: searchTerm })} />
+      <SearchSection onSearch={setGlobalSearchTerm} />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 lg:gap-8">
           <aside className="hidden lg:block lg:col-span-1">

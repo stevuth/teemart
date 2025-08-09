@@ -18,7 +18,6 @@ import { conditions, locations, Condition, DatePostedOption, datePostedOptions, 
 import { X, RotateCcw } from "lucide-react"
 
 export type FilterValues = {
-  search: string
   priceRange: [number, number]
   location: string
   condition: Condition | ''
@@ -43,7 +42,6 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
 
   const handleReset = () => {
     const defaultFilters = {
-      search: '',
       priceRange: [0, 150000000] as [number, number],
       location: '',
       condition: '' as Condition | '',
@@ -155,17 +153,6 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-           <div className="space-y-4">
-            <Label className="text-base font-semibold" htmlFor="search">Search by name</Label>
-            <Input
-              id="search"
-              placeholder="e.g., Toyota Camry"
-              className="h-12 text-base"
-              value={currentFilters.search}
-              onChange={(e) => handleFilterChange({ search: e.target.value })}
-            />
           </div>
         </div>
       </ScrollArea>
