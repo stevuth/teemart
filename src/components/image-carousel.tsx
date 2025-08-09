@@ -24,7 +24,7 @@ export function ImageCarousel() {
     <div className="absolute inset-0 overflow-hidden" ref={emblaRef}>
       <div className="flex h-full">
         {images.map((image, index) => (
-          <div className="relative flex-[0_0_100%] h-full" key={index}>
+          <div className="relative flex-[0_0_100%] h-full bg-secondary" key={index}>
             <Image
               src={image.src}
               alt={image.alt}
