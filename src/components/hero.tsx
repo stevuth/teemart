@@ -7,7 +7,7 @@ import { ImageCarousel } from './image-carousel';
 export function Hero() {
   return (
     <section 
-      className="w-full pt-16 pb-12 sm:pt-32 sm:pb-28 relative"
+      className="w-full pt-20 pb-16 md:pt-28 md:pb-24 lg:pt-32 lg:pb-28 relative"
     >
       <ImageCarousel />
       <div className="absolute inset-0 bg-black/50 z-10" />
