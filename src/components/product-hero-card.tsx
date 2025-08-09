@@ -3,56 +3,45 @@
 
 import React from 'react';
 import Image from 'next/image';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel"
-import Autoplay from 'embla-carousel-autoplay'
-import { Card } from "@/components/ui/card"
+import Link from 'next/link';
+import { Button } from "@/components/ui/button"
 import type { Product } from '@/lib/types'
 
 type ProductHeroCardProps = {
   product: Product
 }
 
-const placeholderImages = (hint: string = 'product') => [
-    `https://i.postimg.cc/qBNSw40W/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png`,
-    `https://placehold.co/1200x600/CBD5E0/4A5568?text=${hint.replace(/\s/g,'%20')}-2`,
-    `https://placehold.co/1200x600/A0AEC0/4A5568?text=${hint.replace(/\s/g,'%20')}-3`,
-];
-
-
 export function ProductHeroCard({ product }: ProductHeroCardProps) {
-  const innerCarouselPlugin = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
-  );
-  
-  const images = placeholderImages(product['data-ai-hint']);
 
   return (
-    <Card className="w-full max-w-4xl overflow-hidden shadow-lg">
-        <Carousel
-            opts={{ loop: true }}
-            plugins={[innerCarouselPlugin.current]}
-            className="w-full h-full"
-        >
-            <CarouselContent>
-            {images.map((src, index) => (
-                <CarouselItem key={index}>
-                <div className="aspect-video relative">
-                    <Image
-                        src={src}
-                        alt={`${product.name} image ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        priority={index === 0}
-                    />
+    <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[24/9] bg-secondary text-white">
+        <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover"
+            priority
+            data-ai-hint={product['data-ai-hint']}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12 lg:p-16">
+            <div className="max-w-2xl">
+                <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white shadow-lg">
+                    {product.name}
+                </h2>
+                <p className="mt-4 text-lg md:text-xl text-white/90 shadow-lg max-w-prose">
+                    {product.description}
+                </p>
+                <div className="mt-8 flex gap-4">
+                    <Button asChild size="lg" className="text-lg px-8 py-6">
+                        <Link href={`/product/${product.id}`}>View Deal</Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent text-white border-2 border-white hover:bg-white hover:text-black">
+                        <Link href={`/categories/${product.category}`}>Shop Now</Link>
+                    </Button>
                 </div>
-                </CarouselItem>
-            ))}
-            </CarouselContent>
-        </Carousel>
-    </Card>
+            </div>
+        </div>
+    </div>
   )
 }

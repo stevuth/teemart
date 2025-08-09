@@ -6,6 +6,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
 } from "@/components/ui/carousel"
 import Autoplay from 'embla-carousel-autoplay'
 import type { Product } from '@/lib/types'
@@ -17,11 +19,11 @@ type ProductHeroCarouselProps = {
 
 export function ProductHeroCarousel({ products }: ProductHeroCarouselProps) {
   const plugin = React.useRef(
-    Autoplay({ delay: 10000, stopOnInteraction: true, stopOnMouseEnter: true })
+    Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
   );
 
   return (
-    <section className="w-full py-12 bg-secondary/30">
+    <section className="w-full bg-secondary/30">
         <Carousel
           opts={{
             align: "start",
@@ -41,6 +43,8 @@ export function ProductHeroCarousel({ products }: ProductHeroCarouselProps) {
               </CarouselItem>
             ))}
           </CarouselContent>
+          <CarouselPrevious className="absolute left-4 h-10 w-10 text-white bg-black/30 hover:bg-black/50 border-none" />
+          <CarouselNext className="absolute right-4 h-10 w-10 text-white bg-black/30 hover:bg-black/50 border-none" />
         </Carousel>
     </section>
   )
