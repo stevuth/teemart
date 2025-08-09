@@ -7,7 +7,7 @@ import Image from 'next/image';
 export function Hero() {
   return (
     <section 
-      className="relative w-full py-20 sm:py-28 lg:py-32 bg-cover bg-center bg-no-repeat"
+      className="relative w-full py-24 sm:py-28 lg:py-32 bg-cover bg-center bg-no-repeat"
     >
       <Image
         src="https://i.postimg.cc/qBNSw40W/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png"
