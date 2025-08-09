@@ -6,12 +6,11 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Marketplace } from '@/components/marketplace';
 import { products } from '@/lib/data';
-import { Hero } from '@/components/hero';
 import { CategoryShowcase } from '@/components/category-showcase';
-import type { Category, DatePostedOption } from '@/lib/types';
+import type { Category } from '@/lib/types';
 import type { FilterValues } from '@/components/product-filters';
 import { ProductFilters } from '@/components/product-filters';
-import { FeaturedProductsCarousel } from '@/components/featured-products-carousel';
+import { ProductHeroCarousel } from '@/components/product-hero-carousel';
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
@@ -51,12 +50,13 @@ export default function Home() {
     category: selectedCategory,
   };
 
+  const featuredProducts = products.slice(0, 3);
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <Hero />
-      <FeaturedProductsCarousel products={products.slice(0, 5)} />
+      <ProductHeroCarousel products={featuredProducts} />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 lg:gap-8">
           <aside className="hidden lg:block lg:col-span-1">
