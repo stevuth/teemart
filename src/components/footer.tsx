@@ -1,8 +1,6 @@
 
 import Link from 'next/link';
-import { Store, Twitter, Facebook, Instagram, Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Store, Twitter, Facebook, Instagram } from 'lucide-react';
 
 export function Footer() {
   const socialLinks = [
@@ -69,7 +67,7 @@ export function Footer() {
                 </div>
             </div>
 
-            <div className="lg:col-span-5 grid grid-cols-2 md:grid-cols-3 gap-8">
+            <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
                 {footerLinks.map((section) => (
                 <div key={section.title}>
                     <h3 className="font-semibold text-md mb-4">{section.title}</h3>
@@ -86,19 +84,6 @@ export function Footer() {
                 ))}
             </div>
             
-            <div className="lg:col-span-3">
-                <h3 className="font-semibold text-md mb-4">Stay in the loop</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                    Join our newsletter to get the latest deals and updates.
-                </p>
-                <form className="flex items-center gap-2">
-                    <Input type="email" placeholder="Enter your email" className="flex-1" />
-                    <Button type="submit" size="icon" aria-label="Subscribe">
-                        <Send className="h-4 w-4" />
-                    </Button>
-                </form>
-            </div>
-
             </div>
             <div className="py-6 border-t">
               <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
