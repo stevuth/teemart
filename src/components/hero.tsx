@@ -7,7 +7,7 @@ import Image from 'next/image';
 export function Hero() {
   return (
     <section 
-      className="relative w-full py-24 sm:py-28 lg:py-32 bg-cover bg-center bg-no-repeat"
+      className="relative w-full py-0 sm:py-28 lg:py-32 bg-cover bg-center bg-no-repeat"
     >
       <Image
         src="https://i.postimg.cc/qBNSw40W/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png"
@@ -19,7 +19,7 @@ export function Hero() {
       />
       <div className="absolute inset-0 bg-black bg-opacity-40 z-10" />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-        <div className="max-w-3xl animate-fade-in text-left">
+        <div className="hidden sm:block max-w-3xl animate-fade-in text-left">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
             Buy More, Sell Faster with TeeMart
           </h1>
