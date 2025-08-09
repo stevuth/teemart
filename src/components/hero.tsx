@@ -19,14 +19,14 @@ export function Hero() {
       />
       <div className="absolute inset-0 bg-black bg-opacity-40 z-10" />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-        <div className="max-w-3xl mx-auto animate-fade-in text-center sm:text-left">
+        <div className="max-w-3xl mx-auto animate-fade-in text-left">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
             Buy More, Sell Faster with TeeMart
           </h1>
           <p className="mt-4 text-lg sm:text-xl text-gray-200 mb-8 max-w-2xl">
             Your all-in-one Nigerian marketplace for phones, cars, electronics, furniture, and real estate properties. Start your journey now and find great deals or post your ad today!
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 max-w-lg">
+          <div className="mt-8 flex flex-row items-center gap-4 max-w-lg">
             <div className="relative w-full">
               <Input
                 type="search"
@@ -35,7 +35,7 @@ export function Hero() {
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
-            <Button size="lg" className="h-12 text-base rounded-lg font-semibold px-8 w-full sm:w-auto">
+            <Button size="lg" className="h-12 text-base rounded-lg font-semibold px-8 w-auto">
               Search
             </Button>
           </div>
