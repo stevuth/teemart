@@ -11,11 +11,9 @@ import { MapPin, MessageCircle, ShoppingCart } from 'lucide-react';
 
 type ProductCardProps = {
   product: Product;
-  inWatchlist: boolean;
-  onWatchlistToggle: (product: Product) => void;
 };
 
-export function ProductCard({ product, inWatchlist, onWatchlistToggle }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg">
       <CardHeader className="p-0 relative">
@@ -32,7 +30,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
       </CardHeader>
       <CardContent className="p-3 sm:p-4 flex-grow">
         <div className="flex justify-between items-start gap-2 mb-2">
-          <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+          <Badge variant="outline" className="text-xs">{product.category}</Badge>
           <Badge variant="outline" className="text-xs">{product.condition}</Badge>
         </div>
         <CardTitle className="text-base sm:text-lg font-bold leading-tight">
