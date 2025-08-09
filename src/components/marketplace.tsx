@@ -110,7 +110,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
                           Filter
                       </Button>
                   </SheetTrigger>
-                  <SheetContent side="bottom" className="p-0">
+                  <SheetContent side="bottom" className="p-0 h-[90vh] flex flex-col">
                       <ProductFilters 
                           filters={filters} 
                           onApply={handleApplyFilters}

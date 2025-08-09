@@ -60,7 +60,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
   }
 
   return (
-    <div className="flex flex-col h-full bg-card rounded-xl shadow-sm border">
+    <div className="flex flex-col h-full bg-card rounded-xl shadow-sm border lg:border-solid">
       <div className="p-6 pb-4 border-b">
         <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold">Filter Results</h2>
