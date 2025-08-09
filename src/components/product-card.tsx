@@ -6,7 +6,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MapPin } from 'lucide-react';
+import { Heart, MapPin, MessageCircle, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ProductCardProps = {
@@ -50,13 +50,23 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
            </Link>
         </CardTitle>
       </CardContent>
-      <CardFooter className="p-4 pt-0 flex justify-between items-center">
+      <CardFooter className="p-4 pt-2 flex flex-col items-start gap-4">
         <div>
             <p className="text-xl font-bold text-primary">₦{product.price.toLocaleString()}</p>
             <div className="flex items-center text-sm text-muted-foreground mt-1">
               <MapPin className="h-4 w-4 mr-1.5" />
               <span>{product.location}</span>
             </div>
+        </div>
+        <div className="w-full flex gap-2">
+            <Button variant="outline" size="sm" className="flex-1">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Chat
+            </Button>
+            <Button size="sm" className="flex-1">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Buy
+            </Button>
         </div>
       </CardFooter>
     </Card>
