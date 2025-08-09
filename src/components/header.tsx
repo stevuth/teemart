@@ -44,6 +44,14 @@ export function Header() {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
+  
+  const handleSellClick = () => {
+    if (!user) {
+      openLoginModal();
+    } else {
+      // TODO: Navigate to sell page
+    }
+  }
 
   return (
     <>
@@ -60,7 +68,7 @@ export function Header() {
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
-              <Button>
+              <Button onClick={handleSellClick}>
                 Sell Product
               </Button>
               <Button size="icon" aria-label="Cart">

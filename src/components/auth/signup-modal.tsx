@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
+  phoneNumber: z.string().min(10, { message: "Please enter a valid phone number." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
@@ -36,6 +37,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
     defaultValues: {
       displayName: "",
       email: "",
+      phoneNumber: "",
       password: "",
     },
   });
@@ -48,8 +50,12 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
         await updateProfile(userCredential.user, {
           displayName: data.displayName
         });
+        await sendEmailVerification(userCredential.user);
       }
-      toast({ title: "Account Created", description: "You have successfully signed up." });
+      toast({ 
+        title: "Account Created", 
+        description: "We've sent a verification email to your address. Please check your inbox." 
+      });
       onClose();
     } catch (error: any) {
       toast({
@@ -91,6 +97,19 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input placeholder="you@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. 08012345678" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
