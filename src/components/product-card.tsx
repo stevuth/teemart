@@ -45,7 +45,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
           <Badge variant="secondary" className="text-xs">{product.category}</Badge>
           <Badge variant="outline" className="text-xs">{product.condition}</Badge>
         </div>
-        <CardTitle className="text-base font-bold leading-tight">
+        <CardTitle className="text-base sm:text-lg font-bold leading-tight">
            <Link href={`/product/${product.id}`} className="hover:text-primary transition-colors">
             {product.name}
            </Link>
@@ -60,11 +60,11 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
             </div>
         </div>
         <div className="w-full flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1 rounded-none">
+            <Button variant="outline" size="sm" className="w-2/3">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Contact Seller
             </Button>
-            <Button size="sm" className="flex-1 rounded-none">
+            <Button size="sm" className="w-1/3">
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Buy
             </Button>
