@@ -60,7 +60,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
   }
 
   return (
-    <div className="flex flex-col h-full bg-card rounded-xl shadow-sm border lg:border-solid">
+    <div className="flex flex-col h-full bg-card rounded-xl shadow-sm border lg:border-solid lg:rounded-xl">
       <div className="p-6 pb-4 border-b">
         <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold">Filter Results</h2>
@@ -156,7 +156,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
           </div>
         </div>
       </ScrollArea>
-      <div className="p-6 pt-4 border-t flex flex-col sm:flex-row gap-2 justify-between">
+      <div className="p-6 pt-4 border-t flex flex-col sm:flex-row gap-2 justify-between mt-auto">
             <Button variant="secondary" onClick={handleReset} className="w-full sm:w-auto mb-2 sm:mb-0">
                 <RotateCcw className="mr-2 h-4 w-4"/>
                 Reset Filters

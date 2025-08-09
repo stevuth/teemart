@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, Store, LogOut, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, User, Store, LogOut, LayoutDashboard, Heart } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -19,15 +19,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 
 
 export function Header() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setSignupModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut(auth);
+    toast({ title: 'Logged Out', description: "You have been successfully logged out."})
   };
 
   const openLoginModal = () => {
@@ -50,6 +53,7 @@ export function Header() {
       openLoginModal();
     } else {
       // TODO: Navigate to sell page
+      toast({ title: 'Coming Soon!', description: 'The ability to sell products is coming soon.'})
     }
   }
 
@@ -68,10 +72,10 @@ export function Header() {
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
-              <Button onClick={handleSellClick}>
+              <Button onClick={handleSellClick} className="hidden sm:inline-flex">
                 Sell Product
               </Button>
-              <Button size="icon" aria-label="Cart">
+              <Button size="icon" variant="ghost" aria-label="Cart">
                 <ShoppingCart className="h-5 w-5" />
               </Button>
 
@@ -101,6 +105,11 @@ export function Header() {
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => toast({ title: 'Coming Soon!', description: 'Watchlist functionality is coming soon.'})}>
+                        <Heart className="mr-2 h-4 w-4" />
+                        <span>Watchlist</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
