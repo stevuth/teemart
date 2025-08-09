@@ -19,7 +19,7 @@ type ProductHeroCardProps = {
 }
 
 const placeholderImages = (hint: string = 'product') => [
-    `https://placehold.co/800x600/E2E8F0/4A5568?text=${hint.replace(/\s/g,'%20')}-1`,
+    `https://i.postimg.cc/qBNSw40W/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png`,
     `https://placehold.co/800x600/CBD5E0/4A5568?text=${hint.replace(/\s/g,'%20')}-2`,
     `https://placehold.co/800x600/A0AEC0/4A5568?text=${hint.replace(/\s/g,'%20')}-3`,
 ];
