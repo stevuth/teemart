@@ -26,8 +26,8 @@ export function Hero() {
           <p className="mt-4 text-lg sm:text-xl text-gray-200 mb-8 max-w-2xl">
             Your all-in-one Nigerian marketplace for phones, cars, electronics, furniture, and real estate properties. Start your journey now and find great deals or post your ad today!
           </p>
-          <div className="mt-8 flex flex-row items-center gap-4 max-w-lg">
-            <div className="relative w-full">
+          <div className="mt-8 flex flex-row items-center gap-2 max-w-lg">
+            <div className="relative flex-grow">
               <Input
                 type="search"
                 placeholder="Search for cars, phones, and more..."
@@ -35,7 +35,7 @@ export function Hero() {
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
-            <Button size="lg" className="h-12 text-base rounded-lg font-semibold px-8 w-auto">
+            <Button size="lg" className="h-12 text-base rounded-lg font-semibold px-4 sm:px-8 shrink-0">
               Search
             </Button>
           </div>
