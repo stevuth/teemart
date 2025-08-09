@@ -41,7 +41,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-gradient-to-t from-secondary via-background to-background border-t text-card-foreground">
+    <footer className="bg-secondary/40 border-t border-secondary text-card-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
             
@@ -58,7 +58,7 @@ export function Footer() {
                     <Link
                         key={social.name}
                         href={social.href}
-                        className="h-9 w-9 flex items-center justify-center rounded-full bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                        className="h-9 w-9 flex items-center justify-center rounded-full bg-background text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
                     >
                         <social.icon className="h-4 w-4" />
                         <span className="sr-only">{social.name}</span>
@@ -85,7 +85,7 @@ export function Footer() {
             </div>
             
             </div>
-            <div className="py-6 border-t">
+            <div className="py-6 border-t border-secondary">
               <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
             </div>
         </div>
