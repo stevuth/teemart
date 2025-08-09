@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from 'next/image';
@@ -25,7 +26,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
             alt={product.name}
             width={600}
             height={400}
-            className="w-full h-48 object-cover"
+            className="w-full h-36 sm:h-48 object-cover"
             data-ai-hint={product['data-ai-hint']}
           />
         </Link>
@@ -39,31 +40,31 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
           <Heart className={cn("h-4 w-4", inWatchlist ? "text-red-500 fill-current" : "text-foreground")} />
         </Button>
       </CardHeader>
-      <CardContent className="p-4 flex-grow">
+      <CardContent className="p-3 sm:p-4 flex-grow">
         <div className="flex justify-between items-start gap-2 mb-2">
-          <Badge variant="secondary">{product.category}</Badge>
-          <Badge variant="outline">{product.condition}</Badge>
+          <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+          <Badge variant="outline" className="text-xs">{product.condition}</Badge>
         </div>
-        <CardTitle className="text-lg font-bold leading-tight">
+        <CardTitle className="text-base font-bold leading-tight">
            <Link href={`/product/${product.id}`} className="hover:text-primary transition-colors">
             {product.name}
            </Link>
         </CardTitle>
       </CardContent>
-      <CardFooter className="p-4 pt-2 flex flex-col items-start gap-4">
+      <CardFooter className="p-3 sm:p-4 pt-2 flex flex-col items-start gap-3">
         <div>
-            <p className="text-xl font-bold text-primary">₦{product.price.toLocaleString()}</p>
-            <div className="flex items-center text-sm text-muted-foreground mt-1">
-              <MapPin className="h-4 w-4 mr-1.5" />
+            <p className="text-lg sm:text-xl font-bold text-primary">₦{product.price.toLocaleString()}</p>
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground mt-1">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5" />
               <span>{product.location}</span>
             </div>
         </div>
-        <div className="w-full flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1">
+        <div className="w-full flex flex-col xxs:flex-row gap-2">
+            <Button variant="outline" size="sm" className="flex-1 text-xs">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Chat
             </Button>
-            <Button size="sm" className="flex-1">
+            <Button size="sm" className="flex-1 text-xs">
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Buy
             </Button>
