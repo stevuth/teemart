@@ -2,15 +2,16 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { ImageCarousel } from './image-carousel';
 
 export function Hero() {
   return (
     <section 
-      className="w-full bg-contain bg-center bg-no-repeat pt-16 pb-12 sm:bg-cover sm:pt-32 sm:pb-28 relative"
-      style={{ backgroundImage: "url('https://i.postimg.cc/PrLZMxC0/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png')" }}
+      className="w-full pt-16 pb-12 sm:pt-32 sm:pb-28 relative"
     >
-      <div className="absolute inset-0 bg-black/50" />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <ImageCarousel />
+      <div className="absolute inset-0 bg-black/50 z-10" />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-tight">
             TeeMart — Nigeria's Classifieds for Cars, Property & More

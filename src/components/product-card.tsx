@@ -26,7 +26,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
             alt={product.name}
             width={600}
             height={400}
-            className="w-full h-28 object-cover"
+            className="w-full h-28 object-cover sm:h-40"
             data-ai-hint={product['data-ai-hint']}
           />
         </Link>
@@ -60,7 +60,7 @@ export function ProductCard({ product, inWatchlist, onWatchlistToggle }: Product
             </div>
         </div>
         <div className="w-full flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" size="sm" className="w-full whitespace-nowrap xxs:whitespace-normal">
+            <Button variant="outline" size="sm" className="w-full">
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Contact
             </Button>

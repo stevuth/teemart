@@ -1,0 +1,41 @@
+
+"use client"
+
+import React from 'react'
+import Image from 'next/image'
+import useEmblaCarousel from 'embla-carousel-react'
+import Autoplay from 'embla-carousel-autoplay'
+import Fade from 'embla-carousel-fade'
+import { cn } from '@/lib/utils'
+
+const images = [
+  { src: "https://placehold.co/1920x1080", alt: "Modern living room", "data-ai-hint": "modern living room" },
+  { src: "https://placehold.co/1920x1080", alt: "Sleek sports car on a city street", "data-ai-hint": "sleek car" },
+  { src: "https://placehold.co/1920x1080", alt: "Family enjoying a new home", "data-ai-hint": "happy family home" },
+]
+
+export function ImageCarousel() {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+    Autoplay({ delay: 5000, stopOnInteraction: false }),
+    Fade(),
+  ])
+
+  return (
+    <div className="absolute inset-0 overflow-hidden" ref={emblaRef}>
+      <div className="flex h-full">
+        {images.map((image, index) => (
+          <div className="relative flex-[0_0_100%] h-full" key={index}>
+            <Image
+              src={image.src}
+              alt={image.alt}
+              fill
+              className="object-cover"
+              priority={index === 0}
+              data-ai-hint={image['data-ai-hint']}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
