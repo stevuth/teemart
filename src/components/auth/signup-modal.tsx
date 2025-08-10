@@ -10,7 +10,7 @@ import { auth, db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore"; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -85,6 +85,9 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create an Account</DialogTitle>
+          <DialogDescription>
+            Fill in the details below to create your TeeMart account.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
