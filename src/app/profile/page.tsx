@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,23 +11,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { signOut, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, Briefcase, ShoppingBag, History, CreditCard, User } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, Edit, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { products, orders } from '@/lib/data';
+import { products, orders, locations } from '@/lib/data';
 import { ProductCard } from '@/components/product-card';
 import type { Order, OrderStatus } from '@/lib/types';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('Lagos');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -56,6 +60,15 @@ export default function ProfilePage() {
         });
       }
     }
+  }
+
+  const handleLocationSave = () => {
+    // Here you would typically save the location to your backend/DB
+    setIsEditingLocation(false);
+    toast({
+        title: "Location Updated",
+        description: `Your location has been set to ${currentLocation}.`
+    });
   }
 
   if (loading || !user) {
@@ -100,7 +113,6 @@ export default function ProfilePage() {
   }
 
   const activeListings = products.slice(0, 4);
-  const soldItems = products.slice(5, 7);
   const purchaseHistory = products.slice(8, 10);
   
   const enrichedOrders = useMemo(() => {
@@ -149,7 +161,30 @@ export default function ProfilePage() {
                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground pt-8 md:pt-0">
                     <div className="flex items-center gap-3">
                         <MapPin className="h-4 w-4 text-primary" />
-                        <span>Lagos, Nigeria</span>
+                        {isEditingLocation ? (
+                            <div className="flex items-center gap-2">
+                                <Select value={currentLocation} onValueChange={setCurrentLocation}>
+                                    <SelectTrigger className="h-9 w-48">
+                                        <SelectValue placeholder="Select location" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {locations.map(loc => (
+                                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Button size="icon" className="h-9 w-9" onClick={handleLocationSave}>
+                                    <Save className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ) : (
+                             <div className="flex items-center gap-2">
+                                <span>{currentLocation}, Nigeria</span>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsEditingLocation(true)}>
+                                    <Edit className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-3">
                         <CalendarDays className="h-4 w-4 text-primary" />
@@ -176,10 +211,9 @@ export default function ProfilePage() {
 
         <div>
             <Tabs defaultValue="active-listings">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
                     <TabsTrigger value="active-listings">Active Listings</TabsTrigger>
                     <TabsTrigger value="my-orders">My Orders</TabsTrigger>
-                    <TabsTrigger value="sold-items">Sold Items</TabsTrigger>
                     <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
                     <TabsTrigger value="reviews">Reviews</TabsTrigger>
                 </TabsList>
@@ -217,13 +251,6 @@ export default function ProfilePage() {
                             </div>
                         ))}
                     </div>
-                </TabsContent>
-
-                <TabsContent value="sold-items" className="mt-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {soldItems.map(product => <ProductCard key={product.id} product={product} />)}
-                    </div>
-                    <Button variant="link" className="mt-4">View all sold items <ChevronRight className="h-4 w-4 ml-1" /></Button>
                 </TabsContent>
 
                 <TabsContent value="purchase-history" className="mt-6">
@@ -282,3 +309,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
