@@ -13,8 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { categories, conditions, locations } from "@/lib/types";
+import { supabase } from "@/lib/supabase-client";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
@@ -30,6 +33,9 @@ type ProductFormValues = z.infer<typeof formSchema>;
 
 export default function SellPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -42,14 +48,75 @@ export default function SellPage() {
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: ProductFormValues) => {
-    // TODO: Implement actual submission logic (e.g., upload image, save to DB)
-    console.log(data);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (!user) {
+        toast({
+            title: "Authentication Error",
+            description: "You must be logged in to list a product.",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    const imageFile = data.image[0];
+    const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
+    
+    // 1. Upload image to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('product-images')
+        .upload(fileName, imageFile, {
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (uploadError) {
+        console.error("Image Upload Error: ", uploadError);
+        toast({
+            title: "Image Upload Failed",
+            description: "There was an error uploading your product image. Please try again.",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    // 2. Get public URL of the uploaded image
+    const { data: { publicUrl } } = supabase
+        .storage
+        .from('product-images')
+        .getPublicUrl(uploadData.path);
+        
+    // 3. Insert product into the database
+    const { error: insertError } = await supabase
+      .from('products')
+      .insert({
+        user_id: user.id,
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        category: data.category,
+        condition: data.condition,
+        location: data.location,
+        image_url: publicUrl,
+      });
+      
+    if (insertError) {
+        console.error("Database Insert Error: ", insertError);
+        toast({
+            title: "Listing Creation Failed",
+            description: "There was an error creating your listing. Please try again.",
+            variant: "destructive"
+        });
+        // Optional: delete the uploaded image if the db insert fails
+        await supabase.storage.from('product-images').remove([fileName]);
+        return;
+    }
+
     toast({
       title: "Listing Created!",
       description: "Your product has been successfully listed for sale.",
     });
     form.reset();
+    router.push(`/profile`);
   };
 
   return (
