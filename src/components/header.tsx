@@ -131,7 +131,9 @@ export function Header() {
               ) : (
                 <div className="flex items-center gap-2">
                    <Button onClick={handleSellClick} className="sm:hidden">Sell</Button>
-                   <Button onClick={openSignupModal}>Sign Up</Button>
+                   <Button onClick={openLoginModal} size="icon" variant="ghost" aria-label="Profile">
+                        <User className="h-5 w-5" />
+                   </Button>
                 </div>
               )}
             </div>
