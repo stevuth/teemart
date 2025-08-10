@@ -16,6 +16,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { conditions, locations, Condition, DatePostedOption, datePostedOptions, Category, categories } from "@/lib/types"
 import { X, RotateCcw } from "lucide-react"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion"
+import { cn } from "@/lib/utils"
+
 
 export type FilterValues = {
   priceRange: [number, number]
@@ -124,19 +127,41 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
           
           <div className="space-y-4">
             <Label className="text-base font-semibold">Location</Label>
-            <Select value={currentFilters.location} onValueChange={(value) => handleFilterChange({ location: value === "all" ? "" : value })}>
-              <SelectTrigger className="h-12 text-base">
-                <SelectValue placeholder="Select location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                {locations.map((loc) => (
-                  <SelectItem key={loc} value={loc}>
-                    {loc}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+             <Accordion type="single" collapsible>
+                <AccordionItem value="location">
+                    <AccordionTrigger className="h-12 text-base border rounded-md px-3 hover:no-underline">
+                        <span>{currentFilters.location || 'Select Location'}</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <ScrollArea className="h-60 mt-2 border rounded-md">
+                            <div className="p-2">
+                               <div
+                                    key="all-locations"
+                                    onClick={() => handleFilterChange({ location: '' })}
+                                    className={cn(
+                                        "p-2 rounded-md cursor-pointer hover:bg-accent",
+                                        !currentFilters.location && 'bg-accent'
+                                    )}
+                                >
+                                    All Locations
+                                </div>
+                                {locations.map((loc) => (
+                                    <div
+                                        key={loc}
+                                        onClick={() => handleFilterChange({ location: loc })}
+                                        className={cn(
+                                            "p-2 rounded-md cursor-pointer hover:bg-accent",
+                                            currentFilters.location === loc && 'bg-accent'
+                                        )}
+                                    >
+                                        {loc}
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
           </div>
           
           <div className="space-y-4">
