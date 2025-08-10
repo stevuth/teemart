@@ -76,7 +76,7 @@ export function Header() {
 
             <div className="flex items-center gap-2">
               <Button onClick={handleSellClick} className="hidden sm:inline-flex">
-                Sell Product
+                Sell
               </Button>
               <Button asChild size="icon" variant="ghost" aria-label="Cart">
                 <Link href="/cart">
