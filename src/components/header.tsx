@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, User, Store, LogOut, LayoutDashboard, Heart } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
+import { supabase } from '@/lib/supabase-client';
 import { LoginModal } from './auth/login-modal';
 import { SignupModal } from './auth/signup-modal';
 import {
@@ -32,7 +31,7 @@ export function Header() {
   const [isSignupModalOpen, setSignupModalOpen] = useState(false);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     toast({ title: 'Logged Out', description: "You have been successfully logged out."})
   };
 
@@ -59,6 +58,10 @@ export function Header() {
       toast({ title: 'Coming Soon!', description: 'The ability to sell products is coming soon.'})
     }
   }
+
+  const displayName = user?.user_metadata?.full_name;
+  const userEmail = user?.email;
+  const userAvatar = user?.user_metadata?.avatar_url;
 
   return (
     <>
@@ -96,17 +99,17 @@ export function Header() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                        <Avatar>
-                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-                        <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                        <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
+                        <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-sm font-medium leading-none">{displayName}</p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
+                          {userEmail}
                         </p>
                       </div>
                     </DropdownMenuLabel>

@@ -9,8 +9,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { signOut, sendEmailVerification } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase-client';
 import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -21,7 +20,7 @@ import { products, orders } from '@/lib/data';
 import { ProductCard } from '@/components/product-card';
 import type { Order, OrderStatus } from '@/lib/types';
 import Image from 'next/image';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 
@@ -43,17 +42,20 @@ export default function ProfilePage() {
 
   const handleResendVerification = async () => {
     if (user) {
-      try {
-        await sendEmailVerification(user);
-        toast({
-          title: "Verification Email Sent",
-          description: "Please check your inbox (and spam folder) for the verification link.",
-        });
-      } catch (error: any) {
+       const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email: user.email!,
+       });
+      if (error) {
         toast({
           title: "Error Sending Email",
           description: error.message,
           variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Verification Email Sent",
+          description: "Please check your inbox (and spam folder) for the verification link.",
         });
       }
     }
@@ -69,7 +71,7 @@ export default function ProfilePage() {
     );
   }
   
-  if (!user.emailVerified) {
+  if (user && !user.email_confirmed_at) {
     return (
        <div className="flex flex-col min-h-screen bg-background">
         <Header />
@@ -126,6 +128,9 @@ export default function ProfilePage() {
     }
   };
 
+  const displayName = user.user_metadata?.full_name;
+  const userAvatar = user.user_metadata?.avatar_url;
+  const creationTime = user.created_at;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -134,14 +139,14 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row items-start gap-8">
             <div className="flex-shrink-0 flex flex-col items-center md:items-start">
                 <Avatar className="h-32 w-32 mb-4 border-4 border-background ring-2 ring-primary">
-                    <AvatarImage src={user.photoURL || ''} alt={user.displayName || ''} />
-                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                    <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
+                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                 </Avatar>
                 <div className="text-center md:text-left">
-                    <h1 className="text-3xl font-bold">{user.displayName}</h1>
+                    <h1 className="text-3xl font-bold">{displayName}</h1>
                     <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
                         <p className="text-muted-foreground">TeeMart Seller</p>
-                        {user.emailVerified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
+                        {user.email_confirmed_at && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
                     </div>
                 </div>
             </div>
@@ -153,7 +158,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <CalendarDays className="h-4 w-4 text-primary" />
-                        <span>Member since {new Date(user.metadata.creationTime!).getFullYear()}</span>
+                        <span>Member since {creationTime ? new Date(creationTime).getFullYear() : ''}</span>
                     </div>
                      <div className="flex items-center gap-3">
                         <Star className="h-4 w-4 text-primary" />
@@ -165,7 +170,7 @@ export default function ProfilePage() {
                         <MessageSquare className="mr-2 h-4 w-4"/>
                         Messages
                     </Button>
-                    <Button variant="destructive" onClick={() => signOut(auth)} className="w-full sm:w-auto">
+                    <Button variant="destructive" onClick={() => supabase.auth.signOut()} className="w-full sm:w-auto">
                       Sign Out
                     </Button>
                 </div>
@@ -205,7 +210,7 @@ export default function ProfilePage() {
                                             </div>
                                              <div className="flex items-center gap-2">
                                                 <CalendarDays className="h-4 w-4" />
-                                                <span>Ordered on: {format(new Date(order.orderDate), 'PPP')}</span>
+                                                <span>Ordered on: {format(parseISO(order.orderDate), 'PPP')}</span>
                                             </div>
                                         </div>
                                     </div>

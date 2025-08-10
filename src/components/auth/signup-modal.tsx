@@ -4,9 +4,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore"; 
+import { supabase } from "@/lib/supabase-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -44,36 +42,30 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: SignupFormValues) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
-      
-      // These operations can be done in parallel
-      await Promise.all([
-        updateProfile(user, {
-          displayName: data.displayName
-        }),
-        setDoc(doc(db, "users", user.uid), {
-            displayName: data.displayName,
-            email: data.email,
-            phoneNumber: data.phoneNumber,
-            createdAt: new Date(),
-        }),
-        sendEmailVerification(user)
-      ]);
-      
-      toast({ 
-        title: "Account Created", 
-        description: "We've sent a verification email to your address. Please check your inbox." 
-      });
-      onClose();
-    } catch (error: any) {
-      console.error("Signup Failed Firebase Error:", error);
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          full_name: data.displayName,
+          phone: data.phoneNumber,
+        },
+        emailRedirectTo: `${location.origin}/auth/callback`,
+      }
+    });
+
+    if (error) {
       toast({
         title: "Signup Failed",
         description: error.message,
         variant: "destructive",
       });
+    } else {
+      toast({ 
+        title: "Account Created", 
+        description: "We've sent a verification email to your address. Please check your inbox." 
+      });
+      onClose();
     }
   };
 
