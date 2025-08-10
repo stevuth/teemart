@@ -2,6 +2,7 @@
 "use client"
 
 import Image from 'next/image';
+import Link from 'next/link';
 import type { Product } from '@/lib/types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -46,8 +47,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 </div>
 
                 <div className="mt-6 space-y-3">
-                     <Button size="lg" className="w-full text-lg">
-                        <ShoppingCart className="mr-2 h-5 w-5" /> Buy Now
+                     <Button size="lg" className="w-full text-lg" asChild>
+                        <Link href="/cart">
+                            <ShoppingCart className="mr-2 h-5 w-5" /> Buy Now
+                        </Link>
                     </Button>
                     <Button size="lg" variant="default" className="w-full text-lg">
                         <MessageCircle className="mr-2 h-5 w-5" /> Contact Seller

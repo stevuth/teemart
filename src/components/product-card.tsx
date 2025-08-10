@@ -52,9 +52,11 @@ export function ProductCard({ product }: ProductCardProps) {
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Contact
             </Button>
-            <Button size="sm" variant="default" className="w-full">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Buy
+            <Button size="sm" variant="default" asChild className="w-full">
+                <Link href="/cart">
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Buy
+                </Link>
             </Button>
         </div>
       </CardFooter>
