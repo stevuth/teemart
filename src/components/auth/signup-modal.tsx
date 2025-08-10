@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore"; 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -46,12 +47,23 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, {
+      const user = userCredential.user;
+      
+      if (user) {
+        await updateProfile(user, {
           displayName: data.displayName
         });
-        await sendEmailVerification(userCredential.user);
+
+        await setDoc(doc(db, "users", user.uid), {
+            displayName: data.displayName,
+            email: data.email,
+            phoneNumber: data.phoneNumber,
+            createdAt: new Date(),
+        });
+
+        await sendEmailVerification(user);
       }
+
       toast({ 
         title: "Account Created", 
         description: "We've sent a verification email to your address. Please check your inbox." 
