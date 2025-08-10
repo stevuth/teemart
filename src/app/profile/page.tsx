@@ -101,7 +101,6 @@ export default function ProfilePage() {
   }
 
   const activeListings = products.slice(0, 4);
-  const soldItems = products.slice(4, 6);
   const purchaseHistory = products.slice(8, 10);
   
   const enrichedOrders = useMemo(() => {
@@ -177,10 +176,9 @@ export default function ProfilePage() {
 
         <div>
             <Tabs defaultValue="active-listings">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
                     <TabsTrigger value="active-listings">Active Listings</TabsTrigger>
                     <TabsTrigger value="my-orders">My Orders</TabsTrigger>
-                    <TabsTrigger value="sold-items">Sold Items</TabsTrigger>
                     <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
                     <TabsTrigger value="reviews">Reviews</TabsTrigger>
                 </TabsList>
@@ -218,13 +216,6 @@ export default function ProfilePage() {
                             </div>
                         ))}
                     </div>
-                </TabsContent>
-
-                <TabsContent value="sold-items" className="mt-6">
-                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {soldItems.map(product => <ProductCard key={product.id} product={product} />)}
-                    </div>
-                    <Button variant="link" className="mt-4">View all sold items <ChevronRight className="h-4 w-4 ml-1" /></Button>
                 </TabsContent>
 
                 <TabsContent value="purchase-history" className="mt-6">
