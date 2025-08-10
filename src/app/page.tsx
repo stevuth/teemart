@@ -57,8 +57,8 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <ProductHeroCarousel products={featuredProducts} />
       <SearchSection onSearch={setGlobalSearchTerm} />
+      <ProductHeroCarousel products={featuredProducts} />
       <main className="flex-grow container mx-auto px-0 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 lg:gap-8">
           <aside className="hidden lg:block lg:col-span-1">

@@ -23,7 +23,7 @@ export function ProductHeroCarousel({ products }: ProductHeroCarouselProps) {
   );
 
   return (
-    <section className="w-full bg-secondary/30 mt-16">
+    <section className="w-full bg-secondary/30">
         <Carousel
           opts={{
             align: "start",
