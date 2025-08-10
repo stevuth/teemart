@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,7 +28,6 @@ type LoginModalProps = {
 
 export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProps) {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,8 +36,9 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
     },
   });
 
+  const { isSubmitting } = form.formState;
+
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
       toast({ title: "Login Successful", description: "Welcome back!" });
@@ -50,8 +49,6 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-        setIsLoading(false);
     }
   };
 
@@ -92,8 +89,8 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
             </Button>
           </form>
         </Form>

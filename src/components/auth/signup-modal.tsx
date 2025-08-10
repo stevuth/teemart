@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -32,7 +31,6 @@ type SignupModalProps = {
 
 export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalProps) {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,27 +41,27 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
     },
   });
 
+  const { isSubmitting } = form.formState;
+
   const onSubmit = async (data: SignupFormValues) => {
-    setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       
-      if (user) {
-        await updateProfile(user, {
+      // These operations can be done in parallel
+      await Promise.all([
+        updateProfile(user, {
           displayName: data.displayName
-        });
-
-        await setDoc(doc(db, "users", user.uid), {
+        }),
+        setDoc(doc(db, "users", user.uid), {
             displayName: data.displayName,
             email: data.email,
             phoneNumber: data.phoneNumber,
             createdAt: new Date(),
-        });
-
-        await sendEmailVerification(user);
-      }
-
+        }),
+        sendEmailVerification(user)
+      ]);
+      
       toast({ 
         title: "Account Created", 
         description: "We've sent a verification email to your address. Please check your inbox." 
@@ -75,8 +73,6 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-        setIsLoading(false);
     }
   };
 
@@ -143,8 +139,8 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Account"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Account"}
             </Button>
           </form>
         </Form>
