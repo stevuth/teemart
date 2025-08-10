@@ -36,7 +36,7 @@ export default function CartPage() {
                                 {cartItems.map(item => (
                                     <div key={item.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-4">
-                                            <Image src={item.image} alt={item.name} width={100} height={100} className="rounded-md object-cover" />
+                                            <Image src={item.image} alt={item.name} width={100} height={100} className="rounded-md object-cover" data-ai-hint={item['data-ai-hint']} />
                                             <div>
                                                 <p className="font-semibold">{item.name}</p>
                                                 <p className="text-muted-foreground">₦{item.price.toLocaleString()}</p>
