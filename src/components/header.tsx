@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, User, Store, LogOut, LayoutDashboard, Heart } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -27,12 +28,14 @@ export function Header() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { cartCount } = useCart();
+  const router = useRouter();
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setSignupModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({ title: 'Logged Out', description: "You have been successfully logged out."})
+    router.push('/');
   };
 
   const openLoginModal = () => {
@@ -54,8 +57,7 @@ export function Header() {
     if (!user) {
       openLoginModal();
     } else {
-      // TODO: Navigate to sell page
-      toast({ title: 'Coming Soon!', description: 'The ability to sell products is coming soon.'})
+      router.push('/sell');
     }
   }
 
