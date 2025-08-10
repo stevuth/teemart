@@ -1,3 +1,4 @@
+
 export type Product = {
   id: string;
   name: string;
@@ -28,3 +29,14 @@ export const locations: string[] = [
 
 export const datePostedOptions = ['any', 'today', 'last7days', 'last30days'] as const;
 export type DatePostedOption = typeof datePostedOptions[number];
+
+export const orderStatuses = ['Processing', 'Completed', 'Canceled'] as const;
+export type OrderStatus = (typeof orderStatuses)[number];
+
+export type Order = {
+  id: string;
+  productId: string;
+  buyerName: string;
+  orderDate: string; // ISO 8601 date string
+  status: OrderStatus;
+};
