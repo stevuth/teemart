@@ -6,8 +6,8 @@ import { getFirestore } from "firebase/firestore";
 const firebaseConfig = {
   projectId: "teemart-marketplace",
   appId: "1:547173440085:web:e122b2c4ecf75d127b92dc",
-  storageBucket: "teemart-marketplace.firebasestorage.app",
-  apiKey: "AIzaSyDcacEfz-dG0BE5go_i8HeP5V_kSpQVDa0",
+  storageBucket: "teemart-marketplace.appspot.com",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "teemart-marketplace.firebaseapp.com",
   messagingSenderId: "547173440085",
 };
