@@ -44,13 +44,6 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: SignupFormValues) => {
-    console.log("Submitting with:", {
-      displayName: data.displayName,
-      email: data.email,
-      password: data.password, // Be careful logging passwords in production
-      phoneNumber: data.phoneNumber
-    });
-
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
