@@ -4,7 +4,6 @@
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +18,7 @@ export default function CartPage() {
   const total = subtotal + shipping;
 
   return (
-    <div className="flex flex-col min-h-screen bg-secondary/20">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center gap-4 mb-8">
@@ -28,63 +27,60 @@ export default function CartPage() {
         </div>
         
         {cartItems.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16 items-start">
                 <div className="lg:col-span-2">
-                    <Card>
-                        <CardContent className="p-0">
-                            <div className="divide-y">
-                                {cartItems.map(item => (
-                                    <div key={item.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <Image src={item.image} alt={item.name} width={100} height={100} className="rounded-md object-cover" data-ai-hint={item['data-ai-hint']} />
-                                            <div>
-                                                <p className="font-semibold">{item.name}</p>
-                                                <p className="text-muted-foreground">₦{item.price.toLocaleString()}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4 ml-auto sm:ml-0">
-                                            <div className="flex items-center gap-2 border rounded-md p-1">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
-                                                    <Minus className="h-4 w-4"/>
-                                                </Button>
-                                                <span>{item.quantity}</span>
-                                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                                                    <Plus className="h-4 w-4"/>
-                                                </Button>
-                                            </div>
-                                            <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
-                                                <Trash2 className="h-5 w-5 text-destructive" />
-                                            </Button>
+                    <div className="border-b">
+                        {cartItems.map((item, index) => (
+                            <div key={item.id}>
+                                <div className="py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                    <div className="flex items-center gap-6 flex-1">
+                                        <Image src={item.image} alt={item.name} width={120} height={120} className="rounded-lg object-cover" data-ai-hint={item['data-ai-hint']} />
+                                        <div className="flex-grow">
+                                            <p className="font-semibold text-lg">{item.name}</p>
+                                            <p className="text-muted-foreground mt-1">₦{item.price.toLocaleString()}</p>
                                         </div>
                                     </div>
-                                ))}
+                                    <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-center">
+                                        <div className="flex items-center gap-2 border rounded-full p-1">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
+                                                <Minus className="h-4 w-4"/>
+                                            </Button>
+                                            <span className="w-6 text-center font-medium">{item.quantity}</span>
+                                             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                                                <Plus className="h-4 w-4"/>
+                                            </Button>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full group" onClick={() => removeFromCart(item.id)}>
+                                            <Trash2 className="h-5 w-5 text-muted-foreground group-hover:text-destructive transition-colors" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                {index < cartItems.length - 1 && <Separator />}
                             </div>
-                        </CardContent>
-                    </Card>
-                    <Button variant="outline" className="mt-4" onClick={clearCart}>Clear Cart</Button>
+                        ))}
+                    </div>
+                    <Button variant="outline" className="mt-6" onClick={clearCart}>Clear Cart</Button>
                 </div>
                 <div className="lg:col-span-1">
-                    <Card className="sticky top-24">
-                        <CardHeader>
-                            <CardTitle>Order Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between">
+                    <div className="sticky top-24 p-6 rounded-lg bg-secondary/30">
+                        <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                        <div className="space-y-4">
+                            <div className="flex justify-between text-muted-foreground">
                                 <span>Subtotal</span>
                                 <span>₦{subtotal.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between text-muted-foreground">
                                 <span>Shipping</span>
                                 <span>₦{shipping.toLocaleString()}</span>
                             </div>
                             <Separator />
-                            <div className="flex justify-between font-bold text-lg">
+                            <div className="flex justify-between font-bold text-xl">
                                 <span>Total</span>
                                 <span>₦{total.toLocaleString()}</span>
                             </div>
                             <Button className="w-full" size="lg">Proceed to Checkout</Button>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
             </div>
         ) : (
