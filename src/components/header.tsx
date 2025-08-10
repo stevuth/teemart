@@ -130,7 +130,6 @@ export function Header() {
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center gap-2">
-                   <Button variant="secondary" onClick={handleSellClick} className="hidden sm:inline-flex">Sell</Button>
                    <Button onClick={handleSellClick} className="sm:hidden">Sell</Button>
                    <Button onClick={openSignupModal}>Sign Up</Button>
                 </div>
