@@ -9,7 +9,6 @@ import { MapPin, MessageCircle, Phone, ShieldCheck, ShoppingCart } from 'lucide-
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useCart } from '@/hooks/use-cart';
-import { useRouter } from 'next/navigation';
 
 type ProductDetailsProps = {
   product: Product;
@@ -17,11 +16,9 @@ type ProductDetailsProps = {
 
 export function ProductDetails({ product }: ProductDetailsProps) {
   const { addToCart } = useCart();
-  const router = useRouter();
 
   const handleBuyClick = () => {
     addToCart(product);
-    router.push('/cart');
   };
 
   return (

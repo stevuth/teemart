@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, MessageCircle, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
-import { useRouter } from 'next/navigation';
 
 type ProductCardProps = {
   product: Product;
@@ -17,11 +16,9 @@ type ProductCardProps = {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const router = useRouter();
 
   const handleBuyClick = () => {
     addToCart(product);
-    router.push('/cart');
   };
 
   return (
