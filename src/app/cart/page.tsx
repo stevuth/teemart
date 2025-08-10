@@ -62,7 +62,7 @@ export default function CartPage() {
                     <Button variant="outline" className="mt-6" onClick={clearCart}>Clear Cart</Button>
                 </div>
                 <div className="lg:col-span-1">
-                    <div className="sticky top-24 p-6 rounded-lg bg-secondary/30">
+                    <div className="sticky top-24 p-6 rounded-lg bg-background border">
                         <h2 className="text-xl font-bold mb-4">Order Summary</h2>
                         <div className="space-y-4">
                             <div className="flex justify-between text-muted-foreground">
