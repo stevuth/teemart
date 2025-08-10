@@ -41,14 +41,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-secondary/40 text-card-foreground clip-wave pt-24 -mt-16">
-        <svg width="0" height="0">
-          <defs>
-            <clipPath id="wave" clipPathUnits="objectBoundingBox">
-              <path d="M0,0.2 C0.1,0.1,0.25,0,0.5,0 S0.9,0.1,1,0.2 V1 H0 Z" />
-            </clipPath>
-          </defs>
-        </svg>
+    <footer className="bg-secondary text-card-foreground border-t">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
             

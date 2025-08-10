@@ -67,7 +67,4 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .clip-wave {
-    clip-path: url(#wave);
-  }
 }
