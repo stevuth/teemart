@@ -28,12 +28,12 @@ export function SearchSection({ onSearch }: SearchSectionProps) {
                             <Input
                                 type="search"
                                 placeholder="Search for cars, phones, and more..."
-                                className="w-full border-none bg-transparent pl-10 focus-visible:ring-0 focus-visible:ring-offset-0 h-12 text-base"
+                                className="w-full border-none bg-transparent pl-10 focus-visible:ring-0 focus-visible:ring-offset-0 h-11 text-base"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Button type="submit" size="lg" className="px-6">
+                        <Button type="submit" size="default" className="px-6">
                             <Search className="h-5 w-5 sm:hidden" />
                             <span className="hidden sm:inline">Search</span>
                         </Button>
