@@ -100,7 +100,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
 
   return (
     <div className="pt-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 px-4 sm:px-0">
             <h1 className="text-2xl font-bold tracking-tight">Used Products For Sale</h1>
             <div className="lg:hidden">
               <Sheet open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
@@ -123,25 +123,23 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
         </div>
 
         {filtersActive && (
-            <div className="mb-4 flex items-center gap-2 text-sm">
+            <div className="mb-4 flex items-center gap-2 text-sm px-4 sm:px-0">
                 <span>{filteredProducts.length} results found.</span>
                 <Button variant="link" size="sm" onClick={onClearFilters} className="p-0 h-auto">Clear filters</Button>
             </div>
         )}
         
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-6">
             {filteredProducts.map(product => (
               <ProductCard
                 key={product.id}
                 product={product}
-                inWatchlist={watchlist.has(product.id)}
-                onWatchlistToggle={toggleWatchlist}
               />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 border-2 border-dashed rounded-lg">
+          <div className="text-center py-16 border-2 border-dashed rounded-lg mx-4 sm:mx-0">
             <h3 className="text-xl font-medium text-muted-foreground">No products found</h3>
             <p className="text-muted-foreground mt-2">Try adjusting your filters or clearing them to see all products.</p>
             <Button onClick={onClearFilters} className="mt-4">Clear All Filters</Button>

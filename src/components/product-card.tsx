@@ -15,7 +15,7 @@ type ProductCardProps = {
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg">
+    <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg">
       <CardHeader className="p-0 relative">
         <Link href={`/product/${product.id}`} aria-label={product.name}>
           <Image
@@ -23,7 +23,7 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             width={600}
             height={400}
-            className="w-full h-28 object-cover sm:h-40"
+            className="w-full h-32 object-cover sm:h-40"
             data-ai-hint={product['data-ai-hint']}
           />
         </Link>
