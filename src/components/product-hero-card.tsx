@@ -14,7 +14,7 @@ type ProductHeroCardProps = {
 export function ProductHeroCard({ product }: ProductHeroCardProps) {
 
   return (
-    <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[24/9] bg-secondary text-white">
+    <div className="relative w-full aspect-[21/9] bg-secondary text-white">
         <Image
             src={product.image}
             alt={product.name}
