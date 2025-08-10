@@ -8,12 +8,22 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, MessageCircle, ShoppingCart } from 'lucide-react';
+import { useCart } from '@/hooks/use-cart';
+import { useRouter } from 'next/navigation';
 
 type ProductCardProps = {
   product: Product;
 };
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  const handleBuyClick = () => {
+    addToCart(product);
+    router.push('/cart');
+  };
+
   return (
     <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg">
       <CardHeader className="p-0 relative">
@@ -52,11 +62,9 @@ export function ProductCard({ product }: ProductCardProps) {
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Contact
             </Button>
-            <Button size="sm" variant="default" asChild className="w-full">
-                <Link href="/cart">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Buy
-                </Link>
+            <Button size="sm" variant="default" onClick={handleBuyClick} className="w-full">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Buy
             </Button>
         </div>
       </CardFooter>

@@ -20,11 +20,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/hooks/use-cart';
+import { Badge } from './ui/badge';
 
 
 export function Header() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { cartCount } = useCart();
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setSignupModalOpen] = useState(false);
 
@@ -75,8 +78,17 @@ export function Header() {
               <Button onClick={handleSellClick} className="hidden sm:inline-flex">
                 Sell Product
               </Button>
-              <Button size="icon" variant="ghost" aria-label="Cart">
-                <ShoppingCart className="h-5 w-5" />
+              <Button asChild size="icon" variant="ghost" aria-label="Cart">
+                <Link href="/cart">
+                  <div className="relative">
+                    <ShoppingCart className="h-5 w-5" />
+                    {cartCount > 0 && (
+                      <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </div>
+                </Link>
               </Button>
 
               {user ? (

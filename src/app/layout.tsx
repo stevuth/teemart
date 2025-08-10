@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
+import { CartProvider } from '@/contexts/cart-context';
 
 export const metadata: Metadata = {
   title: 'TeeMart Marketplace',
@@ -23,8 +24,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-secondary/20">
         <AuthProvider>
-          {children}
-          <Toaster />
+          <CartProvider>
+            {children}
+            <Toaster />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

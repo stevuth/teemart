@@ -6,16 +6,13 @@ import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
-
-// Dummy data for cart items
-const cartItems = [
-  // { id: '1', name: '2018 Toyota Corolla', price: 6800000, quantity: 1, image: 'https://placehold.co/150x100' },
-  // { id: '2', name: 'Apple iPhone 12 Pro', price: 350000, quantity: 1, image: 'https://placehold.co/150x100' },
-];
+import { useCart } from '@/hooks/use-cart';
+import Image from 'next/image';
 
 export default function CartPage() {
+  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = cartItems.length > 0 ? 5000 : 0;
@@ -36,10 +33,35 @@ export default function CartPage() {
                     <Card>
                         <CardContent className="p-0">
                             <div className="divide-y">
-                                {/* Cart items would be mapped here */}
+                                {cartItems.map(item => (
+                                    <div key={item.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <Image src={item.image} alt={item.name} width={100} height={100} className="rounded-md object-cover" />
+                                            <div>
+                                                <p className="font-semibold">{item.name}</p>
+                                                <p className="text-muted-foreground">₦{item.price.toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 ml-auto sm:ml-0">
+                                            <div className="flex items-center gap-2 border rounded-md p-1">
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
+                                                    <Minus className="h-4 w-4"/>
+                                                </Button>
+                                                <span>{item.quantity}</span>
+                                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                                                    <Plus className="h-4 w-4"/>
+                                                </Button>
+                                            </div>
+                                            <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)}>
+                                                <Trash2 className="h-5 w-5 text-destructive" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>
+                    <Button variant="outline" className="mt-4" onClick={clearCart}>Clear Cart</Button>
                 </div>
                 <div className="lg:col-span-1">
                     <Card className="sticky top-24">

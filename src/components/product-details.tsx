@@ -2,19 +2,28 @@
 "use client"
 
 import Image from 'next/image';
-import Link from 'next/link';
 import type { Product } from '@/lib/types';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { MapPin, MessageCircle, Phone, ShieldCheck, ShoppingCart, Tag } from 'lucide-react';
+import { MapPin, MessageCircle, Phone, ShieldCheck, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useCart } from '@/hooks/use-cart';
+import { useRouter } from 'next/navigation';
 
 type ProductDetailsProps = {
   product: Product;
 };
 
 export function ProductDetails({ product }: ProductDetailsProps) {
+  const { addToCart } = useCart();
+  const router = useRouter();
+
+  const handleBuyClick = () => {
+    addToCart(product);
+    router.push('/cart');
+  };
+
   return (
     <div className="bg-card rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -47,10 +56,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 </div>
 
                 <div className="mt-6 space-y-3">
-                     <Button size="lg" className="w-full text-lg" asChild>
-                        <Link href="/cart">
-                            <ShoppingCart className="mr-2 h-5 w-5" /> Buy Now
-                        </Link>
+                     <Button size="lg" className="w-full text-lg" onClick={handleBuyClick}>
+                        <ShoppingCart className="mr-2 h-5 w-5" /> Buy Now
                     </Button>
                     <Button size="lg" variant="default" className="w-full text-lg">
                         <MessageCircle className="mr-2 h-5 w-5" /> Contact Seller
