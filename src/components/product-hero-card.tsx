@@ -19,7 +19,7 @@ export function ProductHeroCard({ product }: ProductHeroCardProps) {
             src={product.image}
             alt={product.name}
             fill
-            className="object-contain"
+            className="object-cover"
             priority
             data-ai-hint={product['data-ai-hint']}
         />
