@@ -72,6 +72,13 @@ export default function ProfilePage() {
       fetchListings();
     }
   }, [user, toast]);
+
+  const enrichedOrders = useMemo(() => {
+    // This part will need to be updated to fetch products for orders from DB
+    return staticOrders.map(order => {
+        return { ...order, product: { name: 'Product Name', image: 'https://placehold.co/80x80' } };
+    });
+  }, []);
   
   const getInitials = (name?: string | null) => {
     if (!name) return 'U';
@@ -140,13 +147,6 @@ export default function ProfilePage() {
        </div>
     )
   }
-  
-  const enrichedOrders = useMemo(() => {
-    // This part will need to be updated to fetch products for orders from DB
-    return staticOrders.map(order => {
-        return { ...order, product: { name: 'Product Name', image: 'https://placehold.co/80x80' } };
-    });
-  }, []);
 
   const getStatusBadgeClass = (status: OrderStatus) => {
     switch (status) {
