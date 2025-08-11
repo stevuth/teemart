@@ -33,7 +33,7 @@ export default function Home() {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", deliveryFee, user_id')
         .order('posted_date', { ascending: false });
 
       if (error) {

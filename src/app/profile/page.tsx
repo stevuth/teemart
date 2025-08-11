@@ -45,7 +45,7 @@ export default function ProfilePage() {
         setListingsLoading(true);
         const { data, error } = await supabase
           .from('products')
-          .select('*')
+          .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", deliveryFee, user_id')
           .eq('user_id', user.id)
           .order('posted_date', { ascending: false });
 

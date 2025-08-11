@@ -23,7 +23,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", deliveryFee, user_id')
         .eq('id', params.id)
         .single();
       
@@ -56,7 +56,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <div>
                   <Skeleton className="w-full aspect-video rounded-lg" />
                   <div className="grid grid-cols-5 gap-2 mt-4">
-                    {[...Array(4)].map(i => <Skeleton key={i} className="aspect-square rounded-md" />)}
+                    {[...Array(4)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-md" />)}
                   </div>
                 </div>
                 <div className="space-y-4">
