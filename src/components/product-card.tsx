@@ -20,13 +20,19 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleBuyClick = () => {
     addToCart(product);
   };
+  
+  const displayImage = Array.isArray(product.image) && product.image.length > 0
+    ? product.image[0]
+    : typeof product.image === 'string'
+    ? product.image
+    : 'https://placehold.co/600x400';
 
   return (
     <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg">
       <CardHeader className="p-0 relative">
         <Link href={`/product/${product.id}`} aria-label={product.name}>
           <Image
-            src={product.image}
+            src={displayImage}
             alt={product.name}
             width={600}
             height={400}

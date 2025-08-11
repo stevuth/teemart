@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useState } from 'react';
 import Image from 'next/image';
 import type { Product } from '@/lib/types';
 import { Button } from './ui/button';
@@ -9,6 +10,7 @@ import { MapPin, MessageCircle, Phone, ShieldCheck, ShoppingCart } from 'lucide-
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useCart } from '@/hooks/use-cart';
+import { cn } from '@/lib/utils';
 
 type ProductDetailsProps = {
   product: Product;
@@ -16,6 +18,10 @@ type ProductDetailsProps = {
 
 export function ProductDetails({ product }: ProductDetailsProps) {
   const { addToCart } = useCart();
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const images = Array.isArray(product.image) ? product.image : [product.image];
+  const selectedImage = images[selectedImageIndex] || 'https://placehold.co/600x400';
 
   const handleBuyClick = () => {
     addToCart(product);
@@ -24,15 +30,40 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   return (
     <div className="bg-card rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Product Image */}
-            <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
-                <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={product['data-ai-hint']}
-                />
+            {/* Product Image Gallery */}
+            <div>
+                <div className="relative aspect-video rounded-lg overflow-hidden">
+                    <Image
+                        src={selectedImage}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        data-ai-hint={product['data-ai-hint']}
+                        key={selectedImageIndex} // force re-render on image change for transition
+                    />
+                </div>
+                {images.length > 1 && (
+                    <div className="grid grid-cols-5 gap-2 mt-4">
+                        {images.map((img, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setSelectedImageIndex(index)}
+                                className={cn(
+                                    "relative aspect-square rounded-md overflow-hidden transition-all",
+                                    "ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                                    selectedImageIndex === index ? "ring-2 ring-primary" : "opacity-70 hover:opacity-100"
+                                )}
+                            >
+                                <Image
+                                    src={img}
+                                    alt={`Product thumbnail ${index + 1}`}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Product Info */}

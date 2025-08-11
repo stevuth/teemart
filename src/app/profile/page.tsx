@@ -200,7 +200,7 @@ export default function ProfilePage() {
                         {enrichedOrders.map(order => (
                             <div key={order.id} className="border rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
                                 <div className="flex items-center gap-4">
-                                    <Image src={order.product!.image} alt={order.product!.name} width={80} height={80} className="rounded-md object-cover" data-ai-hint={order.product!['data-ai-hint']} />
+                                    <Image src={Array.isArray(order.product!.image) ? order.product!.image[0] : order.product!.image} alt={order.product!.name} width={80} height={80} className="rounded-md object-cover" data-ai-hint={order.product!['data-ai-hint']} />
                                     <div>
                                         <p className="font-semibold text-lg">{order.product!.name}</p>
                                         <div className="text-sm text-muted-foreground mt-1 space-y-1">

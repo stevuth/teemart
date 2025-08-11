@@ -34,7 +34,7 @@ export default function CartPage() {
                             <div key={item.id}>
                                 <div className="py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                     <div className="flex items-center gap-6 flex-1">
-                                        <Image src={item.image} alt={item.name} width={120} height={120} className="rounded-lg object-cover" data-ai-hint={item['data-ai-hint']} />
+                                        <Image src={Array.isArray(item.image) ? item.image[0] : item.image} alt={item.name} width={120} height={120} className="rounded-lg object-cover" data-ai-hint={item['data-ai-hint']} />
                                         <div className="flex-grow">
                                             <p className="font-semibold text-lg">{item.name}</p>
                                             <p className="text-muted-foreground mt-1">₦{item.price.toLocaleString()}</p>

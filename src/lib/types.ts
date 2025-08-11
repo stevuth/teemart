@@ -3,7 +3,7 @@ export type Product = {
   id: string;
   name: string;
   price: number;
-  image: string;
+  image: string[] | string; // Allow for array of images or a single one for existing data
   category: Category;
   location: string;
   condition: Condition;

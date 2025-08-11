@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -18,6 +18,12 @@ import { categories, conditions, locations } from "@/lib/types";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Image from "next/image";
+import { X } from "lucide-react";
+
+const MAX_FILES = 5;
+const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
 
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
@@ -27,7 +33,13 @@ const formSchema = z.object({
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
-  image: z.any().refine(files => files?.length === 1, "Product image is required."),
+  images: z.array(z.instanceof(File))
+    .min(1, "At least one image is required.")
+    .max(MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
+    .refine(
+      (files) => files.every((file) => file.size <= MAX_FILE_SIZE),
+      `Each file size must be less than 3MB.`
+    ),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
@@ -36,6 +48,7 @@ export default function SellPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
@@ -43,10 +56,31 @@ export default function SellPage() {
       name: "",
       description: "",
       price: 0,
+      images: [],
     },
   });
 
   const { isSubmitting } = form.formState;
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const currentImages = form.getValues('images') || [];
+    const combined = [...currentImages, ...files].slice(0, MAX_FILES);
+
+    form.setValue('images', combined, { shouldValidate: true });
+
+    const newPreviews = combined.map(file => URL.createObjectURL(file));
+    setImagePreviews(newPreviews);
+  };
+  
+  const removeImage = (index: number) => {
+    const currentImages = form.getValues('images') || [];
+    const updatedImages = currentImages.filter((_, i) => i !== index);
+    form.setValue('images', updatedImages, { shouldValidate: true });
+
+    const updatedPreviews = updatedImages.map(file => URL.createObjectURL(file));
+    setImagePreviews(updatedPreviews);
+  }
 
   const onSubmit = async (data: ProductFormValues) => {
     if (!user) {
@@ -58,31 +92,37 @@ export default function SellPage() {
         return;
     }
 
-    const imageFile = data.image[0];
-    const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
-    
-    const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('product-images')
-        .upload(fileName, imageFile, {
-            cacheControl: '3600',
-            upsert: false
-        });
+    const imageUrls: string[] = [];
+    const uploadedFilePaths: string[] = [];
 
-    if (uploadError) {
-        console.error("Image Upload Error: ", uploadError);
-        toast({
-            title: "Image Upload Failed",
-            description: "There was an error uploading your product image. Please try again.",
-            variant: "destructive"
-        });
-        return;
+    for (const imageFile of data.images) {
+        const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
+        const { data: uploadData, error: uploadError } = await supabase
+            .storage
+            .from('product-images')
+            .upload(fileName, imageFile, {
+                cacheControl: '3600',
+                upsert: false
+            });
+        
+        if (uploadError) {
+             console.error("Image Upload Error: ", uploadError);
+             toast({
+                title: "Image Upload Failed",
+                description: `Error uploading ${imageFile.name}. Please try again.`,
+                variant: "destructive"
+             });
+             // Clean up already uploaded files if one fails
+             if (uploadedFilePaths.length > 0) {
+                await supabase.storage.from('product-images').remove(uploadedFilePaths);
+             }
+             return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
+        imageUrls.push(publicUrl);
+        uploadedFilePaths.push(uploadData.path);
     }
-
-    const { data: { publicUrl } } = supabase
-        .storage
-        .from('product-images')
-        .getPublicUrl(uploadData.path);
         
     const { error: insertError } = await supabase
       .from('products')
@@ -94,7 +134,7 @@ export default function SellPage() {
         category: data.category,
         condition: data.condition,
         location: data.location,
-        image_url: publicUrl,
+        image_url: imageUrls,
         delivery_fee: data.deliveryFee || null,
       });
       
@@ -105,7 +145,7 @@ export default function SellPage() {
             description: "There was an error creating your listing. Please try again.",
             variant: "destructive"
         });
-        await supabase.storage.from('product-images').remove([fileName]);
+        await supabase.storage.from('product-images').remove(uploadedFilePaths);
         return;
     }
 
@@ -114,6 +154,7 @@ export default function SellPage() {
       description: "Your product has been successfully listed for sale.",
     });
     form.reset();
+    setImagePreviews([]);
     router.push(`/profile`);
   };
 
@@ -253,24 +294,45 @@ export default function SellPage() {
                   
                   <FormField
                     control={form.control}
-                    name="image"
-                    render={({ field: { value, onChange, ...fieldProps } }) => (
+                    name="images"
+                    render={() => (
                         <FormItem>
-                            <FormLabel>Product Image</FormLabel>
-                            <FormControl>
+                            <FormLabel>Product Images</FormLabel>
+                             <FormControl>
                                 <Input 
-                                    {...fieldProps} 
                                     type="file"
                                     accept="image/png, image/jpeg, image/webp" 
-                                    onChange={(event) => {
-                                        onChange(event.target.files && event.target.files);
-                                    }}
+                                    multiple
+                                    onChange={handleImageChange}
+                                    disabled={imagePreviews.length >= MAX_FILES}
                                 />
                             </FormControl>
+                            <FormDescription>
+                                You can upload up to {MAX_FILES} images. Max 3MB each.
+                            </FormDescription>
                             <FormMessage />
                         </FormItem>
                     )}
-                    />
+                  />
+
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                        {imagePreviews.map((src, index) => (
+                            <div key={index} className="relative aspect-square">
+                                <Image src={src} alt={`Preview ${index + 1}`} fill className="rounded-md object-cover" />
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                    onClick={() => removeImage(index)}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                  )}
 
                   <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Listing"}
