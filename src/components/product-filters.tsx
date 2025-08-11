@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { conditions, locations, Condition, DatePostedOption, datePostedOptions, Category, categories } from "@/lib/types"
+import { conditions, Condition, DatePostedOption, datePostedOptions, Category, categories } from "@/lib/types"
 import { X, RotateCcw } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion"
 import { cn } from "@/lib/utils"
@@ -34,6 +34,14 @@ type ProductFiltersProps = {
   onClear: () => void;
   onClose?: () => void;
 }
+
+const locations: string[] = [
+    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
+    'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa',
+    'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger',
+    'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe',
+    'Zamfara', 'FCT - Abuja'
+];
 
 export function ProductFilters({ filters: initialFilters, onApply, onClear, onClose }: ProductFiltersProps) {
 
