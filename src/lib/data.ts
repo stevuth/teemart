@@ -174,7 +174,7 @@ export const orders: Order[] = [
         id: 'ord-3',
         productId: '9',
         buyerName: 'Ngozi Okonjo-Iweala',
-        orderDate: subdays(now, 4).toISOString(),
+        orderDate: subDays(now, 4).toISOString(),
         status: 'Canceled',
     },
     {
