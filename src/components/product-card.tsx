@@ -7,7 +7,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, MessageCircle, ShoppingCart } from 'lucide-react';
+import { MapPin, MessageCircle, ShoppingCart, Truck } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 
 type ProductCardProps = {
@@ -55,6 +55,12 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardFooter className="p-3 sm:p-4 pt-2 flex flex-col items-start gap-3">
         <div>
             <p className="text-lg sm:text-xl font-bold text-primary">₦{product.price.toLocaleString()}</p>
+            {product.deliveryFee && product.deliveryFee > 0 && (
+                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                    <Truck className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5" />
+                    <span>Delivery Fee: ₦{product.deliveryFee.toLocaleString()}</span>
+                </div>
+            )}
             <div className="flex items-center text-xs sm:text-sm text-muted-foreground mt-1">
               <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5" />
               <span>{product.location}</span>
