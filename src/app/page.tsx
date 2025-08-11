@@ -1,19 +1,23 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Marketplace } from '@/components/marketplace';
-import { products } from '@/lib/data';
 import { CategoryShowcase } from '@/components/category-showcase';
-import type { Category } from '@/lib/types';
+import type { Category, Product } from '@/lib/types';
 import type { FilterValues } from '@/components/product-filters';
 import { ProductFilters } from '@/components/product-filters';
 import { ProductHeroCarousel } from '@/components/product-hero-carousel';
 import { SearchSection } from '@/components/search-section';
+import { supabase } from '@/lib/supabase-client';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
   const [globalSearchTerm, setGlobalSearchTerm] = useState('');
   const [filters, setFilters] = useState<Omit<FilterValues, 'category'>>({
@@ -22,6 +26,38 @@ export default function Home() {
     condition: '',
     datePosted: 'any',
   });
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('postedDate', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching products:', error);
+        toast({
+          title: "Error",
+          description: "Could not fetch product listings.",
+          variant: "destructive"
+        });
+        setProducts([]);
+      } else {
+        const transformedData = data.map(item => ({
+          ...item,
+          image: item.image_url,
+          postedDate: item.posted_date,
+        }))
+        setProducts(transformedData);
+      }
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, [toast]);
+
 
   const handleCategorySelect = (category: Category | '') => {
     setSelectedCategory(category);
@@ -58,7 +94,11 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <SearchSection onSearch={setGlobalSearchTerm} />
-      <ProductHeroCarousel products={featuredProducts} />
+      {loading ? (
+        <Skeleton className="w-full aspect-[21/9]" />
+      ) : (
+        <ProductHeroCarousel products={featuredProducts} />
+      )}
       <main className="flex-grow container mx-auto px-0 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 lg:gap-8">
           <aside className="hidden lg:block lg:col-span-1">
@@ -76,13 +116,29 @@ export default function Home() {
                   selectedCategory={selectedCategory} 
                   onCategorySelect={handleCategorySelect} 
                 />
-                <Marketplace 
-                  products={products} 
-                  filters={currentFilters}
-                  onFilterChange={handleFilterChange}
-                  onClearFilters={clearFilters}
-                  onCategoryChange={handleCategorySelect}
-                />
+                {loading ? (
+                  <div className="pt-8">
+                    <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-6">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="flex flex-col space-y-3">
+                          <Skeleton className="h-[125px] w-full rounded-xl" />
+                          <div className="space-y-2">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Marketplace 
+                    products={products} 
+                    filters={currentFilters}
+                    onFilterChange={handleFilterChange}
+                    onClearFilters={clearFilters}
+                    onCategoryChange={handleCategorySelect}
+                  />
+                )}
             </div>
           </div>
         </div>

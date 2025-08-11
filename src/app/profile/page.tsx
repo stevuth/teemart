@@ -3,37 +3,69 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase-client';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { products, orders } from '@/lib/data';
+import { orders as staticOrders } from '@/lib/data';
 import { ProductCard } from '@/components/product-card';
-import type { Order, OrderStatus } from '@/lib/types';
+import type { Order, OrderStatus, Product } from '@/lib/types';
 import Image from 'next/image';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [activeListings, setActiveListings] = useState<Product[]>([]);
+  const [purchaseHistory, setPurchaseHistory] = useState<Product[]>([]); // Assuming this logic will be built out
+  const [listingsLoading, setListingsLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (user) {
+      const fetchListings = async () => {
+        setListingsLoading(true);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('postedDate', { ascending: false });
+
+        if (error) {
+          console.error("Error fetching user's listings:", error);
+          toast({ title: "Error", description: "Could not fetch your listings.", variant: "destructive" });
+        } else {
+            const transformedData = data.map(item => ({
+              ...item,
+              image: item.image_url,
+              postedDate: item.posted_date,
+            }))
+            setActiveListings(transformedData);
+        }
+        setListingsLoading(false);
+      }
+
+      fetchListings();
+    }
+  }, [user, toast]);
   
   const getInitials = (name?: string | null) => {
     if (!name) return 'U';
@@ -60,6 +92,7 @@ export default function ProfilePage() {
       }
     }
   }
+  const loading = authLoading || (user && listingsLoading);
 
   if (loading || !user) {
     return (
@@ -101,18 +134,12 @@ export default function ProfilePage() {
        </div>
     )
   }
-
-  const activeListings = products.slice(0, 4);
-  const purchaseHistory = products.slice(8, 10);
   
   const enrichedOrders = useMemo(() => {
-    return orders.map(order => {
-        const product = products.find(p => p.id === order.productId);
-        return {
-            ...order,
-            product,
-        }
-    }).filter(order => order.product); // Filter out orders where product is not found
+    // This part will need to be updated to fetch products for orders from DB
+    return staticOrders.map(order => {
+        return { ...order, product: { name: 'Product Name', image: 'https://placehold.co/80x80' } };
+    });
   }, []);
 
   const getStatusBadgeClass = (status: OrderStatus) => {
@@ -189,10 +216,32 @@ export default function ProfilePage() {
                 </TabsList>
                 
                 <TabsContent value="active-listings" className="mt-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {activeListings.map(product => <ProductCard key={product.id} product={product} />)}
-                    </div>
-                    <Button variant="link" className="mt-4">View all active listings <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                    {listingsLoading ? (
+                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {[...Array(4)].map((_, i) => (
+                           <div key={i} className="flex flex-col space-y-3">
+                              <Skeleton className="h-[125px] w-full rounded-xl" />
+                              <div className="space-y-2">
+                                  <Skeleton className="h-4 w-full" />
+                                  <Skeleton className="h-4 w-3/4" />
+                              </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : activeListings.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {activeListings.map(product => <ProductCard key={product.id} product={product} />)}
+                      </div>
+                    ) : (
+                      <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                        <Package className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-xl font-medium">No active listings</h3>
+                        <p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p>
+                        <Button asChild className="mt-6" variant="default">
+                            <a href="/sell">List an Item</a>
+                        </Button>
+                      </div>
+                    )}
                 </TabsContent>
                 
                 <TabsContent value="my-orders" className="mt-6">
@@ -200,7 +249,7 @@ export default function ProfilePage() {
                         {enrichedOrders.map(order => (
                             <div key={order.id} className="border rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
                                 <div className="flex items-center gap-4">
-                                    <Image src={Array.isArray(order.product!.image) ? order.product!.image[0] : order.product!.image} alt={order.product!.name} width={80} height={80} className="rounded-md object-cover" data-ai-hint={order.product!['data-ai-hint']} />
+                                    <Image src={order.product!.image} alt={order.product!.name} width={80} height={80} className="rounded-md object-cover" />
                                     <div>
                                         <p className="font-semibold text-lg">{order.product!.name}</p>
                                         <div className="text-sm text-muted-foreground mt-1 space-y-1">
@@ -225,7 +274,7 @@ export default function ProfilePage() {
 
                 <TabsContent value="purchase-history" className="mt-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {purchaseHistory.map(product => <ProductCard key={product.id} product={product} />)}
+                        {/* Placeholder */}
                     </div>
                     <Button variant="link" className="mt-4">View all purchases <ChevronRight className="h-4 w-4 ml-1" /></Button>
                 </TabsContent>
