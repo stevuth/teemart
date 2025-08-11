@@ -35,7 +35,7 @@ const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
   price: z.coerce.number().min(1, { message: "Price must be at least 1." }),
-  deliveryFee: z.coerce.number().optional(),
+  deliveryFee: z.union([z.coerce.number(), z.string().length(0)]).optional().transform(value => value === "" ? undefined : value),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
@@ -67,6 +67,9 @@ export function SellForm() {
       name: "",
       description: "",
       price: 0,
+      deliveryFee: '',
+      location: '',
+      images: undefined,
     },
   });
 
