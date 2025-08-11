@@ -9,7 +9,7 @@ export const products: Product[] = [
     id: '1',
     name: '2018 Toyota Corolla',
     price: 6800000,
-    image: 'https://picsum.photos/600/400?random=1',
+    image: 'https://i.postimg.cc/Hx7NGbNF/Gemini-Generated-Image-xcf7bpxcf7bpxcf7-1.png',
     category: 'Cars',
     location: 'Lagos',
     condition: 'Used',
