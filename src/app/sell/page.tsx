@@ -13,14 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { categories, conditions, locations } from "@/lib/types";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
+
 
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB

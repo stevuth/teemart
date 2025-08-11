@@ -29,14 +29,14 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg">
-      <CardHeader className="p-0 relative">
+      <CardHeader className="p-0 relative aspect-[4/3]">
         <Link href={`/product/${product.id}`} aria-label={product.name}>
           <Image
             src={displayImage}
             alt={product.name}
-            width={600}
-            height={400}
-            className="w-full h-32 object-cover sm:h-40"
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
             data-ai-hint={product['data-ai-hint']}
           />
         </Link>
