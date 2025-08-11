@@ -23,7 +23,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", deliveryFee, user_id')
+        .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", delivery_fee, user_id')
         .eq('id', params.id)
         .single();
       
@@ -35,6 +35,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           ...data,
           image: data.image_url,
           postedDate: data.posted_date,
+          deliveryFee: data.delivery_fee,
         } as Product;
         setProduct(transformedData);
       }

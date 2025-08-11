@@ -45,7 +45,7 @@ export default function ProfilePage() {
         setListingsLoading(true);
         const { data, error } = await supabase
           .from('products')
-          .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", deliveryFee, user_id')
+          .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", delivery_fee, user_id')
           .eq('user_id', user.id)
           .order('posted_date', { ascending: false });
 
@@ -57,6 +57,7 @@ export default function ProfilePage() {
               ...item,
               image: item.image_url,
               postedDate: item.posted_date,
+              deliveryFee: item.delivery_fee,
             })) as Product[];
             setActiveListings(transformedData);
         }
