@@ -9,13 +9,23 @@ import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { toast } = useToast();
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = cartItems.length > 0 ? 5000 : 0;
   const total = subtotal + shipping;
+
+  const handleClearCart = () => {
+    clearCart();
+    toast({
+        title: "Cart Cleared",
+        description: "All items have been removed from your cart.",
+    })
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -59,7 +69,7 @@ export default function CartPage() {
                             </div>
                         ))}
                     </div>
-                    <Button variant="outline" className="mt-6" onClick={clearCart}>Clear Cart</Button>
+                    <Button variant="outline" className="mt-6" onClick={handleClearCart}>Clear Cart</Button>
                 </div>
                 <div className="lg:col-span-1">
                     <div className="sticky top-24 p-6 rounded-lg bg-background border">

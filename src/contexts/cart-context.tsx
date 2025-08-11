@@ -92,10 +92,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   
   const clearCart = () => {
     setCartItems([]);
-    toast({
-        title: "Cart Cleared",
-        description: "All items have been removed from your cart.",
-    })
   }
   
   const cartCount = useMemo(() => {
