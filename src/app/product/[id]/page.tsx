@@ -28,7 +28,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         .single();
       
       if (error) {
-        console.error("Error fetching product:", error);
+        console.error("Error fetching product:", error.message || error);
         setProduct(null);
       } else {
         const transformedData = {

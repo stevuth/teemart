@@ -50,7 +50,7 @@ export default function ProfilePage() {
           .order('posted_date', { ascending: false });
 
         if (error) {
-          console.error("Error fetching user's listings:", error);
+          console.error("Error fetching user's listings:", error.message || error);
           toast({ title: "Error", description: "Could not fetch your listings.", variant: "destructive" });
         } else {
             const transformedData = (data as any[]).map(item => ({

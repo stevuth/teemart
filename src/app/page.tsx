@@ -37,7 +37,7 @@ export default function Home() {
         .order('posted_date', { ascending: false });
 
       if (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching products:', error.message || error);
         toast({
           title: "Error",
           description: "Could not fetch product listings.",
