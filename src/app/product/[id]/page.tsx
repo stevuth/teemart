@@ -23,7 +23,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, name')
+        .select('id, name, price, image_url, category, location, condition, description, created_at, delivery_fee')
         .eq('id', params.id)
         .single();
       
@@ -34,7 +34,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         const transformedData = {
           ...data,
           image: (data as any).image_url || [],
-          postedDate: (data as any).posted_date,
+          postedDate: (data as any).created_at,
           deliveryFee: (data as any).delivery_fee,
           price: (data as any).price || 0,
           category: (data as any).category || '',
