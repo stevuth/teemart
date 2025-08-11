@@ -21,7 +21,7 @@ export const products: Product[] = [
     id: '2',
     name: 'Apple iPhone 12 Pro',
     price: 350000,
-    image: 'https://picsum.photos/600/400?random=2',
+    image: 'https://i.postimg.cc/xd15gXCK/Gemini-Generated-Image-u0o7aou0o7aou0o7-1.png',
     category: 'Phones',
     location: 'Abuja',
     condition: 'Used',
