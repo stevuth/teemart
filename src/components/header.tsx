@@ -80,7 +80,7 @@ export function Header() {
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
-              <Button onClick={handleSellClick} className="hidden sm:inline-flex">
+              <Button onClick={handleSellClick}>
                 Sell
               </Button>
               <Button asChild size="icon" variant="ghost" aria-label="Cart">
@@ -135,7 +135,6 @@ export function Header() {
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center gap-2">
-                   <Button onClick={handleSellClick} className="sm:hidden">Sell</Button>
                    <Button onClick={openLoginModal} size="icon" variant="ghost" aria-label="Profile">
                         <User className="h-5 w-5" />
                    </Button>
