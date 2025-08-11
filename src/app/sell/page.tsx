@@ -24,6 +24,7 @@ import { X } from "lucide-react";
 
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
@@ -33,12 +34,16 @@ const formSchema = z.object({
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
-  images: z.array(z.instanceof(File))
-    .min(1, "At least one image is required.")
-    .max(MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
+  images: z.any()
+    .refine((files: File[]) => files?.length >= 1, "At least one image is required.")
+    .refine((files: File[]) => files?.length <= MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
     .refine(
-      (files) => files.every((file) => file.size <= MAX_FILE_SIZE),
-      `Each file size must be less than 3MB.`
+        (files: File[]) => Array.from(files).every((file) => file.size <= MAX_FILE_SIZE),
+        `Each file size must be less than 3MB.`
+    )
+    .refine(
+        (files: File[]) => Array.from(files).every((file) => ALLOWED_FILE_TYPES.includes(file.type)),
+        "Only .jpg, .jpeg, .png and .webp formats are supported."
     ),
 });
 
@@ -295,7 +300,7 @@ export default function SellPage() {
                   <FormField
                     control={form.control}
                     name="images"
-                    render={() => (
+                    render={({ field: { onChange, value, ...rest }}) => (
                         <FormItem>
                             <FormLabel>Product Images</FormLabel>
                              <FormControl>
