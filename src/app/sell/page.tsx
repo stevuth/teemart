@@ -23,6 +23,7 @@ const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
   price: z.coerce.number().min(1, { message: "Price must be at least 1." }),
+  deliveryFee: z.coerce.number().optional(),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
@@ -97,6 +98,7 @@ export default function SellPage() {
         condition: data.condition,
         location: data.location,
         image_url: publicUrl,
+        delivery_fee: data.deliveryFee
       });
       
     if (insertError) {
@@ -176,6 +178,22 @@ export default function SellPage() {
                     />
                      <FormField
                       control={form.control}
+                      name="deliveryFee"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Delivery Fee (₦) <span className="text-muted-foreground">(Optional)</span></FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="Enter delivery fee" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <FormField
+                      control={form.control}
                       name="category"
                       render={({ field }) => (
                         <FormItem>
@@ -194,9 +212,6 @@ export default function SellPage() {
                         </FormItem>
                       )}
                     />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      <FormField
                       control={form.control}
                       name="condition"
@@ -217,27 +232,28 @@ export default function SellPage() {
                         </FormItem>
                       )}
                     />
-                     <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Location</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                               <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select your location" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {locations.map(loc => <SelectItem key={loc} value={loc}>{loc}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                              <SelectTrigger>
+                                  <SelectValue placeholder="Select your location" />
+                              </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                  {locations.map(loc => <SelectItem key={loc} value={loc}>{loc}</SelectItem>)}
+                              </SelectContent>
+                          </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
                   <FormField
                     control={form.control}

@@ -10,6 +10,7 @@ export type Product = {
   description: string;
   postedDate: string; // ISO 8601 date string
   'data-ai-hint'?: string;
+  deliveryFee?: number;
 };
 
 export const categories = ['Cars', 'Electronics', 'Real Estate', 'Furniture', 'Phones'] as const;

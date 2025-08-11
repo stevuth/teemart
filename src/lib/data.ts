@@ -15,7 +15,8 @@ export const products: Product[] = [
     condition: 'Used',
     description: 'A clean, well-maintained 2018 Toyota Corolla with automatic transmission and excellent fuel economy.',
     postedDate: subDays(now, 2).toISOString(),
-    "data-ai-hint": 'sedan car'
+    "data-ai-hint": 'sedan car',
+    deliveryFee: 50000,
   },
   {
     id: '2',
@@ -27,7 +28,8 @@ export const products: Product[] = [
     condition: 'Used',
     description: '128GB iPhone 12 Pro in Pacific Blue. No scratches, perfect working condition, with original box.',
     postedDate: now.toISOString(),
-    "data-ai-hint": 'smartphone iphone'
+    "data-ai-hint": 'smartphone iphone',
+    deliveryFee: 5000,
   },
   {
     id: '3',
@@ -51,7 +53,8 @@ export const products: Product[] = [
     condition: 'Used',
     description: 'Comfortable 6-seater L-shaped sofa. Grey fabric, comes with four throw pillows. Less than 2 years old.',
     postedDate: subDays(now, 5).toISOString(),
-    "data-ai-hint": 'living room'
+    "data-ai-hint": 'living room',
+    deliveryFee: 25000,
   },
   {
     id: '5',
@@ -63,7 +66,8 @@ export const products: Product[] = [
     condition: 'Refurbished',
     description: 'Experience stunning 4K visuals with this Samsung smart TV. All apps working perfectly. Comes with remote.',
     postedDate: subDays(now, 40).toISOString(),
-    "data-ai-hint": 'television livingroom'
+    "data-ai-hint": 'television livingroom',
+    deliveryFee: 10000,
   },
   {
     id: '6',
@@ -170,7 +174,7 @@ export const orders: Order[] = [
         id: 'ord-3',
         productId: '9',
         buyerName: 'Ngozi Okonjo-Iweala',
-        orderDate: subDays(now, 4).toISOString(),
+        orderDate: subdays(now, 4).toISOString(),
         status: 'Canceled',
     },
     {
