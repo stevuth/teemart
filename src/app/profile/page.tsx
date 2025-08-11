@@ -45,7 +45,7 @@ export default function ProfilePage() {
         setListingsLoading(true);
         const { data, error } = await supabase
           .from('products')
-          .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", delivery_fee, user_id')
+          .select('id, name')
           .eq('user_id', user.id)
           .order('posted_date', { ascending: false });
 
@@ -53,11 +53,16 @@ export default function ProfilePage() {
           console.error("Error fetching user's listings:", error);
           toast({ title: "Error", description: "Could not fetch your listings.", variant: "destructive" });
         } else {
-            const transformedData = data.map(item => ({
+            const transformedData = (data as any[]).map(item => ({
               ...item,
-              image: item.image_url,
+              image: item.image_url || [],
               postedDate: item.posted_date,
               deliveryFee: item.delivery_fee,
+              price: item.price || 0,
+              category: item.category || '',
+              location: item.location || '',
+              condition: item.condition || 'Used',
+              description: item.description || '',
             })) as Product[];
             setActiveListings(transformedData);
         }

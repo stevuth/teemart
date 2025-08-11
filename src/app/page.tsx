@@ -33,7 +33,7 @@ export default function Home() {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, category, location, condition, description, posted_date, "data-ai-hint", delivery_fee, user_id')
+        .select('id, name')
         .order('posted_date', { ascending: false });
 
       if (error) {
@@ -45,11 +45,16 @@ export default function Home() {
         });
         setProducts([]);
       } else {
-        const transformedData = data.map(item => ({
+        const transformedData = (data as any[]).map(item => ({
           ...item,
-          image: item.image_url,
+          image: item.image_url || [],
           postedDate: item.posted_date,
           deliveryFee: item.delivery_fee,
+          price: item.price || 0,
+          category: item.category || '',
+          location: item.location || '',
+          condition: item.condition || 'Used',
+          description: item.description || '',
         })) as Product[];
         setProducts(transformedData);
       }
