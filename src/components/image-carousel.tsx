@@ -9,7 +9,7 @@ import Fade from 'embla-carousel-fade'
 import { cn } from '@/lib/utils'
 
 const images = [
-  { src: "https://i.postimg.cc/PrLZMxC0/Chat-GPT-Image-Aug-9-2025-12-21-37-AM.png", alt: "Modern living room with furniture", "data-ai-hint": "modern living room" },
+  { src: "https://i.postimg.cc/Hx7NGbNF/Gemini-Generated-Image-xcf7bpxcf7bpxcf7-1.png", alt: "Modern living room with furniture", "data-ai-hint": "modern living room" },
   { src: "https://picsum.photos/1920/1080?random=2", alt: "Sleek sports car on a city street", "data-ai-hint": "sleek car" },
   { src: "https://picsum.photos/1920/1080?random=3", alt: "Family enjoying a new home", "data-ai-hint": "happy family home" },
 ]
