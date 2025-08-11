@@ -35,7 +35,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           ...data,
           image: data.image_url,
           postedDate: data.posted_date,
-        }
+        } as Product;
         setProduct(transformedData);
       }
       setLoading(false);

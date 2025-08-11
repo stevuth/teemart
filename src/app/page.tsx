@@ -34,7 +34,7 @@ export default function Home() {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .order('postedDate', { ascending: false });
+        .order('posted_date', { ascending: false });
 
       if (error) {
         console.error('Error fetching products:', error);
@@ -49,7 +49,7 @@ export default function Home() {
           ...item,
           image: item.image_url,
           postedDate: item.posted_date,
-        }))
+        })) as Product[];
         setProducts(transformedData);
       }
       setLoading(false);

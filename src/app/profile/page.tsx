@@ -47,7 +47,7 @@ export default function ProfilePage() {
           .from('products')
           .select('*')
           .eq('user_id', user.id)
-          .order('postedDate', { ascending: false });
+          .order('posted_date', { ascending: false });
 
         if (error) {
           console.error("Error fetching user's listings:", error);
@@ -57,7 +57,7 @@ export default function ProfilePage() {
               ...item,
               image: item.image_url,
               postedDate: item.posted_date,
-            }))
+            })) as Product[];
             setActiveListings(transformedData);
         }
         setListingsLoading(false);
