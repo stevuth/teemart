@@ -35,14 +35,14 @@ const formSchema = z.object({
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
   images: z.any()
-    .refine((files: File[]) => files?.length >= 1, "At least one image is required.")
-    .refine((files: File[]) => files?.length <= MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
+    .refine((files: FileList | null | undefined) => files && files?.length >= 1, "At least one image is required.")
+    .refine((files: FileList | null | undefined) => files && files?.length <= MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
     .refine(
-        (files: File[]) => Array.from(files).every((file) => file.size <= MAX_FILE_SIZE),
+        (files: FileList | null | undefined) => files && Array.from(files).every((file) => file.size <= MAX_FILE_SIZE),
         `Each file size must be less than 3MB.`
     )
     .refine(
-        (files: File[]) => Array.from(files).every((file) => ALLOWED_FILE_TYPES.includes(file.type)),
+        (files: FileList | null | undefined) => files && Array.from(files).every((file) => ALLOWED_FILE_TYPES.includes(file.type)),
         "Only .jpg, .jpeg, .png and .webp formats are supported."
     ),
 });
@@ -54,6 +54,7 @@ export default function SellPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
@@ -61,7 +62,6 @@ export default function SellPage() {
       name: "",
       description: "",
       price: 0,
-      images: [],
     },
   });
 
@@ -69,21 +69,28 @@ export default function SellPage() {
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    const currentImages = form.getValues('images') || [];
+    const currentImages = imageFiles;
     const combined = [...currentImages, ...files].slice(0, MAX_FILES);
+    
+    setImageFiles(combined);
 
-    form.setValue('images', combined, { shouldValidate: true });
+    const dataTransfer = new DataTransfer();
+    combined.forEach(file => dataTransfer.items.add(file));
+    form.setValue('images', dataTransfer.files, { shouldValidate: true });
 
     const newPreviews = combined.map(file => URL.createObjectURL(file));
     setImagePreviews(newPreviews);
   };
   
   const removeImage = (index: number) => {
-    const currentImages = form.getValues('images') || [];
-    const updatedImages = currentImages.filter((_, i) => i !== index);
-    form.setValue('images', updatedImages, { shouldValidate: true });
+    const updatedFiles = imageFiles.filter((_, i) => i !== index);
+    setImageFiles(updatedFiles);
+    
+    const dataTransfer = new DataTransfer();
+    updatedFiles.forEach(file => dataTransfer.items.add(file));
+    form.setValue('images', dataTransfer.files, { shouldValidate: true });
 
-    const updatedPreviews = updatedImages.map(file => URL.createObjectURL(file));
+    const updatedPreviews = updatedFiles.map(file => URL.createObjectURL(file));
     setImagePreviews(updatedPreviews);
   }
 
@@ -100,7 +107,9 @@ export default function SellPage() {
     const imageUrls: string[] = [];
     const uploadedFilePaths: string[] = [];
 
-    for (const imageFile of data.images) {
+    if (!data.images) return;
+
+    for (const imageFile of Array.from(data.images)) {
         const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
         const { data: uploadData, error: uploadError } = await supabase
             .storage
@@ -117,7 +126,6 @@ export default function SellPage() {
                 description: `Error uploading ${imageFile.name}. Please try again.`,
                 variant: "destructive"
              });
-             // Clean up already uploaded files if one fails
              if (uploadedFilePaths.length > 0) {
                 await supabase.storage.from('product-images').remove(uploadedFilePaths);
              }
@@ -160,6 +168,7 @@ export default function SellPage() {
     });
     form.reset();
     setImagePreviews([]);
+    setImageFiles([]);
     router.push(`/profile`);
   };
 
