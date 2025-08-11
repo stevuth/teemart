@@ -61,7 +61,6 @@ export default function SellPage() {
     const imageFile = data.image[0];
     const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
     
-    // 1. Upload image to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase
         .storage
         .from('product-images')
@@ -80,13 +79,11 @@ export default function SellPage() {
         return;
     }
 
-    // 2. Get public URL of the uploaded image
     const { data: { publicUrl } } = supabase
         .storage
         .from('product-images')
         .getPublicUrl(uploadData.path);
         
-    // 3. Insert product into the database
     const { error: insertError } = await supabase
       .from('products')
       .insert({
@@ -98,7 +95,7 @@ export default function SellPage() {
         condition: data.condition,
         location: data.location,
         image_url: publicUrl,
-        delivery_fee: data.deliveryFee
+        delivery_fee: data.deliveryFee || null,
       });
       
     if (insertError) {
@@ -108,7 +105,6 @@ export default function SellPage() {
             description: "There was an error creating your listing. Please try again.",
             variant: "destructive"
         });
-        // Optional: delete the uploaded image if the db insert fails
         await supabase.storage.from('product-images').remove([fileName]);
         return;
     }

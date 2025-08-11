@@ -263,7 +263,7 @@ export default function ProfilePage() {
                                     <div className="flex items-center gap-1 text-yellow-500">
                                         {[...Array(5)].map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}
                                     </div>
-                                </div>
+                                 </div>
                             </div>
                             <p className="text-sm text-muted-foreground">1 month ago</p>
                             </div>
