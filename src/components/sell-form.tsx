@@ -201,7 +201,8 @@ export function SellForm({ existingProduct }: SellFormProps) {
             description: `Your product has been successfully ${isEditMode ? 'updated' : 'listed'}.`,
         });
 
-        router.push(`/profile`);
+        router.replace('/profile');
+        router.refresh();
 
     } catch (error: any) {
         console.error("Submit Error: ", error);
@@ -396,3 +397,5 @@ export function SellForm({ existingProduct }: SellFormProps) {
     </div>
   );
 }
+
+    
