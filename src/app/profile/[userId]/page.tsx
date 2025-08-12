@@ -44,68 +44,12 @@ export default function SellerProfilePage() {
         if (!name) return 'S';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
-
-    const fetchSellerData = useCallback(async () => {
-        if (!userId) return;
-        setLoading(true);
-
-        // Fetch seller public info from the new public.users table
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('id, user_metadata, created_at')
-            .eq('id', userId)
-            .single();
-
-        if (userError || !userData) {
-            console.error("Error fetching seller info:", userError || 'User not found');
-            toast({ title: "Error", description: "Could not find seller information.", variant: "destructive" });
-            setLoading(false);
-            return;
-        }
-        
-        const metadata = userData.user_metadata as any;
-        setSeller({
-            id: userData.id,
-            full_name: metadata?.full_name || 'TeeMart Seller',
-            avatar_url: metadata?.avatar_url,
-            created_at: userData.created_at,
-        });
-
-        // Fetch seller listings
-        const { data: listingsData, error: listingsError } = await supabase
-            .from('products')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-
-        if (listingsError) {
-            console.error("Error fetching seller listings:", listingsError);
-            toast({ title: "Error", description: "Could not fetch seller's listings.", variant: "destructive" });
-        } else {
-            const transformedListings = (listingsData as any[]).map(item => ({
-                ...item,
-                image: item.image_url || [],
-                postedDate: item.created_at,
-                deliveryFee: item.delivery_fee,
-                price: item.price || 0,
-                category: item.category || '',
-                location: item.location || '',
-                city: item.city || '',
-                condition: item.condition || 'Used',
-                description: item.description || '',
-            })) as Product[];
-            setListings(transformedListings);
-
-            // Fetch reviews for the listings
-            if (transformedListings.length > 0) {
-                await fetchReviewsForListings(transformedListings.map(l => l.id));
-            }
-        }
-        setLoading(false);
-    }, [userId, toast]);
     
     const fetchReviewsForListings = useCallback(async (productIds: string[]) => {
-       if (productIds.length === 0) return;
+       if (productIds.length === 0) {
+        setReviews([]);
+        return;
+       }
         const { data: reviewsData, error: reviewsError } = await supabase
             .from('reviews')
             .select('*, user:users(id, user_metadata)')
@@ -131,12 +75,67 @@ export default function SellerProfilePage() {
         }
     }, [])
 
+    const fetchSellerData = useCallback(async () => {
+        if (!userId) return;
+        setLoading(true);
+
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('id, user_metadata, created_at')
+            .eq('id', userId)
+            .single();
+
+        if (userError || !userData) {
+            console.error("Error fetching seller info:", userError || 'User not found');
+            toast({ title: "Error", description: "Could not find seller information.", variant: "destructive" });
+            setLoading(false);
+            return;
+        }
+        
+        const metadata = userData.user_metadata as any;
+        setSeller({
+            id: userData.id,
+            full_name: metadata?.full_name || 'TeeMart Seller',
+            avatar_url: metadata?.avatar_url,
+            created_at: userData.created_at,
+        });
+
+        const { data: listingsData, error: listingsError } = await supabase
+            .from('products')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (listingsError) {
+            console.error("Error fetching seller listings:", listingsError);
+            toast({ title: "Error", description: "Could not fetch seller's listings.", variant: "destructive" });
+        } else {
+            const transformedListings = (listingsData as any[]).map(item => ({
+                ...item,
+                image: item.image_url || [],
+                postedDate: item.created_at,
+                deliveryFee: item.delivery_fee,
+                price: item.price || 0,
+                category: item.category || '',
+                location: item.location || '',
+                city: item.city || '',
+                condition: item.condition || 'Used',
+                description: item.description || '',
+            })) as Product[];
+            setListings(transformedListings);
+
+            if (transformedListings.length > 0) {
+                await fetchReviewsForListings(transformedListings.map(l => l.id));
+            }
+        }
+        setLoading(false);
+    }, [userId, toast, fetchReviewsForListings]);
+
     useEffect(() => {
         fetchSellerData();
     }, [fetchSellerData]);
 
     const handleReviewSubmitted = () => {
-        // Refetch reviews after a new one is submitted
         if (listings.length > 0) {
             fetchReviewsForListings(listings.map(l => l.id));
         }
@@ -164,9 +163,6 @@ export default function SellerProfilePage() {
                                 <Skeleton className="h-6 w-full" />
                                 <Skeleton className="h-6 w-full" />
                                 <Skeleton className="h-6 w-full" />
-                            </div>
-                            <div className="mt-8 flex gap-3">
-                                <Skeleton className="h-10 w-32" />
                             </div>
                         </div>
                     </div>
@@ -291,5 +287,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    

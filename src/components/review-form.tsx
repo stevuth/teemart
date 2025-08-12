@@ -81,8 +81,8 @@ export function ReviewForm({ listings, sellerId, onReviewSubmitted }: ReviewForm
     }
   };
   
-  if (!user || user.id === sellerId) {
-    return null; // Don't show form if user is not logged in or is the seller
+  if (!user || user.id === sellerId || listings.length === 0) {
+    return null; // Don't show form if user is not logged in, is the seller, or seller has no products
   }
 
   return (
