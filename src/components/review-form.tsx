@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -81,10 +80,6 @@ export function ReviewForm({ listings, sellerId, onReviewSubmitted }: ReviewForm
     }
   };
   
-  if (!user || user.id === sellerId || listings.length === 0) {
-    return null; // Don't show form if user is not logged in, is the seller, or seller has no products
-  }
-
   return (
     <Card>
       <CardHeader>

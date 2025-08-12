@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ReviewWithUser, Product } from "@/lib/types";

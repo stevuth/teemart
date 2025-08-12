@@ -273,11 +273,13 @@ export default function SellerProfilePage() {
                         <TabsContent value="reviews" className="mt-6">
                             <div className="space-y-8">
                                 <ReviewList reviews={reviews} listings={listings} />
-                                <ReviewForm 
-                                    listings={listings}
-                                    sellerId={seller.id}
-                                    onReviewSubmitted={handleReviewSubmitted} 
-                                />
+                                {currentUser && currentUser.id !== seller.id && listings.length > 0 && (
+                                    <ReviewForm 
+                                        listings={listings}
+                                        sellerId={seller.id}
+                                        onReviewSubmitted={handleReviewSubmitted} 
+                                    />
+                                )}
                             </div>
                         </TabsContent>
                     </Tabs>
