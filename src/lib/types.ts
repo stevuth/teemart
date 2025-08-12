@@ -17,6 +17,14 @@ export type Product = {
   user_id?: string;
 };
 
+export type ProductWithSeller = Product & {
+  seller: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+  }
+}
+
 export const categories = ['Cars', 'Electronics', 'Real Estate', 'Furniture', 'Phones'] as const;
 export type Category = (typeof categories)[number];
 
@@ -56,5 +64,3 @@ export type ReviewWithUser = Review & {
     }
   } | null;
 };
-
-    
