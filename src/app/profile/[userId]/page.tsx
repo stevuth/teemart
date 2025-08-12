@@ -38,16 +38,14 @@ export default function SellerProfilePage() {
     const [seller, setSeller] = useState<Seller | null>(null);
     const [listings, setListings] = useState<Product[]>([]);
     const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    const getInitials = (name?: string | null) => {
-        if (!name) return 'S';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase();
-    }
+    const [loadingSeller, setLoadingSeller] = useState(true);
+    const [loadingListings, setLoadingListings] = useState(true);
+    const [loadingReviews, setLoadingReviews] = useState(true);
     
-    const fetchSellerData = useCallback(async () => {
+    const fetchSellerAndListings = useCallback(async () => {
         if (!userId) return;
-        setLoading(true);
+        setLoadingSeller(true);
+        setLoadingListings(true);
 
         try {
             // Fetch seller info
@@ -57,9 +55,7 @@ export default function SellerProfilePage() {
                 .eq('id', userId)
                 .single();
 
-            if (userError || !userData) {
-                throw userError || new Error('User not found');
-            }
+            if (userError || !userData) throw userError || new Error('User not found');
             
             const metadata = userData.user_metadata as any;
             setSeller({
@@ -68,6 +64,7 @@ export default function SellerProfilePage() {
                 avatar_url: metadata?.avatar_url,
                 created_at: userData.created_at,
             });
+            setLoadingSeller(false);
 
             // Fetch seller's listings
             const { data: listingsData, error: listingsError } = await supabase
@@ -76,9 +73,7 @@ export default function SellerProfilePage() {
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
-            if (listingsError) {
-                throw listingsError;
-            }
+            if (listingsError) throw listingsError;
 
             const transformedListings = (listingsData as any[]).map(item => ({
                 ...item,
@@ -94,53 +89,79 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            // Fetch reviews for those listings
-            if (transformedListings.length > 0) {
-                const productIds = transformedListings.map(l => l.id);
-                const { data: reviewsData, error: reviewsError } = await supabase
-                    .from('reviews')
-                    .select('*, user:users(id, user_metadata)')
-                    .in('product_id', productIds)
-                    .order('created_at', { ascending: false });
-                
-                if (reviewsError) {
-                    throw reviewsError;
-                }
-
-                const transformedReviews = reviewsData.map(review => {
-                  const reviewUser = review.user as any; 
-                  return {
-                    ...review,
-                    user: reviewUser ? { 
-                        user_metadata: { 
-                            full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
-                            avatar_url: reviewUser.user_metadata?.avatar_url
-                        } 
-                    } : { user_metadata: { full_name: 'Unknown User' } }
-                  }
-                }) as ReviewWithUser[];
-                setReviews(transformedReviews);
-            } else {
-                setReviews([]);
-            }
-
         } catch (error: any) {
              console.error("Error fetching seller data:", error);
              toast({ title: "Error", description: "Could not fetch seller information.", variant: "destructive" });
         } finally {
-            setLoading(false);
+            setLoadingListings(false);
         }
     }, [userId, toast]);
+    
+    const fetchReviews = useCallback(async (listingsToReview: Product[]) => {
+        if (listingsToReview.length === 0) {
+            setReviews([]);
+            setLoadingReviews(false);
+            return;
+        }
+        setLoadingReviews(true);
+        try {
+            const productIds = listingsToReview.map(l => l.id);
+            const { data: reviewsData, error: reviewsError } = await supabase
+                .from('reviews')
+                .select('*, user:users(id, user_metadata)')
+                .in('product_id', productIds)
+                .order('created_at', { ascending: false });
+            
+            if (reviewsError) throw reviewsError;
+
+            const transformedReviews = reviewsData.map(review => {
+                const reviewUser = review.user as any; 
+                return {
+                ...review,
+                user: reviewUser ? { 
+                    user_metadata: { 
+                        full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
+                        avatar_url: reviewUser.user_metadata?.avatar_url
+                    } 
+                } : { user_metadata: { full_name: 'Unknown User' } }
+                }
+            }) as ReviewWithUser[];
+            setReviews(transformedReviews);
+        } catch (error: any) {
+            console.error("Error fetching reviews:", error);
+            toast({ title: "Error", description: "Could not fetch reviews.", variant: "destructive" });
+        } finally {
+            setLoadingReviews(false);
+        }
+    }, [toast]);
+    
+    useEffect(() => {
+        fetchSellerAndListings();
+    }, [fetchSellerAndListings]);
 
     useEffect(() => {
-        fetchSellerData();
-    }, [fetchSellerData]);
+        if (!loadingListings) {
+            fetchReviews(listings);
+        }
+    }, [loadingListings, listings, fetchReviews]);
+
+    const getInitials = (name?: string | null) => {
+        if (!name) return 'S';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    }
     
     const handleBuyClick = (e: React.MouseEvent, product: Product) => {
         e.preventDefault(); 
         e.stopPropagation(); 
         addToCart(product);
     };
+
+    const handleReviewSubmitted = () => {
+        // Refetch reviews after a new one is submitted
+        fetchReviews(listings);
+    };
+
+    const loading = loadingSeller || loadingListings;
 
     if (loading) {
         return (
@@ -236,7 +257,7 @@ export default function SellerProfilePage() {
                 <div>
                     <Tabs defaultValue="listings">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="listings">Seller's Listings</TabsTrigger>
+                            <TabsTrigger value="listings">Seller's Listings ({listings.length})</TabsTrigger>
                             <TabsTrigger value="reviews">Reviews</TabsTrigger>
                         </TabsList>
 
@@ -266,16 +287,22 @@ export default function SellerProfilePage() {
                         </TabsContent>
 
                         <TabsContent value="reviews" className="mt-6">
-                            <div className="space-y-8">
-                                <ReviewList reviews={reviews} listings={listings} />
-                                {currentUser && currentUser.id !== seller.id && listings.length > 0 && (
-                                    <ReviewForm 
-                                        listings={listings}
-                                        sellerId={seller.id}
-                                        onReviewSubmitted={fetchSellerData} 
-                                    />
-                                )}
-                            </div>
+                             {loadingReviews ? (
+                                <div className="flex justify-center items-center py-16">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : (
+                                <div className="space-y-8">
+                                    <ReviewList reviews={reviews} listings={listings} />
+                                    {currentUser && currentUser.id !== seller.id && listings.length > 0 && (
+                                        <ReviewForm 
+                                            listings={listings}
+                                            sellerId={seller.id}
+                                            onReviewSubmitted={handleReviewSubmitted} 
+                                        />
+                                    )}
+                                </div>
+                            )}
                         </TabsContent>
                     </Tabs>
                 </div>

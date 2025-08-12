@@ -40,7 +40,7 @@ export default function ProfilePage() {
 
   const enrichedOrders = useMemo(() => {
     return staticOrders.map(order => {
-        return { ...order, product: { name: 'Product Name', image: 'https://placehold.co/80x80' } };
+        return { ...order, product: { name: 'Product Name', image: 'https://placehold.co/80x80.png' } };
     });
   }, []);
   
@@ -84,39 +84,43 @@ export default function ProfilePage() {
         return;
       }
       setReviewsLoading(true);
-      const productIds = listings.map(l => l.id);
-      
-      const { data, error } = await supabase
-        .from('reviews')
-        .select(`
-            *,
-            user:users(
-                id, user_metadata
-            )
-        `)
-        .in('product_id', productIds)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-          console.error("Error fetching reviews:", error.message || error);
-          toast({ title: "Error", description: "Could not fetch reviews for your listings.", variant: "destructive" });
-          setReviews([]);
-      } else {
-          const transformedReviews = data.map(review => {
-             const reviewUser = review.user as any; // Cast to any to access properties safely
-             return {
-                ...review,
-                user: reviewUser ? { 
-                    user_metadata: { 
-                        full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
-                        avatar_url: reviewUser.user_metadata?.avatar_url
-                    } 
-                } : { user_metadata: { full_name: 'Unknown User' } }
-              }
-          }) as ReviewWithUser[];
-          setReviews(transformedReviews);
+      try {
+        const productIds = listings.map(l => l.id);
+        
+        const { data, error } = await supabase
+          .from('reviews')
+          .select(`
+              *,
+              user:users(
+                  id, user_metadata
+              )
+          `)
+          .in('product_id', productIds)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const transformedReviews = data.map(review => {
+            const reviewUser = review.user as any; // Cast to any to access properties safely
+            return {
+              ...review,
+              user: reviewUser ? { 
+                  user_metadata: { 
+                      full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
+                      avatar_url: reviewUser.user_metadata?.avatar_url
+                  } 
+              } : { user_metadata: { full_name: 'Unknown User' } }
+            }
+        }) as ReviewWithUser[];
+        setReviews(transformedReviews);
+
+      } catch (error: any) {
+        console.error("Error fetching reviews:", error.message || error);
+        toast({ title: "Error", description: "Could not fetch reviews for your listings.", variant: "destructive" });
+        setReviews([]);
+      } finally {
+        setReviewsLoading(false);
       }
-      setReviewsLoading(false);
   }, [toast]);
 
   useEffect(() => {
@@ -130,11 +134,8 @@ export default function ProfilePage() {
   }, [user, authLoading, router, fetchListings]);
 
   useEffect(() => {
-    if (activeListings.length > 0) {
+    if (!listingsLoading) {
         fetchReviewsForListings(activeListings);
-    } else if (!listingsLoading) {
-        setReviews([]);
-        setReviewsLoading(false);
     }
   }, [activeListings, listingsLoading, fetchReviewsForListings]);
 
@@ -295,7 +296,7 @@ export default function ProfilePage() {
           <div>
               <Tabs defaultValue="active-listings">
                   <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
-                      <TabsTrigger value="active-listings">Active Listings</TabsTrigger>
+                      <TabsTrigger value="active-listings">Active Listings ({activeListings.length})</TabsTrigger>
                       <TabsTrigger value="my-orders">My Orders</TabsTrigger>
                       <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
                       <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -382,10 +383,8 @@ export default function ProfilePage() {
                   
                   <TabsContent value="reviews" className="mt-6">
                       {reviewsLoading ? (
-                          <div className="space-y-4">
-                              <Skeleton className="h-24 w-full" />
-                              <Skeleton className="h-24 w-full" />
-                              <Skeleton className="h-24 w-full" />
+                          <div className="flex justify-center items-center py-16">
+                              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                           </div>
                       ) : (
                           <ReviewList reviews={reviews} listings={activeListings} />
