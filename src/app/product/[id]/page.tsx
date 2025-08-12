@@ -2,6 +2,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { ProductDetails } from '@/components/product-details';
@@ -10,10 +11,11 @@ import { supabase } from '@/lib/supabase-client';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ProductPage({ params }: { params: { id: string } }) {
+export default function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const { id } = params;
+  const params = useParams();
+  const id = params.id as string;
 
   useEffect(() => {
     const fetchProduct = async () => {

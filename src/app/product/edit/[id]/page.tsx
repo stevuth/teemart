@@ -2,22 +2,23 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useParams, notFound } from 'next/navigation';
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { SellForm } from "@/components/sell-form";
 import { supabase } from '@/lib/supabase-client';
-import { notFound } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import type { Product } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage() {
     const { user, loading: authLoading } = useAuth();
+    const params = useParams();
+    const productId = params.id as string;
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const productId = params.id;
 
     useEffect(() => {
         const fetchProduct = async () => {
