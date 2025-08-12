@@ -22,14 +22,14 @@ export function ProductCard({ product, actions }: ProductCardProps) {
   const router = useRouter();
 
   const handleBuyClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent link navigation
-    e.stopPropagation(); // Stop event from bubbling to the parent Link
+    e.preventDefault(); 
+    e.stopPropagation(); 
     addToCart(product);
   };
   
   const handleContactClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent link navigation
-    e.stopPropagation(); // Stop event from bubbling to the parent Link
+    e.preventDefault(); 
+    e.stopPropagation(); 
     router.push(`/profile/${product.user_id}`);
   }
   
