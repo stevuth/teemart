@@ -45,71 +45,41 @@ export default function SellerProfilePage() {
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
     
-    const fetchReviewsForListings = useCallback(async (productIds: string[]) => {
-       if (productIds.length === 0) {
-        setReviews([]);
-        return;
-       }
-        const { data: reviewsData, error: reviewsError } = await supabase
-            .from('reviews')
-            .select('*, user:users(id, user_metadata)')
-            .in('product_id', productIds)
-            .order('created_at', { ascending: false });
-        
-        if (reviewsError) {
-            console.error("Error fetching reviews:", reviewsError);
-        } else {
-            const transformedReviews = reviewsData.map(review => {
-              const reviewUser = review.user as any; 
-              return {
-                ...review,
-                user: reviewUser ? { 
-                    user_metadata: { 
-                        full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
-                        avatar_url: reviewUser.user_metadata?.avatar_url
-                    } 
-                } : { user_metadata: { full_name: 'Unknown User' } }
-              }
-            }) as ReviewWithUser[];
-            setReviews(transformedReviews);
-        }
-    }, [])
-
     const fetchSellerData = useCallback(async () => {
         if (!userId) return;
         setLoading(true);
 
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('id, user_metadata, created_at')
-            .eq('id', userId)
-            .single();
+        try {
+            // Fetch seller info
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('id, user_metadata, created_at')
+                .eq('id', userId)
+                .single();
 
-        if (userError || !userData) {
-            console.error("Error fetching seller info:", userError || 'User not found');
-            toast({ title: "Error", description: "Could not find seller information.", variant: "destructive" });
-            setLoading(false);
-            return;
-        }
-        
-        const metadata = userData.user_metadata as any;
-        setSeller({
-            id: userData.id,
-            full_name: metadata?.full_name || 'TeeMart Seller',
-            avatar_url: metadata?.avatar_url,
-            created_at: userData.created_at,
-        });
+            if (userError || !userData) {
+                throw userError || new Error('User not found');
+            }
+            
+            const metadata = userData.user_metadata as any;
+            setSeller({
+                id: userData.id,
+                full_name: metadata?.full_name || 'TeeMart Seller',
+                avatar_url: metadata?.avatar_url,
+                created_at: userData.created_at,
+            });
 
-        const { data: listingsData, error: listingsError } = await supabase
-            .from('products')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
+            // Fetch seller's listings
+            const { data: listingsData, error: listingsError } = await supabase
+                .from('products')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
 
-        if (listingsError) {
-            console.error("Error fetching seller listings:", listingsError);
-            toast({ title: "Error", description: "Could not fetch seller's listings.", variant: "destructive" });
-        } else {
+            if (listingsError) {
+                throw listingsError;
+            }
+
             const transformedListings = (listingsData as any[]).map(item => ({
                 ...item,
                 image: item.image_url || [],
@@ -124,22 +94,47 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
+            // Fetch reviews for those listings
             if (transformedListings.length > 0) {
-                await fetchReviewsForListings(transformedListings.map(l => l.id));
+                const productIds = transformedListings.map(l => l.id);
+                const { data: reviewsData, error: reviewsError } = await supabase
+                    .from('reviews')
+                    .select('*, user:users(id, user_metadata)')
+                    .in('product_id', productIds)
+                    .order('created_at', { ascending: false });
+                
+                if (reviewsError) {
+                    throw reviewsError;
+                }
+
+                const transformedReviews = reviewsData.map(review => {
+                  const reviewUser = review.user as any; 
+                  return {
+                    ...review,
+                    user: reviewUser ? { 
+                        user_metadata: { 
+                            full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
+                            avatar_url: reviewUser.user_metadata?.avatar_url
+                        } 
+                    } : { user_metadata: { full_name: 'Unknown User' } }
+                  }
+                }) as ReviewWithUser[];
+                setReviews(transformedReviews);
+            } else {
+                setReviews([]);
             }
+
+        } catch (error: any) {
+             console.error("Error fetching seller data:", error);
+             toast({ title: "Error", description: "Could not fetch seller information.", variant: "destructive" });
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
-    }, [userId, toast, fetchReviewsForListings]);
+    }, [userId, toast]);
 
     useEffect(() => {
         fetchSellerData();
     }, [fetchSellerData]);
-
-    const handleReviewSubmitted = () => {
-        if (listings.length > 0) {
-            fetchReviewsForListings(listings.map(l => l.id));
-        }
-    }
     
     const handleBuyClick = (e: React.MouseEvent, product: Product) => {
         e.preventDefault(); 
@@ -277,7 +272,7 @@ export default function SellerProfilePage() {
                                     <ReviewForm 
                                         listings={listings}
                                         sellerId={seller.id}
-                                        onReviewSubmitted={handleReviewSubmitted} 
+                                        onReviewSubmitted={fetchSellerData} 
                                     />
                                 )}
                             </div>

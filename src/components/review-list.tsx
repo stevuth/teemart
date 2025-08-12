@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReviewWithUser, Product } from "@/lib/types";
@@ -28,10 +29,12 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
     }, [reviews]);
     
     const productListWithReviews = useMemo(() => {
-        return listings.map(listing => ({
-            ...listing,
-            reviews: reviewsByProduct[listing.id] || []
-        })).filter(item => item.reviews.length > 0);
+        return listings
+            .map(listing => ({
+                ...listing,
+                reviews: reviewsByProduct[listing.id] || []
+            }))
+            .filter(item => item.reviews.length > 0);
     }, [listings, reviewsByProduct]);
 
 
@@ -52,7 +55,7 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
 
     return (
         <div className="space-y-8">
-            {productListWithReviews.map((product) => (
+            {productListWithReviews.map((product, pIndex) => (
                 <Card key={product.id}>
                     <CardHeader>
                         <CardTitle>Reviews for: {product.name}</CardTitle>
