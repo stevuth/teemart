@@ -13,12 +13,13 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
-import { Loader2, MessageSquare, Star, MapPin, CalendarDays, Package, ShieldCheck } from 'lucide-react';
+import { Loader2, MessageSquare, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ReviewForm } from '@/components/review-form';
 import { useAuth } from '@/hooks/use-auth';
+import { useCart } from '@/hooks/use-cart';
 
 type Seller = {
     id: string;
@@ -32,6 +33,7 @@ export default function SellerProfilePage() {
     const userId = params.userId as string;
     const { toast } = useToast();
     const { user: currentUser } = useAuth();
+    const { addToCart } = useCart();
 
     const [seller, setSeller] = useState<Seller | null>(null);
     const [listings, setListings] = useState<Product[]>([]);
@@ -139,6 +141,12 @@ export default function SellerProfilePage() {
             fetchReviewsForListings(listings.map(l => l.id));
         }
     }
+    
+    const handleBuyClick = (e: React.MouseEvent, product: Product) => {
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        addToCart(product);
+    };
 
     if (loading) {
         return (
@@ -252,7 +260,18 @@ export default function SellerProfilePage() {
                         <TabsContent value="listings" className="mt-6">
                             {listings.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {listings.map(product => <ProductCard key={product.id} product={product} />)}
+                                    {listings.map(product => (
+                                      <ProductCard 
+                                        key={product.id} 
+                                        product={product} 
+                                        actions={
+                                            <Button size="sm" variant="default" onClick={(e) => handleBuyClick(e, product)} className="w-full">
+                                                <ShoppingCart className="mr-2 h-4 w-4" />
+                                                Buy
+                                            </Button>
+                                        }
+                                      />
+                                    ))}
                                 </div>
                             ) : (
                                 <div className="text-center py-16 border-2 border-dashed rounded-lg">
@@ -280,3 +299,5 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
+    
