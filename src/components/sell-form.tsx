@@ -35,7 +35,9 @@ const locations: string[] = [
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  price: z.coerce.number().min(1, { message: "Price must be at least 1." }),
+  price: z.string().refine(value => !isNaN(parseFloat(value)) && parseFloat(value) >= 1, {
+    message: "Price must be a number and at least 1.",
+  }),
   deliveryFee: z.union([z.coerce.number(), z.string().length(0)]).optional().transform(value => value === "" ? undefined : value),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
@@ -77,7 +79,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price || 0,
+      price: existingProduct?.price?.toString() || "",
       deliveryFee: existingProduct?.deliveryFee || '',
       category: existingProduct?.category,
       condition: existingProduct?.condition,
@@ -179,7 +181,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             user_id: user.id,
             name: data.name,
             description: data.description,
-            price: data.price,
+            price: parseFloat(data.price),
             category: data.category,
             condition: data.condition,
             location: data.location,
@@ -189,10 +191,11 @@ export function SellForm({ existingProduct }: SellFormProps) {
 
         // 3. Upsert (Insert or Update) product in DB
         if (isEditMode && existingProduct) {
-            const { error } = await supabase
+            const { data: updatedData, error } = await supabase
                 .from('products')
                 .update(productData)
-                .eq('id', existingProduct.id);
+                .eq('id', existingProduct.id)
+                .select();
 
             if (error) throw error;
         } else {
@@ -401,5 +404,3 @@ export function SellForm({ existingProduct }: SellFormProps) {
     </div>
   );
 }
-
-    
