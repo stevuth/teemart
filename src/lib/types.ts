@@ -14,7 +14,7 @@ export type Product = {
   postedDate: string; // ISO 8601 date string
   'data-ai-hint'?: string;
   deliveryFee?: number;
-  user_id?: string;
+  user_id: string;
 };
 
 export type ProductWithSeller = Product & {
@@ -64,3 +64,5 @@ export type ReviewWithUser = Review & {
     }
   } | null;
 };
+
+    
