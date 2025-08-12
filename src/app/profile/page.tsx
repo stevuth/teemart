@@ -49,7 +49,7 @@ export default function ProfilePage() {
       setListingsLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee')
+        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -69,6 +69,7 @@ export default function ProfilePage() {
             city: item.city || '',
             condition: item.condition || 'Used',
             description: item.description || '',
+            user_id: item.user_id,
           })) as Product[];
           setActiveListings(transformedData);
       }
@@ -90,7 +91,7 @@ export default function ProfilePage() {
         .select(`
             *,
             user:users(
-                user_metadata
+                id, user_metadata
             )
         `)
         .in('product_id', productIds)
@@ -101,10 +102,18 @@ export default function ProfilePage() {
           toast({ title: "Error", description: "Could not fetch reviews for your listings.", variant: "destructive" });
           setReviews([]);
       } else {
-          const transformedReviews = data.map(review => ({
-              ...review,
-              user: review.user || { user_metadata: { full_name: 'Unknown User' } }
-          })) as ReviewWithUser[];
+          const transformedReviews = data.map(review => {
+             const reviewUser = review.user as any; // Cast to any to access properties safely
+             return {
+                ...review,
+                user: reviewUser ? { 
+                    user_metadata: { 
+                        full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
+                        avatar_url: reviewUser.user_metadata?.avatar_url
+                    } 
+                } : { user_metadata: { full_name: 'Unknown User' } }
+              }
+          }) as ReviewWithUser[];
           setReviews(transformedReviews);
       }
       setReviewsLoading(false);
@@ -391,3 +400,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    

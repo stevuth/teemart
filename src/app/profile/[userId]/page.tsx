@@ -96,17 +96,25 @@ export default function SellerProfilePage() {
                 const productIds = transformedListings.map(l => l.id);
                 const { data: reviewsData, error: reviewsError } = await supabase
                     .from('reviews')
-                    .select('*, user:users(user_metadata)')
+                    .select('*, user:users(id, user_metadata)')
                     .in('product_id', productIds)
                     .order('created_at', { ascending: false });
                 
                 if (reviewsError) {
                     console.error("Error fetching reviews:", reviewsError);
                 } else {
-                    const transformedReviews = reviewsData.map(review => ({
-                      ...review,
-                      user: review.user || { user_metadata: { full_name: 'Unknown User' } }
-                    })) as ReviewWithUser[];
+                    const transformedReviews = reviewsData.map(review => {
+                      const reviewUser = review.user as any; // Cast to any to access properties safely
+                      return {
+                        ...review,
+                        user: reviewUser ? { 
+                            user_metadata: { 
+                                full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
+                                avatar_url: reviewUser.user_metadata?.avatar_url
+                            } 
+                        } : { user_metadata: { full_name: 'Unknown User' } }
+                      }
+                    }) as ReviewWithUser[];
                     setReviews(transformedReviews);
                 }
             }
@@ -251,3 +259,5 @@ export default function SellerProfilePage() {
     );
 }
  
+
+    
