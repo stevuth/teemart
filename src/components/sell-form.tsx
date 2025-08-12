@@ -188,13 +188,14 @@ export function SellForm({ existingProduct }: SellFormProps) {
         // 3. Upsert (Insert or Update) product in DB
         let dbResponse;
         if (isEditMode) {
-             dbResponse = await supabase.from('products').update(productData).eq('id', existingProduct.id).select().single();
+             dbResponse = await supabase.from('products').update(productData).eq('id', existingProduct!.id).select().single();
         } else {
              dbResponse = await supabase.from('products').insert(productData).select().single();
         }
 
-        const { error: dbError } = dbResponse;
-        if (dbError) throw dbError;
+        if (dbResponse.error) {
+            throw dbResponse.error;
+        }
 
         toast({
             title: isEditMode ? "Listing Updated!" : "Listing Created!",
