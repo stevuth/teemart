@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, MessageCircle, ShoppingCart, Truck } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
+import Link from 'next/link';
 
 type ProductCardProps = {
   product: Product;
@@ -90,9 +91,11 @@ export function ProductCard({ product, actions }: ProductCardProps) {
             actions
           ) : (
             <>
-              <Button size="sm" variant="default" className="w-full">
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Contact
+              <Button size="sm" variant="default" className="w-full" asChild>
+                  <Link href={`/profile/${product.user_id}`}>
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Contact
+                  </Link>
               </Button>
               <Button size="sm" variant="default" onClick={handleBuyClick} className="w-full">
                   <ShoppingCart className="mr-2 h-4 w-4" />

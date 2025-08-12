@@ -34,7 +34,7 @@ export default function Home() {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee')
+        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -57,6 +57,7 @@ export default function Home() {
           city: item.city || '',
           condition: item.condition || 'Used',
           description: item.description || '',
+          user_id: item.user_id,
         })) as Product[];
         setProducts(transformedData);
       }
