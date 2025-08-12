@@ -44,21 +44,21 @@ export default function SellerProfilePage() {
         if (!userId) return;
         setLoading(true);
 
-        // Fetch seller public info
+        // Fetch seller public info from the new public.users table
         const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('id, raw_user_meta_data, created_at')
+            .select('id, user_metadata, created_at')
             .eq('id', userId)
             .single();
 
         if (userError || !userData) {
-            console.error("Error fetching seller info:", userError);
+            console.error("Error fetching seller info:", userError || 'User not found');
             toast({ title: "Error", description: "Could not find seller information.", variant: "destructive" });
             setLoading(false);
             return;
         }
         
-        const metadata = userData.raw_user_meta_data as any;
+        const metadata = userData.user_metadata as any;
         setSeller({
             id: userData.id,
             full_name: metadata?.full_name || 'TeeMart Seller',
@@ -250,3 +250,4 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+ 
