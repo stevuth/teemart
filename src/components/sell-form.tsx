@@ -186,17 +186,19 @@ export function SellForm({ existingProduct }: SellFormProps) {
         };
 
         // 3. Upsert (Insert or Update) product in DB
+        let dbResponse;
         if (isEditMode) {
-            const { error } = await supabase
+            dbResponse = await supabase
                 .from('products')
                 .update(productData)
-                .eq('id', existingProduct!.id);
-            if (error) throw error;
+                .eq('id', existingProduct!.id)
         } else {
-            const { error } = await supabase.from('products').insert(productData);
-            if (error) throw error;
+            dbResponse = await supabase.from('products').insert(productData);
         }
 
+        if (dbResponse.error) {
+            throw dbResponse.error;
+        }
 
         toast({
             title: isEditMode ? "Listing Updated!" : "Listing Created!",
@@ -204,7 +206,6 @@ export function SellForm({ existingProduct }: SellFormProps) {
         });
 
         router.replace('/profile');
-        router.refresh();
 
     } catch (error: any) {
         console.error("Submit Error: ", error);
