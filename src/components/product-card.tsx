@@ -10,6 +10,7 @@ import { MapPin, MessageCircle, ShoppingCart, Truck } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type ProductCardProps = {
   product: Product;
@@ -18,12 +19,19 @@ type ProductCardProps = {
 
 export function ProductCard({ product, actions }: ProductCardProps) {
   const { addToCart } = useCart();
+  const router = useRouter();
 
   const handleBuyClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent link navigation when clicking the buy button
-    e.stopPropagation();
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation(); // Stop event from bubbling to the parent Link
     addToCart(product);
   };
+  
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation(); // Stop event from bubbling to the parent Link
+    router.push(`/profile/${product.user_id}`);
+  }
   
   const images = Array.isArray(product.image) ? product.image : [product.image];
   const hasMultipleImages = images.length > 1;
@@ -98,11 +106,9 @@ export function ProductCard({ product, actions }: ProductCardProps) {
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Buy
                 </Button>
-                 <Button asChild size="sm" variant="outline" className="w-full">
-                    <Link href={`/profile/${product.user_id}`}>
-                        <MessageCircle className="mr-2 h-4 w-4"/>
-                        Contact Seller
-                    </Link>
+                 <Button size="sm" variant="outline" className="w-full" onClick={handleContactClick}>
+                    <MessageCircle className="mr-2 h-4 w-4"/>
+                    Contact Seller
                 </Button>
                 </>
             )}
@@ -112,5 +118,3 @@ export function ProductCard({ product, actions }: ProductCardProps) {
     </Link>
   );
 }
-
-    
