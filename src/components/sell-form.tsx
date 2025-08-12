@@ -35,8 +35,8 @@ const locations: string[] = [
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  price: z.string().refine(value => !isNaN(parseFloat(value)) && parseFloat(value) >= 1, {
-    message: "Price must be a number and at least 1.",
+  price: z.string().refine(value => /^\d+$/.test(value) && Number(value) >= 1, {
+    message: "Price must be a valid number of at least 1.",
   }),
   deliveryFee: z.union([z.coerce.number(), z.string().length(0)]).optional().transform(value => value === "" ? undefined : value),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
@@ -181,7 +181,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             user_id: user.id,
             name: data.name,
             description: data.description,
-            price: parseFloat(data.price),
+            price: Number(data.price),
             category: data.category,
             condition: data.condition,
             location: data.location,
@@ -208,11 +208,10 @@ export function SellForm({ existingProduct }: SellFormProps) {
             description: `Your product has been successfully ${isEditMode ? 'updated' : 'listed'}.`,
         });
 
-        router.replace('/profile');
-        router.refresh();
+        router.push('/profile');
         
     } catch (error: any) {
-        console.error("Submit Error:", error);
+        console.error("Submit Error: ", error);
         toast({
             title: "Operation Failed",
             description: error.message || "There was an error. Please try again.",
