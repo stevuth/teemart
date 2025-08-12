@@ -87,3 +87,5 @@ export function ProductCard({ product, actions }: ProductCardProps) {
     </Card>
   );
 }
+
+    

@@ -75,12 +75,12 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/');
+      return;
     }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    fetchListings();
-  }, [fetchListings]);
+    if(user) {
+      fetchListings();
+    }
+  }, [user, authLoading, router, fetchListings]);
 
   
   const getInitials = (name?: string | null) => {
@@ -374,3 +374,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    

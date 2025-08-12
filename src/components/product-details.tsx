@@ -61,6 +61,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                                     alt={`Product thumbnail ${index + 1}`}
                                     fill
                                     className="object-cover"
+                                    sizes="10vw"
                                 />
                             </button>
                         ))}
@@ -125,3 +126,5 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     </div>
   );
 }
+
+    
