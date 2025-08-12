@@ -35,9 +35,7 @@ const locations: string[] = [
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  price: z.string().refine(value => /^\d+$/.test(value) && Number(value) >= 1, {
-    message: "Price must be a valid number of at least 1.",
-  }),
+  price: z.coerce.number().positive({ message: "Price must be a positive number." }).min(1, { message: "Price must be at least 1." }),
   deliveryFee: z.union([z.coerce.number(), z.string().length(0)]).optional().transform(value => value === "" ? undefined : value),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
@@ -79,7 +77,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price?.toString() || "",
+      price: existingProduct?.price || 0,
       deliveryFee: existingProduct?.deliveryFee || '',
       category: existingProduct?.category,
       condition: existingProduct?.condition,
@@ -181,7 +179,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             user_id: user.id,
             name: data.name,
             description: data.description,
-            price: Number(data.price),
+            price: data.price,
             category: data.category,
             condition: data.condition,
             location: data.location,
@@ -208,7 +206,8 @@ export function SellForm({ existingProduct }: SellFormProps) {
             description: `Your product has been successfully ${isEditMode ? 'updated' : 'listed'}.`,
         });
 
-        router.push('/profile');
+        router.replace('/profile');
+        router.refresh();
         
     } catch (error: any) {
         console.error("Submit Error: ", error);
