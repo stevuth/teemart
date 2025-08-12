@@ -203,6 +203,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
         });
 
         router.replace('/profile');
+        router.refresh();
 
     } catch (error: any) {
         console.error("Submit Error: ", error);
@@ -399,3 +400,4 @@ export function SellForm({ existingProduct }: SellFormProps) {
 }
 
     
+
