@@ -35,8 +35,10 @@ const locations: string[] = [
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  price: z.coerce.number().positive({ message: "Price must be a positive number." }),
-  deliveryFee: z.union([z.coerce.number().positive().optional(), z.literal('')]),
+  price: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "Price must be a positive number.",
+  }),
+  deliveryFee: z.string().optional(),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
@@ -77,8 +79,8 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price || undefined,
-      deliveryFee: existingProduct?.deliveryFee || '',
+      price: existingProduct?.price ? String(existingProduct.price) : "",
+      deliveryFee: existingProduct?.deliveryFee ? String(existingProduct.deliveryFee) : "",
       category: existingProduct?.category,
       condition: existingProduct?.condition,
       location: existingProduct?.location || '',
@@ -179,12 +181,12 @@ export function SellForm({ existingProduct }: SellFormProps) {
             user_id: user.id,
             name: data.name,
             description: data.description,
-            price: data.price,
+            price: data.price, // Pass as string
             category: data.category,
             condition: data.condition,
             location: data.location,
             image_url: imageUrls,
-            delivery_fee: data.deliveryFee === '' ? null : data.deliveryFee,
+            delivery_fee: data.deliveryFee && data.deliveryFee !== '' ? data.deliveryFee : null, // Pass as string or null
         };
 
         // 3. Upsert (Insert or Update) product in DB
@@ -266,7 +268,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Price (₦)</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="Enter price" {...field} />
+                        <Input type="text" inputMode="decimal" placeholder="Enter price" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -279,7 +281,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Delivery Fee (₦) <span className="text-muted-foreground">(Optional)</span></FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="Enter delivery fee" {...field} />
+                        <Input type="text" inputMode="decimal" placeholder="Enter delivery fee" {...field} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
