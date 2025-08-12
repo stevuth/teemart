@@ -18,6 +18,7 @@ type EditProductPageProps = {
 
 export default function EditProductPage({ params }: EditProductPageProps) {
     const { user, loading: authLoading } = useAuth();
+    const { id: productId } = params;
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
             const { data, error } = await supabase
                 .from('products')
                 .select()
-                .eq('id', params.id)
+                .eq('id', productId)
                 .single();
 
             if (error) {
@@ -57,7 +58,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         if (!authLoading) {
             fetchProduct();
         }
-    }, [params.id, user, authLoading]);
+    }, [productId, user, authLoading]);
 
     if (authLoading || loading) {
         return (
