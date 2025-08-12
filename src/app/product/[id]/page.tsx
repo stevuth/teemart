@@ -10,11 +10,7 @@ import { supabase } from '@/lib/supabase-client';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type ProductPageProps = {
-  params: { id: string };
-};
-
-export default function ProductPage({ params }: ProductPageProps) {
+export default function ProductPage({ params: { id } }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +20,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       const { data, error } = await supabase
         .from('products')
         .select('id, name, price, image_url, category, location, condition, description, created_at, delivery_fee')
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
       
       if (error) {
@@ -47,10 +43,10 @@ export default function ProductPage({ params }: ProductPageProps) {
       setLoading(false);
     };
 
-    if (params.id) {
+    if (id) {
       fetchProduct();
     }
-  }, [params.id]);
+  }, [id]);
 
 
   if (loading) {

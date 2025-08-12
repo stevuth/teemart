@@ -12,13 +12,8 @@ import { useAuth } from '@/hooks/use-auth';
 import type { Product } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
-type EditProductPageProps = {
-  params: { id: string };
-};
-
-export default function EditProductPage({ params }: EditProductPageProps) {
+export default function EditProductPage({ params: { id: productId } }: { params: { id: string } }) {
     const { user, loading: authLoading } = useAuth();
-    const { id: productId } = params;
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
