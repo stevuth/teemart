@@ -12,11 +12,11 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X } from "lucide-react";
-import { categories, conditions } from "@/lib/types";
+import { categories, conditions, Product } from "@/lib/types";
 import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 const MAX_FILES = 5;
@@ -31,6 +31,7 @@ const locations: string[] = [
     'Zamfara', 'FCT - Abuja'
 ];
 
+// Zod schema for the form
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
@@ -40,152 +41,185 @@ const formSchema = z.object({
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
   images: z.any()
-    .refine((files: FileList | null | undefined) => files && files?.length >= 1, "At least one image is required.")
-    .refine((files: FileList | null | undefined) => files && files?.length <= MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
+    .refine((files) => files?.length >= 1, "At least one image is required.")
+    .refine((files) => files?.length <= MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
     .refine(
-        (files: FileList | null | undefined) => files && Array.from(files).every((file) => file.size <= MAX_FILE_SIZE),
+        (files) => Array.from(files).every((file: any) => file.size <= MAX_FILE_SIZE),
         `Each file size must be less than 3MB.`
     )
     .refine(
-        (files: FileList | null | undefined) => files && Array.from(files).every((file) => ALLOWED_FILE_TYPES.includes(file.type)),
+        (files) => Array.from(files).every((file: any) => ALLOWED_FILE_TYPES.includes(file.type)),
         "Only .jpg, .jpeg, .png and .webp formats are supported."
-    ),
+    ).optional(), // Optional for edit mode where images might exist
+}).refine(data => {
+    // If in create mode (no existing product), images are required.
+    // This logic is a bit complex for Zod, handled in component logic.
+    return true;
 });
+
 
 type ProductFormValues = z.infer<typeof formSchema>;
 
-export function SellForm() {
+type SellFormProps = {
+  existingProduct?: Product | null;
+}
+
+export function SellForm({ existingProduct }: SellFormProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const isEditMode = !!existingProduct;
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      price: 0,
-      deliveryFee: '',
-      location: '',
+      name: existingProduct?.name || "",
+      description: existingProduct?.description || "",
+      price: existingProduct?.price || 0,
+      deliveryFee: existingProduct?.deliveryFee || '',
+      category: existingProduct?.category,
+      condition: existingProduct?.condition,
+      location: existingProduct?.location || '',
       images: undefined,
     },
   });
+  
+  useEffect(() => {
+    if (isEditMode && existingProduct?.image) {
+        setImagePreviews(existingProduct.image);
+    }
+  }, [existingProduct, isEditMode]);
 
   const { isSubmitting } = form.formState;
-
+  
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    const currentImages = imageFiles;
-    const combined = [...currentImages, ...files].slice(0, MAX_FILES);
+    if (imagePreviews.length + files.length > MAX_FILES) {
+        toast({
+            title: "Too many images",
+            description: `You can only have a total of ${MAX_FILES} images.`,
+            variant: "destructive",
+        });
+        return;
+    }
+
+    const validFiles = files.filter(file => {
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+            toast({ title: "Invalid File Type", description: `${file.name} is not a supported image type.`, variant: "destructive" });
+            return false;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            toast({ title: "File Too Large", description: `${file.name} exceeds the 3MB size limit.`, variant: "destructive" });
+            return false;
+        }
+        return true;
+    });
+
+    const combinedFiles = [...imageFiles, ...validFiles];
+    setImageFiles(combinedFiles);
     
-    setImageFiles(combined);
-
-    const dataTransfer = new DataTransfer();
-    combined.forEach(file => dataTransfer.items.add(file));
-    form.setValue('images', dataTransfer.files, { shouldValidate: true });
-
-    const newPreviews = combined.map(file => URL.createObjectURL(file));
-    setImagePreviews(newPreviews);
+    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...newPreviews]);
   };
   
   const removeImage = (index: number) => {
-    const updatedFiles = imageFiles.filter((_, i) => i !== index);
-    setImageFiles(updatedFiles);
+    const newPreviews = [...imagePreviews];
+    const newFiles = [...imageFiles];
     
-    const dataTransfer = new DataTransfer();
-    updatedFiles.forEach(file => dataTransfer.items.add(file));
-    form.setValue('images', dataTransfer.files, { shouldValidate: true });
-
-    const updatedPreviews = updatedFiles.map(file => URL.createObjectURL(file));
-    setImagePreviews(updatedPreviews);
+    const removedPreview = newPreviews.splice(index, 1)[0];
+    // Check if the removed preview is a blob URL (new upload) or existing URL
+    if (removedPreview.startsWith('blob:')) {
+      const fileIndex = imageFiles.findIndex(file => URL.createObjectURL(file) === removedPreview);
+      if(fileIndex > -1) {
+        newFiles.splice(fileIndex, 1);
+      }
+    }
+    
+    setImagePreviews(newPreviews);
+    setImageFiles(newFiles);
   }
 
   const onSubmit = async (data: ProductFormValues) => {
     if (!user) {
-        toast({
-            title: "Authentication Error",
-            description: "You must be logged in to list a product.",
-            variant: "destructive"
-        });
+        toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
         return;
     }
 
-    const imageUrls: string[] = [];
-    const uploadedFilePaths: string[] = [];
+    if (!isEditMode && imageFiles.length === 0) {
+        form.setError("images", { type: "manual", message: "At least one image is required." });
+        return;
+    }
 
-    if (!data.images) return;
-
-    for (const imageFile of Array.from(data.images)) {
-        const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
-        const { data: uploadData, error: uploadError } = await supabase
-            .storage
-            .from('product-images')
-            .upload(fileName, imageFile, {
-                cacheControl: '3600',
-                upsert: false
-            });
+    try {
+        let imageUrls: string[] = isEditMode ? imagePreviews.filter(p => !p.startsWith('blob:')) : [];
         
-        if (uploadError) {
-             console.error("Image Upload Error: ", uploadError);
-             toast({
-                title: "Image Upload Failed",
-                description: `Error uploading ${imageFile.name}. Please try again.`,
-                variant: "destructive"
-             });
-             if (uploadedFilePaths.length > 0) {
-                await supabase.storage.from('product-images').remove(uploadedFilePaths);
-             }
-             return;
+        // 1. Upload new images to Supabase Storage
+        if (imageFiles.length > 0) {
+            for (const imageFile of imageFiles) {
+                const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
+                const { data: uploadData, error: uploadError } = await supabase
+                    .storage.from('product-images').upload(fileName, imageFile);
+                if (uploadError) throw new Error(`Image Upload Failed: ${uploadError.message}`);
+                const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
+                imageUrls.push(publicUrl);
+            }
+        }
+        
+        if (imageUrls.length === 0) {
+            form.setError("images", { type: "manual", message: "At least one image is required." });
+            return;
         }
 
-        const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
-        imageUrls.push(publicUrl);
-        uploadedFilePaths.push(uploadData.path);
-    }
-        
-    const { error: insertError } = await supabase
-      .from('products')
-      .insert({
-        user_id: user.id,
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        category: data.category,
-        condition: data.condition,
-        location: data.location,
-        image_url: imageUrls,
-        delivery_fee: data.deliveryFee || null,
-      });
-      
-    if (insertError) {
-        console.error("Database Insert Error: ", insertError);
+        // 2. Prepare product data for DB
+        const productData = {
+            user_id: user.id,
+            name: data.name,
+            description: data.description,
+            price: data.price,
+            category: data.category,
+            condition: data.condition,
+            location: data.location,
+            image_url: imageUrls,
+            delivery_fee: data.deliveryFee || null,
+        };
+
+        // 3. Upsert (Insert or Update) product in DB
+        let dbResponse;
+        if (isEditMode) {
+             dbResponse = await supabase.from('products').update(productData).eq('id', existingProduct.id);
+        } else {
+             dbResponse = await supabase.from('products').insert(productData);
+        }
+
+        const { error: dbError } = dbResponse;
+        if (dbError) throw dbError;
+
         toast({
-            title: "Listing Creation Failed",
-            description: "There was an error creating your listing. Please try again.",
+            title: isEditMode ? "Listing Updated!" : "Listing Created!",
+            description: `Your product has been successfully ${isEditMode ? 'updated' : 'listed'}.`,
+        });
+
+        router.push(`/profile`);
+        router.refresh();
+
+    } catch (error: any) {
+        console.error("Submit Error: ", error);
+        toast({
+            title: "Operation Failed",
+            description: error.message || "There was an error. Please try again.",
             variant: "destructive"
         });
-        await supabase.storage.from('product-images').remove(uploadedFilePaths);
-        return;
     }
-
-    toast({
-      title: "Listing Created!",
-      description: "Your product has been successfully listed for sale.",
-    });
-    form.reset();
-    setImagePreviews([]);
-    setImageFiles([]);
-    router.push(`/profile`);
   };
 
   return (
     <div className="max-w-3xl mx-auto">
         <Card>
         <CardHeader>
-            <CardTitle className="text-3xl">Sell Your Item</CardTitle>
-            <CardDescription>Fill out the details below to list your product on TeeMart.</CardDescription>
+            <CardTitle className="text-3xl">{isEditMode ? "Edit Your Item" : "Sell Your Item"}</CardTitle>
+            <CardDescription>{isEditMode ? "Update the details below." : "Fill out the details below to list your product."}</CardDescription>
         </CardHeader>
         <CardContent>
             <Form {...form}>
@@ -314,7 +348,7 @@ export function SellForm() {
                 <FormField
                 control={form.control}
                 name="images"
-                render={({ field: { onChange, value, ...rest }}) => (
+                render={({ field }) => (
                     <FormItem>
                         <FormLabel>Product Images</FormLabel>
                             <FormControl>
@@ -354,7 +388,7 @@ export function SellForm() {
                 )}
 
                 <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Listing"}
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditMode ? "Update Listing" : "Create Listing" }
                 </Button>
             </form>
             </Form>

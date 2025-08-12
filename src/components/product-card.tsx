@@ -12,9 +12,10 @@ import { useCart } from '@/hooks/use-cart';
 
 type ProductCardProps = {
   product: Product;
+  actions?: React.ReactNode;
 };
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, actions }: ProductCardProps) {
   const { addToCart } = useCart();
 
   const handleBuyClick = () => {
@@ -67,14 +68,20 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
         </div>
         <div className="w-full flex flex-col sm:flex-row gap-2">
-            <Button size="sm" variant="default" className="w-full">
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Contact
-            </Button>
-            <Button size="sm" variant="default" onClick={handleBuyClick} className="w-full">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Buy
-            </Button>
+          {actions ? (
+            actions
+          ) : (
+            <>
+              <Button size="sm" variant="default" className="w-full">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Contact
+              </Button>
+              <Button size="sm" variant="default" onClick={handleBuyClick} className="w-full">
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Buy
+              </Button>
+            </>
+          )}
         </div>
       </CardFooter>
     </Card>
