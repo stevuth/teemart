@@ -186,16 +186,17 @@ export function SellForm({ existingProduct }: SellFormProps) {
         };
 
         // 3. Upsert (Insert or Update) product in DB
-        let dbResponse;
         if (isEditMode) {
-             dbResponse = await supabase.from('products').update(productData).eq('id', existingProduct!.id).select().single();
+            const { error } = await supabase
+                .from('products')
+                .update(productData)
+                .eq('id', existingProduct!.id);
+            if (error) throw error;
         } else {
-             dbResponse = await supabase.from('products').insert(productData).select().single();
+            const { error } = await supabase.from('products').insert(productData);
+            if (error) throw error;
         }
 
-        if (dbResponse.error) {
-            throw dbResponse.error;
-        }
 
         toast({
             title: isEditMode ? "Listing Updated!" : "Listing Created!",
@@ -398,6 +399,3 @@ export function SellForm({ existingProduct }: SellFormProps) {
     </div>
   );
 }
-
-    
-
