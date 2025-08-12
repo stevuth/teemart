@@ -192,8 +192,9 @@ export function SellForm({ existingProduct }: SellFormProps) {
                 .from('products')
                 .update(productData)
                 .eq('id', existingProduct!.id)
+                .select();
         } else {
-            dbResponse = await supabase.from('products').insert(productData);
+            dbResponse = await supabase.from('products').insert(productData).select();
         }
 
         if (dbResponse.error) {
@@ -206,6 +207,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
         });
 
         router.replace('/profile');
+        router.refresh();
 
     } catch (error: any) {
         console.error("Submit Error: ", error);
