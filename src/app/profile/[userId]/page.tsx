@@ -237,14 +237,6 @@ export default function SellerProfilePage() {
                                 <span>4.9 (125 reviews)</span>
                             </div>
                         </div>
-                         {currentUser && currentUser.id !== seller.id && (
-                            <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                                <Button variant="outline" className="w-full sm:w-auto">
-                                    <MessageSquare className="mr-2 h-4 w-4"/>
-                                    Chat with Seller
-                                </Button>
-                            </div>
-                        )}
                     </div>
                 </div>
 
