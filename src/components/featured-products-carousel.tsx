@@ -3,7 +3,6 @@
 
 import React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import {
   Carousel,
   CarouselContent,
@@ -16,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { Product } from '@/lib/types'
 import { Badge } from './ui/badge'
+import { useCart } from '@/hooks/use-cart'
 
 type FeaturedProductsCarouselProps = {
   products: Product[]
@@ -25,6 +25,7 @@ export function FeaturedProductsCarousel({ products }: FeaturedProductsCarouselP
   const plugin = React.useRef(
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
   );
+  const { addToCart } = useCart();
 
   return (
     <section className="w-full py-12 md:py-16 lg:py-20 bg-secondary/50">
@@ -47,7 +48,7 @@ export function FeaturedProductsCarousel({ products }: FeaturedProductsCarouselP
                   <Card className="overflow-hidden h-full flex flex-col">
                     <div className="relative aspect-[4/3]">
                       <Image
-                        src={product.image}
+                        src={Array.isArray(product.image) ? product.image[0] : product.image}
                         alt={product.name}
                         fill
                         className="object-cover"
@@ -57,16 +58,12 @@ export function FeaturedProductsCarousel({ products }: FeaturedProductsCarouselP
                     </div>
                     <CardContent className="p-6 flex flex-col flex-grow">
                       <h3 className="text-xl font-bold mb-2 leading-snug">
-                        <Link href={`/product/${product.id}`} className="hover:text-primary transition-colors">
-                            {product.name}
-                        </Link>
+                        {product.name}
                       </h3>
                       <p className="text-muted-foreground text-sm mb-4 flex-grow">{product.description.substring(0, 100)}...</p>
                       <div className="flex justify-between items-center">
                         <p className="text-2xl font-bold text-primary">₦{product.price.toLocaleString()}</p>
-                        <Button asChild>
-                           <Link href={`/product/${product.id}`}>View Details</Link>
-                        </Button>
+                        <Button onClick={() => addToCart(product)}>Add to Cart</Button>
                       </div>
                     </CardContent>
                   </Card>

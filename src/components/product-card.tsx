@@ -2,7 +2,6 @@
 "use client"
 
 import Image from 'next/image';
-import Link from 'next/link';
 import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
             <CarouselContent>
               {images.map((imgSrc, index) => (
                 <CarouselItem key={index}>
-                  <Link href={`/product/${product.id}`} aria-label={product.name} className="relative block h-full aspect-[4/3]">
+                  <div className="relative block h-full aspect-[4/3]">
                     <Image
                       src={imgSrc || 'https://placehold.co/600x400'}
                       alt={`${product.name} image ${index + 1}`}
@@ -43,7 +42,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
                       sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
                       data-ai-hint={product['data-ai-hint']}
                     />
-                  </Link>
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -51,7 +50,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
             <CarouselNext className="absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Carousel>
         ) : (
-          <Link href={`/product/${product.id}`} aria-label={product.name}>
+          <div className="relative h-full">
             <Image
               src={images[0] || 'https://placehold.co/600x400'}
               alt={product.name}
@@ -60,7 +59,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
               sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
               data-ai-hint={product['data-ai-hint']}
             />
-          </Link>
+          </div>
         )}
       </CardHeader>
       <CardContent className="p-3 sm:p-4 flex-grow">
@@ -69,9 +68,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
           <Badge variant="outline" className="text-xs">{product.condition}</Badge>
         </div>
         <CardTitle className="text-base sm:text-lg font-bold leading-tight">
-           <Link href={`/product/${product.id}`} className="hover:text-primary transition-colors">
             {product.name}
-           </Link>
         </CardTitle>
       </CardContent>
       <CardFooter className="p-3 sm:p-4 pt-2 flex flex-col items-start gap-3">
