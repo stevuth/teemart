@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, MessageCircle, ShoppingCart, Truck } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 
 type ProductCardProps = {
   product: Product;
@@ -22,25 +23,45 @@ export function ProductCard({ product, actions }: ProductCardProps) {
     addToCart(product);
   };
   
-  const displayImage = Array.isArray(product.image) && product.image.length > 0
-    ? product.image[0]
-    : typeof product.image === 'string'
-    ? product.image
-    : 'https://placehold.co/600x400';
+  const images = Array.isArray(product.image) ? product.image : [product.image];
+  const hasMultipleImages = images.length > 1;
 
   return (
     <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg">
       <CardHeader className="p-0 relative aspect-[4/3]">
-        <Link href={`/product/${product.id}`} aria-label={product.name}>
-          <Image
-            src={displayImage}
-            alt={product.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            data-ai-hint={product['data-ai-hint']}
-          />
-        </Link>
+        {hasMultipleImages ? (
+          <Carousel className="w-full h-full group">
+            <CarouselContent>
+              {images.map((imgSrc, index) => (
+                <CarouselItem key={index}>
+                  <Link href={`/product/${product.id}`} aria-label={product.name} className="relative block h-full aspect-[4/3]">
+                    <Image
+                      src={imgSrc || 'https://placehold.co/600x400'}
+                      alt={`${product.name} image ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                      data-ai-hint={product['data-ai-hint']}
+                    />
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CarouselNext className="absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Carousel>
+        ) : (
+          <Link href={`/product/${product.id}`} aria-label={product.name}>
+            <Image
+              src={images[0] || 'https://placehold.co/600x400'}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              data-ai-hint={product['data-ai-hint']}
+            />
+          </Link>
+        )}
       </CardHeader>
       <CardContent className="p-3 sm:p-4 flex-grow">
         <div className="flex justify-between items-start gap-2 mb-2">
@@ -87,5 +108,3 @@ export function ProductCard({ product, actions }: ProductCardProps) {
     </Card>
   );
 }
-
-    
