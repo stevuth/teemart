@@ -35,7 +35,9 @@ const locations: string[] = [
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  price: z.coerce.number().positive({ message: "Price must be a positive number." }).min(1, { message: "Price must be at least 1." }),
+  price: z.string().refine(value => !isNaN(parseFloat(value)) && parseFloat(value) > 0, {
+    message: "Price must be a positive number.",
+  }),
   deliveryFee: z.union([z.coerce.number(), z.string().length(0)]).optional().transform(value => value === "" ? undefined : value),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
@@ -77,7 +79,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price || undefined,
+      price: existingProduct?.price ? String(existingProduct.price) : "",
       deliveryFee: existingProduct?.deliveryFee || '',
       category: existingProduct?.category,
       condition: existingProduct?.condition,
@@ -179,12 +181,12 @@ export function SellForm({ existingProduct }: SellFormProps) {
             user_id: user.id,
             name: data.name,
             description: data.description,
-            price: data.price,
+            price: data.price, // Pass as string, Supabase will handle casting to NUMERIC
             category: data.category,
             condition: data.condition,
             location: data.location,
             image_url: imageUrls,
-            delivery_fee: data.deliveryFee || null,
+            delivery_fee: data.deliveryFee ? Number(data.deliveryFee) : null,
         };
 
         // 3. Upsert (Insert or Update) product in DB
@@ -403,3 +405,5 @@ export function SellForm({ existingProduct }: SellFormProps) {
     </div>
   );
 }
+
+    
