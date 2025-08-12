@@ -17,6 +17,8 @@ import { Loader2, MessageSquare, Star, MapPin, CalendarDays, Package, ShieldChec
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { ReviewForm } from '@/components/review-form';
+import { useAuth } from '@/hooks/use-auth';
 
 type Seller = {
     id: string;
@@ -29,6 +31,7 @@ export default function SellerProfilePage() {
     const params = useParams();
     const userId = params.userId as string;
     const { toast } = useToast();
+    const { user: currentUser } = useAuth();
 
     const [seller, setSeller] = useState<Seller | null>(null);
     const [listings, setListings] = useState<Product[]>([]);
@@ -93,38 +96,49 @@ export default function SellerProfilePage() {
 
             // Fetch reviews for the listings
             if (transformedListings.length > 0) {
-                const productIds = transformedListings.map(l => l.id);
-                const { data: reviewsData, error: reviewsError } = await supabase
-                    .from('reviews')
-                    .select('*, user:users(id, user_metadata)')
-                    .in('product_id', productIds)
-                    .order('created_at', { ascending: false });
-                
-                if (reviewsError) {
-                    console.error("Error fetching reviews:", reviewsError);
-                } else {
-                    const transformedReviews = reviewsData.map(review => {
-                      const reviewUser = review.user as any; // Cast to any to access properties safely
-                      return {
-                        ...review,
-                        user: reviewUser ? { 
-                            user_metadata: { 
-                                full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
-                                avatar_url: reviewUser.user_metadata?.avatar_url
-                            } 
-                        } : { user_metadata: { full_name: 'Unknown User' } }
-                      }
-                    }) as ReviewWithUser[];
-                    setReviews(transformedReviews);
-                }
+                await fetchReviewsForListings(transformedListings.map(l => l.id));
             }
         }
         setLoading(false);
     }, [userId, toast]);
+    
+    const fetchReviewsForListings = useCallback(async (productIds: string[]) => {
+       if (productIds.length === 0) return;
+        const { data: reviewsData, error: reviewsError } = await supabase
+            .from('reviews')
+            .select('*, user:users(id, user_metadata)')
+            .in('product_id', productIds)
+            .order('created_at', { ascending: false });
+        
+        if (reviewsError) {
+            console.error("Error fetching reviews:", reviewsError);
+        } else {
+            const transformedReviews = reviewsData.map(review => {
+              const reviewUser = review.user as any; 
+              return {
+                ...review,
+                user: reviewUser ? { 
+                    user_metadata: { 
+                        full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
+                        avatar_url: reviewUser.user_metadata?.avatar_url
+                    } 
+                } : { user_metadata: { full_name: 'Unknown User' } }
+              }
+            }) as ReviewWithUser[];
+            setReviews(transformedReviews);
+        }
+    }, [])
 
     useEffect(() => {
         fetchSellerData();
     }, [fetchSellerData]);
+
+    const handleReviewSubmitted = () => {
+        // Refetch reviews after a new one is submitted
+        if (listings.length > 0) {
+            fetchReviewsForListings(listings.map(l => l.id));
+        }
+    }
 
     if (loading) {
         return (
@@ -248,8 +262,14 @@ export default function SellerProfilePage() {
                         </TabsContent>
 
                         <TabsContent value="reviews" className="mt-6">
-                            <ReviewList reviews={reviews} listings={listings} />
-                            {/* Review submission form would go here */}
+                            <div className="space-y-8">
+                                <ReviewList reviews={reviews} listings={listings} />
+                                <ReviewForm 
+                                    listings={listings}
+                                    sellerId={seller.id}
+                                    onReviewSubmitted={handleReviewSubmitted} 
+                                />
+                            </div>
                         </TabsContent>
                     </Tabs>
                 </div>
@@ -258,6 +278,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
- 
-
-    

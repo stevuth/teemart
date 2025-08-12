@@ -8,6 +8,7 @@ import { StarRatingDisplay } from "./star-rating-display";
 import { formatDistanceToNow } from "date-fns";
 import { useMemo } from 'react';
 import { Separator } from "./ui/separator";
+import { MessageSquare } from "lucide-react";
 
 type ReviewListProps = {
     reviews: ReviewWithUser[];
@@ -43,15 +44,16 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
     if (reviews.length === 0) {
         return (
             <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                <h3 className="text-xl font-medium">No reviews yet</h3>
-                <p className="mt-2 text-muted-foreground">Your listings don't have any reviews from buyers.</p>
+                <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-4 text-xl font-medium">No reviews yet</h3>
+                <p className="mt-2 text-muted-foreground">This seller hasn't received any reviews on their products.</p>
             </div>
         )
     }
 
     return (
         <div className="space-y-8">
-            {productListWithReviews.map((product, pIndex) => (
+            {productListWithReviews.map((product) => (
                 <Card key={product.id}>
                     <CardHeader>
                         <CardTitle>Reviews for: {product.name}</CardTitle>
@@ -62,7 +64,7 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
                                 <div key={review.id}>
                                     <div className="flex items-start gap-4">
                                         <Avatar>
-                                            <AvatarImage src={review.user?.user_metadata.avatar_url} alt={review.user?.user_metadata.full_name} />
+                                            <AvatarImage src={review.user?.user_metadata.avatar_url} alt={review.user?.user_metadata.full_name || ''} />
                                             <AvatarFallback>{getInitials(review.user?.user_metadata.full_name)}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex-grow">
