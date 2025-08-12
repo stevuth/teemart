@@ -161,7 +161,9 @@ export function SellForm({ existingProduct }: SellFormProps) {
                 const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
                 const { data: uploadData, error: uploadError } = await supabase
                     .storage.from('product-images').upload(fileName, imageFile);
+
                 if (uploadError) throw uploadError;
+
                 const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
                 imageUrls.push(publicUrl);
             }
@@ -187,15 +189,12 @@ export function SellForm({ existingProduct }: SellFormProps) {
 
         // 3. Upsert (Insert or Update) product in DB
         if (isEditMode && existingProduct) {
-             const { data: updatedData, error } = await supabase
+            const { error } = await supabase
                 .from('products')
                 .update(productData)
-                .eq('id', existingProduct.id)
-                .select();
+                .eq('id', existingProduct.id);
 
             if (error) throw error;
-            console.log('Updated row:', updatedData);
-
         } else {
             const { error } = await supabase.from('products').insert(productData);
             if (error) throw error;
@@ -207,6 +206,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
         });
 
         router.replace('/profile');
+        router.refresh();
         
     } catch (error: any) {
         console.error("Submit Error:", error);
