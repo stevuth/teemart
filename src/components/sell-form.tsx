@@ -77,7 +77,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price || 0,
+      price: existingProduct?.price || undefined,
       deliveryFee: existingProduct?.deliveryFee || '',
       category: existingProduct?.category,
       condition: existingProduct?.condition,
@@ -189,11 +189,12 @@ export function SellForm({ existingProduct }: SellFormProps) {
 
         // 3. Upsert (Insert or Update) product in DB
         if (isEditMode && existingProduct) {
-            const { data: updatedData, error } = await supabase
+            const { error } = await supabase
                 .from('products')
                 .update(productData)
                 .eq('id', existingProduct.id)
-                .select();
+                .select()
+                .single();
 
             if (error) throw error;
         } else {
