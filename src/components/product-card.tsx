@@ -106,7 +106,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
                     <ShoppingCart className="mr-2 h-4 w-4" />
                     Buy
                 </Button>
-                 <Button size="sm" variant="outline" className="w-full" onClick={handleContactClick}>
+                 <Button size="sm" variant="default" className="w-full" onClick={handleContactClick}>
                     <MessageCircle className="mr-2 h-4 w-4"/>
                     Contact Seller
                 </Button>
