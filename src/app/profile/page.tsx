@@ -18,22 +18,24 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { orders as staticOrders } from '@/lib/data';
 import { ProductCard } from '@/components/product-card';
-import type { Order, OrderStatus, Product } from '@/lib/types';
+import type { Order, OrderStatus, Product, ReviewWithUser } from '@/lib/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteProductDialog } from '@/components/delete-product-dialog';
-
+import { ReviewList } from '@/components/review-list';
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState<Product[]>([]);
+  const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [purchaseHistory, setPurchaseHistory] = useState<Product[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const enrichedOrders = useMemo(() => {
@@ -54,6 +56,7 @@ export default function ProfilePage() {
       if (error) {
         console.error("Error fetching user's listings:", error.message || error);
         toast({ title: "Error", description: "Could not fetch your listings.", variant: "destructive" });
+        setActiveListings([]);
       } else {
           const transformedData = (data as any[]).map(item => ({
             ...item,
@@ -73,6 +76,40 @@ export default function ProfilePage() {
     }
   }, [user, toast]);
 
+  const fetchReviewsForListings = useCallback(async (listings: Product[]) => {
+      if (listings.length === 0) {
+        setReviews([]);
+        setReviewsLoading(false);
+        return;
+      }
+      setReviewsLoading(true);
+      const productIds = listings.map(l => l.id);
+      
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+            *,
+            user:users(
+                user_metadata
+            )
+        `)
+        .in('product_id', productIds)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+          console.error("Error fetching reviews:", error.message || error);
+          toast({ title: "Error", description: "Could not fetch reviews for your listings.", variant: "destructive" });
+          setReviews([]);
+      } else {
+          const transformedReviews = data.map(review => ({
+              ...review,
+              user: review.user || { user_metadata: { full_name: 'Unknown User' } }
+          })) as ReviewWithUser[];
+          setReviews(transformedReviews);
+      }
+      setReviewsLoading(false);
+  }, [toast]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/');
@@ -82,6 +119,15 @@ export default function ProfilePage() {
       fetchListings();
     }
   }, [user, authLoading, router, fetchListings]);
+
+  useEffect(() => {
+    if (activeListings.length > 0) {
+        fetchReviewsForListings(activeListings);
+    } else if (!listingsLoading) {
+        setReviews([]);
+        setReviewsLoading(false);
+    }
+  }, [activeListings, listingsLoading, fetchReviewsForListings]);
 
   
   const getInitials = (name?: string | null) => {
@@ -326,45 +372,15 @@ export default function ProfilePage() {
                   </TabsContent>
                   
                   <TabsContent value="reviews" className="mt-6">
-                      <div className="space-y-6">
-                          <h3 className="text-lg font-semibold">User Reviews (3)</h3>
-                          <div className="p-4 rounded-lg border">
-                              <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-3">
-                                  <Avatar>
-                                      <AvatarImage src="https://github.com/random-user1.png" />
-                                      <AvatarFallback>BU</AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                      <p className="font-semibold">Buyer One</p>
-                                      <div className="flex items-center gap-1 text-yellow-500">
-                                          {[...Array(5)].map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}
-                                      </div>
-                                  </div>
-                              </div>
-                              <p className="text-sm text-muted-foreground">2 weeks ago</p>
-                              </div>
-                              <p className="mt-3 text-muted-foreground">"Great seller! The iPhone was exactly as described. Fast shipping and excellent communication. Highly recommended."</p>
+                      {reviewsLoading ? (
+                          <div className="space-y-4">
+                              <Skeleton className="h-24 w-full" />
+                              <Skeleton className="h-24 w-full" />
+                              <Skeleton className="h-24 w-full" />
                           </div>
-                          <div className="p-4 rounded-lg border">
-                              <div className="flex items-start justify-between">
-                              <div className="flex items-center gap-3">
-                                  <Avatar>
-                                      <AvatarImage src="https://github.com/random-user2.png" />
-                                      <AvatarFallback>ST</AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                      <p className="font-semibold">Seller Two</p>
-                                      <div className="flex items-center gap-1 text-yellow-500">
-                                          {[...Array(5)].map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}
-                                      </div>
-                                  </div>
-                              </div>
-                              <p className="text-sm text-muted-foreground">1 month ago</p>
-                              </div>
-                              <p className="mt-3 text-muted-foreground">"Smooth transaction. The buyer was decisive and paid promptly. A pleasure to deal with."</p>
-                          </div>
-                      </div>
+                      ) : (
+                          <ReviewList reviews={reviews} listings={activeListings} />
+                      )}
                   </TabsContent>
               </Tabs>
           </div>
@@ -375,5 +391,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    

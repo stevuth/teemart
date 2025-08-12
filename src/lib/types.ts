@@ -1,4 +1,6 @@
 
+import type { User } from "@supabase/supabase-js";
+
 export type Product = {
   id: string;
   name: string;
@@ -34,4 +36,23 @@ export type Order = {
   buyerName: string;
   orderDate: string; // ISO 8601 date string
   status: OrderStatus;
+};
+
+export type Review = {
+  id: string;
+  product_id: string;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+};
+
+// For fetching reviews with user data
+export type ReviewWithUser = Review & {
+  user: {
+    user_metadata: {
+      full_name: string;
+      avatar_url?: string;
+    }
+  } | null;
 };
