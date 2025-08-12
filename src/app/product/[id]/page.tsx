@@ -161,7 +161,7 @@ export default function ProductDetailPage() {
                                 <CarouselItem key={index}>
                                 <div className="relative block h-full aspect-square bg-secondary">
                                     <Image
-                                    src={imgSrc || 'https://placehold.co/600x400'}
+                                    src={imgSrc || 'https://placehold.co/600x400.png'}
                                     alt={`${product.name} image ${index + 1}`}
                                     fill
                                     className="object-cover"
@@ -281,5 +281,3 @@ export default function ProductDetailPage() {
         </div>
     );
 }
-
-    

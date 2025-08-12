@@ -13,11 +13,11 @@ type CategoryShowcaseProps = {
 };
 
 const categoryDetails: Record<Category, { icon: React.ElementType, image: string, hint: string }> = {
-  Cars: { icon: Car, image: 'https://placehold.co/400x400', hint: 'modern car' },
-  Electronics: { icon: Laptop, image: 'https://placehold.co/400x400', hint: 'laptop workspace' },
-  'Real Estate': { icon: HomeIcon, image: 'https://placehold.co/400x400', hint: 'modern house' },
-  Furniture: { icon: Lamp, image: 'https://placehold.co/400x400', hint: 'stylish furniture' },
-  Phones: { icon: Phone, image: 'https://placehold.co/400x400', hint: 'smartphone screen' },
+  Cars: { icon: Car, image: 'https://placehold.co/400x400.png', hint: 'modern car' },
+  Electronics: { icon: Laptop, image: 'https://placehold.co/400x400.png', hint: 'laptop workspace' },
+  'Real Estate': { icon: HomeIcon, image: 'https://placehold.co/400x400.png', hint: 'modern house' },
+  Furniture: { icon: Lamp, image: 'https://placehold.co/400x400.png', hint: 'stylish furniture' },
+  Phones: { icon: Phone, image: 'https://placehold.co/400x400.png', hint: 'smartphone screen' },
 };
 
 export function CategoryShowcase({ selectedCategory, onCategorySelect }: CategoryShowcaseProps) {

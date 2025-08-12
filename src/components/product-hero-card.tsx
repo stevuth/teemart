@@ -14,7 +14,7 @@ export function ProductHeroCard({ product }: ProductHeroCardProps) {
     ? product.image[0]
     : typeof product.image === 'string'
     ? product.image
-    : 'https://placehold.co/1920x1080';
+    : 'https://placehold.co/1920x1080.png';
 
   return (
     <div className="relative w-full aspect-[21/9] bg-secondary text-white">

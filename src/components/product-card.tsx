@@ -47,7 +47,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
                     <CarouselItem key={index}>
                     <div className="relative block h-full aspect-[4/3]">
                         <Image
-                        src={imgSrc || 'https://placehold.co/600x400'}
+                        src={imgSrc || 'https://placehold.co/600x400.png'}
                         alt={`${product.name} image ${index + 1}`}
                         fill
                         className="object-cover"
@@ -64,7 +64,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
             ) : (
             <div className="relative h-full">
                 <Image
-                src={images[0] || 'https://placehold.co/600x400'}
+                src={images[0] || 'https://placehold.co/600x400.png'}
                 alt={product.name}
                 fill
                 className="object-cover"
