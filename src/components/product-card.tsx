@@ -82,7 +82,7 @@ export function ProductCard({ product, actions }: ProductCardProps) {
             )}
             <div className="flex items-center text-xs sm:text-sm text-muted-foreground mt-1">
               <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5" />
-              <span>{product.location}</span>
+              <span>{product.city}, {product.location}</span>
             </div>
         </div>
         <div className="w-full flex flex-col sm:flex-row gap-2">

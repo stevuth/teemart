@@ -62,6 +62,9 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
       if (filters.location && product.location !== filters.location) {
         return false;
       }
+      if (filters.city && !product.city.toLowerCase().includes(filters.city.toLowerCase())) {
+          return false;
+      }
       if (filters.condition && product.condition !== filters.condition) {
         return false;
       }
@@ -89,6 +92,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
            filters.priceRange[0] !== 0 ||
            filters.priceRange[1] !== 150000000 ||
            filters.location !== '' ||
+           filters.city !== '' ||
            filters.condition !== '' ||
            filters.datePosted !== 'any';
   }, [filters]);

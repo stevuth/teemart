@@ -44,6 +44,7 @@ export default function EditProductPage() {
                     price: data.price || 0,
                     category: data.category || '',
                     location: data.location || '',
+                    city: data.city || '',
                     condition: data.condition || 'Used',
                     description: data.description || '',
                 } as Product;

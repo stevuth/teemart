@@ -23,6 +23,7 @@ export default function Home() {
   const [filters, setFilters] = useState<Omit<FilterValues, 'category'>>({
     priceRange: [0, 150000000],
     location: '',
+    city: '',
     condition: '',
     datePosted: 'any',
   });
@@ -33,7 +34,7 @@ export default function Home() {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, category, location, condition, description, created_at, delivery_fee')
+        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -53,6 +54,7 @@ export default function Home() {
           price: item.price || 0,
           category: item.category || '',
           location: item.location || '',
+          city: item.city || '',
           condition: item.condition || 'Used',
           description: item.description || '',
         })) as Product[];
@@ -81,6 +83,7 @@ export default function Home() {
     setFilters({
       priceRange: [0, 150000000],
       location: '',
+      city: '',
       condition: '',
       datePosted: 'any',
     });

@@ -6,6 +6,7 @@ export type Product = {
   image: string[];
   category: Category;
   location: string;
+  city: string;
   condition: Condition;
   description: string;
   postedDate: string; // ISO 8601 date string

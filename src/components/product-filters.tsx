@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils"
 export type FilterValues = {
   priceRange: [number, number]
   location: string
+  city: string
   condition: Condition | ''
   datePosted: DatePostedOption
   category: Category | ''
@@ -55,6 +56,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
     const defaultFilters = {
       priceRange: [0, 150000000] as [number, number],
       location: '',
+      city: '',
       condition: '' as Condition | '',
       datePosted: 'any' as DatePostedOption,
       category: '' as Category | '',
@@ -138,7 +140,7 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
              <Accordion type="single" collapsible>
                 <AccordionItem value="location">
                     <AccordionTrigger className="h-12 text-base border rounded-md px-3 hover:no-underline">
-                        <span>{currentFilters.location || 'Select Location'}</span>
+                        <span>{currentFilters.location || 'Select State'}</span>
                     </AccordionTrigger>
                     <AccordionContent>
                         <ScrollArea className="h-60 mt-2 border rounded-md">
@@ -170,6 +172,16 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
+          </div>
+
+           <div className="space-y-4">
+            <Label className="text-base font-semibold" htmlFor="city">City</Label>
+            <Input 
+                id="city"
+                placeholder="Enter city" 
+                value={currentFilters.city}
+                onChange={(e) => handleFilterChange({ city: e.target.value })}
+            />
           </div>
           
           <div className="space-y-4">
