@@ -187,11 +187,15 @@ export function SellForm({ existingProduct }: SellFormProps) {
 
         // 3. Upsert (Insert or Update) product in DB
         if (isEditMode && existingProduct) {
-             const { error } = await supabase
+             const { data: updatedData, error } = await supabase
                 .from('products')
                 .update(productData)
-                .eq('id', existingProduct.id);
+                .eq('id', existingProduct.id)
+                .select();
+
             if (error) throw error;
+            console.log('Updated row:', updatedData);
+
         } else {
             const { error } = await supabase.from('products').insert(productData);
             if (error) throw error;
@@ -205,7 +209,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
         router.replace('/profile');
         
     } catch (error: any) {
-        console.error("Submit Error: ", error);
+        console.error("Submit Error:", error);
         toast({
             title: "Operation Failed",
             description: error.message || "There was an error. Please try again.",
