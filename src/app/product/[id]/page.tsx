@@ -10,9 +10,10 @@ import { supabase } from '@/lib/supabase-client';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ProductPage({ params: { id } }: { params: { id: string } }) {
+export default function ProductPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const { id } = params;
 
   useEffect(() => {
     const fetchProduct = async () => {
