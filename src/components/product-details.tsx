@@ -40,6 +40,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                         className="object-cover"
                         data-ai-hint={product['data-ai-hint']}
                         key={selectedImageIndex} // force re-render on image change for transition
+                        priority
+                        sizes="(max-width: 1024px) 90vw, 50vw"
                     />
                 </div>
                 {images.length > 1 && (

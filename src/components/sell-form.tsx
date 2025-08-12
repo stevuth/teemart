@@ -161,7 +161,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                 const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
                 const { data: uploadData, error: uploadError } = await supabase
                     .storage.from('product-images').upload(fileName, imageFile);
-                if (uploadError) throw new Error(`Image Upload Failed: ${uploadError.message}`);
+                if (uploadError) throw uploadError;
                 const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
                 imageUrls.push(publicUrl);
             }
@@ -186,18 +186,15 @@ export function SellForm({ existingProduct }: SellFormProps) {
         };
 
         // 3. Upsert (Insert or Update) product in DB
-        let dbResponse;
         if (isEditMode && existingProduct) {
-             dbResponse = await supabase
+             const { error } = await supabase
                 .from('products')
                 .update(productData)
                 .eq('id', existingProduct.id);
+            if (error) throw error;
         } else {
-            dbResponse = await supabase.from('products').insert(productData).select();
-        }
-
-        if (dbResponse.error) {
-            throw dbResponse.error;
+            const { error } = await supabase.from('products').insert(productData);
+            if (error) throw error;
         }
 
         toast({
@@ -206,10 +203,9 @@ export function SellForm({ existingProduct }: SellFormProps) {
         });
 
         router.replace('/profile');
-        router.refresh();
-
+        
     } catch (error: any) {
-        console.error("Submit Error:", error);
+        console.error("Submit Error: ", error);
         toast({
             title: "Operation Failed",
             description: error.message || "There was an error. Please try again.",
