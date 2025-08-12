@@ -38,7 +38,7 @@ const formSchema = z.object({
   price: z.string().refine(value => !isNaN(parseFloat(value)) && parseFloat(value) > 0, {
     message: "Price must be a positive number.",
   }),
-  deliveryFee: z.union([z.coerce.number(), z.string().length(0)]).optional().transform(value => value === "" ? undefined : value),
+  deliveryFee: z.string().optional(),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
@@ -80,7 +80,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
       price: existingProduct?.price ? String(existingProduct.price) : "",
-      deliveryFee: existingProduct?.deliveryFee || '',
+      deliveryFee: existingProduct?.deliveryFee ? String(existingProduct.deliveryFee) : '',
       category: existingProduct?.category,
       condition: existingProduct?.condition,
       location: existingProduct?.location || '',
@@ -405,5 +405,3 @@ export function SellForm({ existingProduct }: SellFormProps) {
     </div>
   );
 }
-
-    
