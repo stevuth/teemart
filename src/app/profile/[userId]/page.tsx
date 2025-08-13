@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
 import { Loader2, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
-import type { Product, Review, ReviewWithUser } from '@/lib/types';
+import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ReviewForm } from '@/components/review-form';
@@ -44,7 +44,7 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // Fetch seller's product listings first to get seller info from the join
+            // Fetch seller's product listings first. This also gets us seller info from the join.
             const { data: listingsData, error: listingsError } = await supabase
                 .from('products')
                 .select(`
@@ -90,6 +90,7 @@ export default function SellerProfilePage() {
                         .in('product_id', productIds);
                     
                     if (reviewsError) {
+                        // This query might fail if the profiles table has issues. We'll log it but not crash.
                         console.error("Error fetching reviews:", reviewsError);
                         setReviews([]);
                     } else {
@@ -102,18 +103,21 @@ export default function SellerProfilePage() {
                 // If the seller has no listings, try to fetch their profile directly.
                 // This handles cases for new sellers without products yet.
                 const { data: sellerData, error: sellerError } = await supabase
-                    .from('profiles')
-                    .select('*')
+                    .from('users')
+                    .select('id, created_at, raw_user_meta_data')
                     .eq('id', userId)
                     .single();
 
                 if (sellerError) {
-                    // This could be the source of the error if the profiles table is not accessible
-                    // We'll fall back gracefully.
                      console.error("Could not fetch seller profile directly, they may have no listings.", sellerError);
                      setSeller(null);
-                } else {
-                    setSeller(sellerData as Seller);
+                } else if(sellerData) {
+                    setSeller({
+                        id: sellerData.id,
+                        full_name: sellerData.raw_user_meta_data?.full_name || 'TeeMart Seller',
+                        avatar_url: sellerData.raw_user_meta_data?.avatar_url || '',
+                        created_at: sellerData.created_at
+                    });
                 }
                 setListings([]);
                 setReviews([]);
@@ -288,3 +292,5 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
+    
