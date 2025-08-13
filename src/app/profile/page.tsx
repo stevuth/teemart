@@ -49,7 +49,6 @@ export default function ProfilePage() {
     setLoading(true);
     
     try {
-      // Fetch listings and reviews in parallel
       const [listingsRes, reviewsRes] = await Promise.all([
         supabase
           .from('products')
@@ -105,6 +104,7 @@ export default function ProfilePage() {
       }
     } catch (error: any) {
         console.error("Error fetching profile data: ", error);
+        toast({ title: "Error", description: "Could not fetch your data.", variant: "destructive" });
     } finally {
         setLoading(false);
     }
@@ -148,7 +148,7 @@ export default function ProfilePage() {
 
   const onListingDeleted = () => {
     setProductToDelete(null);
-    fetchUserData(); // Refetch all user data after a listing is deleted
+    fetchUserData();
   }
 
   if (authLoading || loading || !user) {
