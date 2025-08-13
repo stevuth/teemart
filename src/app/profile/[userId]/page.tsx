@@ -44,7 +44,7 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // 1. Fetch Seller Profile Info
+            // 1. Fetch Seller Profile Info from the public 'profiles' table
             const { data: sellerData, error: sellerError } = await supabase
                 .from('profiles')
                 .select('id, full_name, avatar_url, created_at')
@@ -53,11 +53,7 @@ export default function SellerProfilePage() {
 
             if (sellerError) {
                 console.error("Error fetching seller profile:", sellerError);
-                setSeller(null);
-                setListings([]);
-                setReviews([]);
-                setLoading(false);
-                return;
+                throw new Error("Could not fetch seller profile.");
             }
             setSeller(sellerData as Seller);
             
@@ -70,39 +66,38 @@ export default function SellerProfilePage() {
 
             if (listingsError) {
                 console.error("Error fetching listings:", listingsError);
-                setListings([]);
-            } else {
-                 const transformedListings = (listingsData as any[]).map(item => ({
-                    ...item,
-                    image: item.image_url || [],
-                    postedDate: item.created_at,
-                    deliveryFee: item.delivery_fee,
-                    price: item.price || 0,
-                    category: item.category || '',
-                    location: item.location || '',
-                    city: item.city || '',
-                    condition: item.condition || 'Used',
-                    description: item.description || '',
-                })) as Product[];
-                setListings(transformedListings);
+                throw new Error("Could not fetch seller listings.");
+            }
+            const transformedListings = (listingsData as any[]).map(item => ({
+                ...item,
+                image: item.image_url || [],
+                postedDate: item.created_at,
+                deliveryFee: item.delivery_fee,
+                price: item.price || 0,
+                category: item.category || '',
+                location: item.location || '',
+                city: item.city || '',
+                condition: item.condition || 'Used',
+                description: item.description || '',
+            })) as Product[];
+            setListings(transformedListings);
 
-                 // 3. Fetch Reviews for those listings
-                const productIds = transformedListings.map(p => p.id);
-                if (productIds.length > 0) {
-                    const { data: reviewsData, error: reviewsError } = await supabase
-                        .from('reviews')
-                        .select('*, user:profiles(full_name, avatar_url)')
-                        .in('product_id', productIds);
+            // 3. Fetch Reviews for those listings
+            const productIds = transformedListings.map(p => p.id);
+            if (productIds.length > 0) {
+                const { data: reviewsData, error: reviewsError } = await supabase
+                    .from('reviews')
+                    .select('*, user:profiles(full_name, avatar_url)')
+                    .in('product_id', productIds);
 
-                    if (reviewsError) {
-                        console.error("Error fetching reviews:", reviewsError);
-                        setReviews([]);
-                    } else {
-                        setReviews(reviewsData as ReviewWithUser[]);
-                    }
-                } else {
+                if (reviewsError) {
+                    console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
+                } else {
+                    setReviews(reviewsData as ReviewWithUser[]);
                 }
+            } else {
+                setReviews([]);
             }
         } catch (error: any) {
             console.error("An unexpected error occurred:", error.message);
@@ -276,4 +271,5 @@ export default function SellerProfilePage() {
             <Footer />
         </div>
     );
-}
+
+    
