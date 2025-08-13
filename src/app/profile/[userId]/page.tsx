@@ -44,29 +44,35 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            const { data, error } = await supabase
-                .rpc('get_seller_profile_and_listings', { p_user_id: userId });
+            // 1. Fetch Seller Profile Info
+            const { data: sellerData, error: sellerError } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url, created_at')
+                .eq('id', userId)
+                .single();
 
-            if (error) {
-                console.error("Error fetching seller data:", error);
-                throw error;
+            if (sellerError) {
+                console.error("Error fetching seller profile:", sellerError);
+                setSeller(null);
+                setListings([]);
+                setReviews([]);
+                setLoading(false);
+                return;
             }
+            setSeller(sellerData as Seller);
+            
+            // 2. Fetch Seller's Listings
+            const { data: listingsData, error: listingsError } = await supabase
+                .from('products')
+                .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
 
-            if (data) {
-                // Set Seller
-                if (data.seller) {
-                    setSeller({
-                        id: data.seller.id,
-                        full_name: data.seller.full_name || 'TeeMart Seller',
-                        avatar_url: data.seller.avatar_url || '',
-                        created_at: '', // Placeholder, as this isn't in profiles table
-                    });
-                } else {
-                     setSeller(null);
-                }
-
-                // Set Listings
-                const transformedListings = (data.listings as any[]).map(item => ({
+            if (listingsError) {
+                console.error("Error fetching listings:", listingsError);
+                setListings([]);
+            } else {
+                 const transformedListings = (listingsData as any[]).map(item => ({
                     ...item,
                     image: item.image_url || [],
                     postedDate: item.created_at,
@@ -79,18 +85,30 @@ export default function SellerProfilePage() {
                     description: item.description || '',
                 })) as Product[];
                 setListings(transformedListings);
-                
-                // Set Reviews
-                setReviews(data.reviews as ReviewWithUser[]);
-            } else {
-                 setSeller(null);
-                 setListings([]);
-                 setReviews([]);
-            }
 
+                 // 3. Fetch Reviews for those listings
+                const productIds = transformedListings.map(p => p.id);
+                if (productIds.length > 0) {
+                    const { data: reviewsData, error: reviewsError } = await supabase
+                        .from('reviews')
+                        .select('*, user:profiles(full_name, avatar_url)')
+                        .in('product_id', productIds);
+
+                    if (reviewsError) {
+                        console.error("Error fetching reviews:", reviewsError);
+                        setReviews([]);
+                    } else {
+                        setReviews(reviewsData as ReviewWithUser[]);
+                    }
+                } else {
+                    setReviews([]);
+                }
+            }
         } catch (error: any) {
-            console.error("Error fetching seller data:", error.message);
+            console.error("An unexpected error occurred:", error.message);
             setSeller(null);
+            setListings([]);
+            setReviews([]);
         } finally {
             setLoading(false);
         }
