@@ -48,6 +48,7 @@ export default function ProfilePage() {
     setLoading(true);
     
     try {
+      // Fetch listings
       const { data: listingsData, error: listingsError } = await supabase
         .from('products')
         .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
@@ -64,6 +65,7 @@ export default function ProfilePage() {
       })) as Product[];
       setActiveListings(transformedData);
 
+      // Fetch reviews for the listings
       const productIds = transformedData.map(p => p.id);
       if (productIds.length > 0) {
         const { data: reviewsData, error: reviewsError } = await supabase
@@ -76,6 +78,8 @@ export default function ProfilePage() {
           setReviews([]);
         } else {
             const reviewerIds = [...new Set(reviewsData.map(r => r.user_id))];
+            
+            // Fetch profiles for the reviewers
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
                 .select('id, full_name, avatar_url')

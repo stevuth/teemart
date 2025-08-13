@@ -85,7 +85,6 @@ export default function SellerProfilePage() {
                     .in('product_id', productIds);
                 
                 if (reviewsError) {
-                    // Log error but don't show toast
                     console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
                 } else {
