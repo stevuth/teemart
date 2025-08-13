@@ -82,11 +82,11 @@ export default function SellerProfilePage() {
             if (productIds.length > 0) {
                  const { data: reviewsData, error: reviewsError } = await supabase
                     .from('reviews')
-                    .select(`*, user:profiles(id, full_name, avatar_url)`)
+                    .select('*, user:profiles(id, full_name, avatar_url)')
                     .in('product_id', productIds)
                     .order('created_at', { ascending: false });
 
-                if (reviewsError) {
+                if (reviewsError && Object.keys(reviewsError).length > 0) {
                     console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
                 } else {
