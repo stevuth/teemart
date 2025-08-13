@@ -46,10 +46,11 @@ export default function SellerProfilePage() {
             setLoading(true);
 
             try {
-                // Fetch seller info and listings in parallel
-                const [sellerRes, listingsRes] = await Promise.all([
+                // Fetch seller info, listings, and reviews in parallel
+                const [sellerRes, listingsRes, reviewsRes] = await Promise.all([
                     supabase.from('users').select('id, user_metadata, created_at').eq('id', userId).single(),
-                    supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+                    supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+                    supabase.rpc('get_reviews_for_seller', { seller_id: userId })
                 ]);
                 
                 if (sellerRes.error || !sellerRes.data) throw sellerRes.error || new Error('User not found');
@@ -78,15 +79,10 @@ export default function SellerProfilePage() {
                 })) as Product[];
                 setListings(transformedListings);
 
-                // Fetch reviews for the seller using the RPC function
-                const { data: reviewsData, error: reviewsError } = await supabase
-                    .rpc('get_reviews_for_seller', { seller_id: userId });
-
-                if (reviewsError) {
-                    // Log error but don't show toast to user
-                    console.error("Error fetching reviews:", reviewsError);
+                if (reviewsRes.error) {
+                    console.error("Error fetching reviews:", reviewsRes.error);
                 } else {
-                     const transformedReviews = (reviewsData as any[]).map(review => {
+                     const transformedReviews = (reviewsRes.data as any[]).map(review => {
                         const reviewUser = review.user_data as any;
                         return {
                             id: review.id,
@@ -272,5 +268,4 @@ export default function SellerProfilePage() {
             <Footer />
         </div>
     );
-
-    
+}

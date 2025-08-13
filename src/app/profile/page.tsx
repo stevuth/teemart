@@ -34,8 +34,7 @@ export default function ProfilePage() {
   const [activeListings, setActiveListings] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [purchaseHistory, setPurchaseHistory] = useState<Product[]>([]);
-  const [listingsLoading, setListingsLoading] = useState(true);
-  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   
   const enrichedOrders = useMemo(() => {
@@ -47,8 +46,7 @@ export default function ProfilePage() {
   const fetchUserData = useCallback(async () => {
     if (!user) return;
 
-    setListingsLoading(true);
-    setReviewsLoading(true);
+    setLoading(true);
     
     try {
       // Fetch listings and reviews in parallel
@@ -108,8 +106,7 @@ export default function ProfilePage() {
     } catch (error: any) {
         console.error("Error fetching profile data: ", error);
     } finally {
-        setListingsLoading(false);
-        setReviewsLoading(false);
+        setLoading(false);
     }
   }, [user, toast]);
 
@@ -154,23 +151,13 @@ export default function ProfilePage() {
     fetchUserData(); // Refetch all user data after a listing is deleted
   }
 
-  const loading = authLoading || (user && listingsLoading);
-
-  if (loading || !user) {
+  if (authLoading || loading || !user) {
     return (
-      <>
-        <DeleteProductDialog 
-            product={productToDelete}
-            isOpen={!!productToDelete}
-            onClose={() => setProductToDelete(null)}
-            onDeleted={onListingDeleted}
-        />
         <div className="flex flex-col min-h-screen">
             <Header />
             <div className="flex-grow flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
             <Footer />
         </div>
-      </>
     );
   }
   
@@ -259,7 +246,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex items-center gap-3">
                           <Star className="h-4 w-4 text-primary" />
-                          <span>4.9 (125 reviews)</span>
+                          <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
                       </div>
                   </div>
                   <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -282,11 +269,11 @@ export default function ProfilePage() {
                       <TabsTrigger value="active-listings">Active Listings ({activeListings.length})</TabsTrigger>
                       <TabsTrigger value="my-orders">My Orders</TabsTrigger>
                       <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
-                      <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                      <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="active-listings" className="mt-6">
-                      {listingsLoading ? (
+                      {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                           {[...Array(4)].map((_, i) => (
                             <div key={i} className="flex flex-col space-y-3">
@@ -365,7 +352,7 @@ export default function ProfilePage() {
                   </TabsContent>
                   
                   <TabsContent value="reviews" className="mt-6">
-                      {reviewsLoading ? (
+                      {loading ? (
                           <div className="flex justify-center items-center py-16">
                               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                           </div>
