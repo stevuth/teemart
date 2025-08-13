@@ -44,7 +44,7 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // 1. Fetch Seller Profile Info from the public 'profiles' table
+            // Step 1: Fetch Seller Profile Info from the public 'profiles' table
             const { data: sellerData, error: sellerError } = await supabase
                 .from('profiles')
                 .select('id, full_name, avatar_url, created_at')
@@ -57,7 +57,7 @@ export default function SellerProfilePage() {
             }
             setSeller(sellerData as Seller);
             
-            // 2. Fetch Seller's Listings
+            // Step 2: Fetch Seller's Listings
             const { data: listingsData, error: listingsError } = await supabase
                 .from('products')
                 .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
@@ -82,7 +82,7 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            // 3. Fetch Reviews for those listings
+            // Step 3: Fetch Reviews for those listings, joining with the profiles table for user info
             const productIds = transformedListings.map(p => p.id);
             if (productIds.length > 0) {
                 const { data: reviewsData, error: reviewsError } = await supabase
@@ -271,5 +271,4 @@ export default function SellerProfilePage() {
             <Footer />
         </div>
     );
-
-    
+}

@@ -62,6 +62,12 @@ export default function ProfilePage() {
         image: item.image_url || [],
         postedDate: item.created_at,
         deliveryFee: item.delivery_fee,
+        price: item.price || 0,
+        category: item.category || '',
+        location: item.location || '',
+        city: item.city || '',
+        condition: item.condition || 'Used',
+        description: item.description || '',
       })) as Product[];
       setActiveListings(transformedData);
 
