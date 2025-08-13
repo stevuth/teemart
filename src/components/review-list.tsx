@@ -36,7 +36,8 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
                 ...listing,
                 reviews: reviewsByProduct[listing.id] || []
             }))
-            .filter(item => item.reviews.length > 0);
+            .filter(item => item.reviews.length > 0)
+            .sort((a, b) => new Date(b.reviews[0].created_at).getTime() - new Date(a.reviews[0].created_at).getTime());
     }, [listings, reviewsByProduct]);
 
 
@@ -62,11 +63,16 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
                     <CardHeader>
                         <div className="flex items-center gap-4">
                             <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
-                                <Image src={Array.isArray(product.image) ? product.image[0] : product.image} alt={product.name} fill className="object-cover" />
+                                <Image 
+                                    src={(Array.isArray(product.image) ? product.image[0] : product.image) || 'https://placehold.co/400x400.png'} 
+                                    alt={product.name} 
+                                    fill 
+                                    sizes="64px"
+                                    className="object-cover" />
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Reviews for</p>
-                                <CardTitle className="text-xl">
+                                <CardTitle className="text-xl font-semibold">
                                     <Link href={`/product/${product.id}`} className="hover:underline">
                                         {product.name}
                                     </Link>
