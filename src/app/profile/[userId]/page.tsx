@@ -44,19 +44,26 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // Fetch seller info and listings concurrently
-            const [sellerRes, listingsRes] = await Promise.all([
-                supabase.from('profiles').select('*').eq('id', userId).single(),
-                supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-            ]);
+            // Fetch seller info, which is stored in the 'profiles' table.
+            const { data: sellerData, error: sellerError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
 
-            if (sellerRes.error || !sellerRes.data) throw sellerRes.error || new Error('User not found');
-            
-            setSeller(sellerRes.data as Seller);
+            if (sellerError) throw sellerError;
+            setSeller(sellerData as Seller);
 
-            if (listingsRes.error) throw listingsRes.error;
+            // Fetch seller's product listings
+            const { data: listingsData, error: listingsError } = await supabase
+                .from('products')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
 
-            const transformedListings = (listingsRes.data as any[]).map(item => ({
+            if (listingsError) throw listingsError;
+
+            const transformedListings = (listingsData as any[]).map(item => ({
                 ...item,
                 image: item.image_url || [],
                 postedDate: item.created_at,
@@ -70,6 +77,7 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
+            // Fetch reviews for the fetched listings
             const productIds = transformedListings.map(p => p.id);
             if (productIds.length > 0) {
                 const { data: reviewsData, error: reviewsError } = await supabase
@@ -89,6 +97,7 @@ export default function SellerProfilePage() {
 
         } catch (error: any) {
             console.error("Error fetching seller data:", error.message);
+            setSeller(null); // Ensure seller is null on error to show 'not found'
         } finally {
             setLoading(false);
         }
