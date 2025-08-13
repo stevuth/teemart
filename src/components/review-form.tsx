@@ -71,7 +71,7 @@ export function ReviewForm({ listings, sellerId, onReviewSubmitted }: ReviewForm
         }
       } else {
         toast({ title: "Review Submitted!", description: "Thank you for your feedback." });
-        form.reset();
+        form.reset({ rating: 0, comment: "", productId: undefined });
         onReviewSubmitted();
       }
     } catch (error: any) {
@@ -95,7 +95,7 @@ export function ReviewForm({ listings, sellerId, onReviewSubmitted }: ReviewForm
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Product</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue="">
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a product to review" />

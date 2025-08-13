@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
-import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
-import { Loader2, MessageSquare, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { Loader2, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +30,6 @@ type Seller = {
 export default function SellerProfilePage() {
     const params = useParams();
     const userId = params.userId as string;
-    const { toast } = useToast();
     const { user: currentUser } = useAuth();
     const { addToCart } = useCart();
 
@@ -91,25 +89,20 @@ export default function SellerProfilePage() {
 
         } catch (error: any) {
              console.error("Error fetching seller data:", error);
-             toast({ title: "Error", description: "Could not fetch seller information.", variant: "destructive" });
+             // No toast here
         } finally {
             setLoadingListings(false);
         }
-    }, [userId, toast]);
+    }, [userId]);
     
-    const fetchReviews = useCallback(async (listingsToReview: Product[]) => {
-        if (listingsToReview.length === 0) {
-            setReviews([]);
-            setLoadingReviews(false);
-            return;
-        }
+    const fetchReviews = useCallback(async () => {
+        if (!seller) return;
         setLoadingReviews(true);
         try {
-            const productIds = listingsToReview.map(l => l.id);
             const { data: reviewsData, error: reviewsError } = await supabase
                 .from('reviews')
                 .select('*, user:users(id, user_metadata)')
-                .in('product_id', productIds)
+                .in('product_id', listings.map(l => l.id))
                 .order('created_at', { ascending: false });
             
             if (reviewsError) throw reviewsError;
@@ -129,20 +122,21 @@ export default function SellerProfilePage() {
             setReviews(transformedReviews);
         } catch (error: any) {
             console.error("Error fetching reviews:", error);
+            // No toast here
         } finally {
             setLoadingReviews(false);
         }
-    }, []);
+    }, [seller, listings]);
     
     useEffect(() => {
         fetchSellerAndListings();
     }, [fetchSellerAndListings]);
 
     useEffect(() => {
-        if (!loadingListings) {
-            fetchReviews(listings);
+        if (!loadingListings && seller) {
+            fetchReviews();
         }
-    }, [loadingListings, listings, fetchReviews]);
+    }, [loadingListings, listings, seller, fetchReviews]);
 
     const getInitials = (name?: string | null) => {
         if (!name) return 'S';
@@ -157,7 +151,7 @@ export default function SellerProfilePage() {
 
     const handleReviewSubmitted = () => {
         // Refetch reviews after a new one is submitted
-        fetchReviews(listings);
+        fetchReviews();
     };
 
     const loading = loadingSeller || loadingListings;
