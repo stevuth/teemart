@@ -55,7 +55,7 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
 
     return (
         <div className="space-y-8">
-            {productListWithReviews.map((product, pIndex) => (
+            {productListWithReviews.map((product) => (
                 <Card key={product.id}>
                     <CardHeader>
                         <CardTitle>Reviews for: {product.name}</CardTitle>
@@ -66,7 +66,7 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
                                 <div key={review.id}>
                                     <div className="flex items-start gap-4">
                                         <Avatar>
-                                            <AvatarImage src={review.user?.avatar_url} alt={review.user?.full_name || ''} />
+                                            <AvatarImage src={review.user?.avatar_url || undefined} alt={review.user?.full_name || ''} />
                                             <AvatarFallback>{getInitials(review.user?.full_name)}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex-grow">

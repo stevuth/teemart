@@ -268,6 +268,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-
-    
