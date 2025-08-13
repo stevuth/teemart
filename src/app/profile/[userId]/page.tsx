@@ -50,12 +50,8 @@ export default function SellerProfilePage() {
                 .select('id, full_name, avatar_url')
                 .eq('id', userId)
                 .single();
-
-            // We also need the join date from auth.users, but we can't get that easily here.
-            // For now, let's just use a placeholder or skip it if it's not critical.
-            // A more advanced solution would be an RPC call, but let's keep it simple to fix the page.
-             if (sellerError) {
-                // If it's a 'not found' error, it's a valid case for a non-existent user.
+            
+            if (sellerError) {
                 if (sellerError.code === 'PGRST116') { 
                     setSeller(null);
                 } else {
@@ -71,7 +67,7 @@ export default function SellerProfilePage() {
             }
 
             // Step 2: Fetch the seller's product listings.
-            const { data: listingsData, error: listingsError }_ = await supabase
+            const { data: listingsData, error: listingsError } = await supabase
                 .from('products')
                 .select()
                 .eq('user_id', userId)
