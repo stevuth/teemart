@@ -44,26 +44,34 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // Step 1: Fetch the seller's profile directly.
+            // Step 1: Fetch the seller's profile from the public profiles table.
             const { data: sellerData, error: sellerError } = await supabase
-                .from('users')
-                .select('id, created_at, raw_user_meta_data')
+                .from('profiles')
+                .select('id, full_name, avatar_url')
                 .eq('id', userId)
                 .single();
 
-            if (sellerError || !sellerData) {
-                throw sellerError || new Error("Seller not found");
+            // We also need the join date from auth.users, but we can't get that easily here.
+            // For now, let's just use a placeholder or skip it if it's not critical.
+            // A more advanced solution would be an RPC call, but let's keep it simple to fix the page.
+             if (sellerError) {
+                // If it's a 'not found' error, it's a valid case for a non-existent user.
+                if (sellerError.code === 'PGRST116') { 
+                    setSeller(null);
+                } else {
+                    throw sellerError;
+                }
+            } else {
+                 setSeller({
+                    id: sellerData.id,
+                    full_name: sellerData.full_name || 'TeeMart Seller',
+                    avatar_url: sellerData.avatar_url || '',
+                    created_at: '', // Placeholder as we can't query auth.users directly
+                });
             }
-            
-            setSeller({
-                id: sellerData.id,
-                full_name: sellerData.raw_user_meta_data?.full_name || 'TeeMart Seller',
-                avatar_url: sellerData.raw_user_meta_data?.avatar_url || '',
-                created_at: sellerData.created_at
-            });
 
             // Step 2: Fetch the seller's product listings.
-            const { data: listingsData, error: listingsError } = await supabase
+            const { data: listingsData, error: listingsError }_ = await supabase
                 .from('products')
                 .select()
                 .eq('user_id', userId)
@@ -94,7 +102,6 @@ export default function SellerProfilePage() {
                     .in('product_id', productIds);
                 
                 if (reviewsError) {
-                    // This might fail if RLS or schema cache is an issue. Log it but don't crash the page.
                     console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
                 } else {
@@ -207,10 +214,12 @@ export default function SellerProfilePage() {
                                 <MapPin className="h-4 w-4 text-primary" />
                                 <span>Lagos, Nigeria</span>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <CalendarDays className="h-4 w-4 text-primary" />
-                                <span>Member since {seller.created_at ? new Date(seller.created_at).getFullYear() : ''}</span>
-                            </div>
+                            {seller.created_at && (
+                                <div className="flex items-center gap-3">
+                                    <CalendarDays className="h-4 w-4 text-primary" />
+                                    <span>Member since {new Date(seller.created_at).getFullYear()}</span>
+                                </div>
+                            )}
                             <div className="flex items-center gap-3">
                                 <Star className="h-4 w-4 text-primary" />
                                 <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
@@ -272,5 +281,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    

@@ -1,4 +1,3 @@
-
 import type { User } from "@supabase/supabase-js";
 
 export type Product = {
@@ -58,7 +57,7 @@ export type Review = {
 // For fetching reviews with user data from the public 'profiles' table
 export type ReviewWithUser = Review & {
   user: {
-    full_name: string;
+    full_name: string | null;
     avatar_url: string | null;
   } | null;
 };
