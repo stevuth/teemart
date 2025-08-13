@@ -9,6 +9,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useMemo } from 'react';
 import { Separator } from "./ui/separator";
 import { MessageSquare } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 type ReviewListProps = {
     reviews: ReviewWithUser[];
@@ -58,7 +60,19 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
             {productListWithReviews.map((product) => (
                 <Card key={product.id}>
                     <CardHeader>
-                        <CardTitle>Reviews for: {product.name}</CardTitle>
+                        <div className="flex items-center gap-4">
+                            <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
+                                <Image src={Array.isArray(product.image) ? product.image[0] : product.image} alt={product.name} fill className="object-cover" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Reviews for</p>
+                                <CardTitle className="text-xl">
+                                    <Link href={`/product/${product.id}`} className="hover:underline">
+                                        {product.name}
+                                    </Link>
+                                </CardTitle>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-6">
@@ -79,7 +93,7 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
                                             <div className="my-1">
                                                 <StarRatingDisplay rating={review.rating} />
                                             </div>
-                                            <p className="text-muted-foreground">{review.comment}</p>
+                                            {review.comment && <p className="text-muted-foreground">{review.comment}</p>}
                                         </div>
                                     </div>
                                     {rIndex < product.reviews.length - 1 && <Separator className="mt-6" />}
@@ -92,3 +106,5 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
         </div>
     )
 }
+
+    
