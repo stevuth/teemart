@@ -44,85 +44,65 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // Fetch seller's product listings first. This also gets us seller info from the join.
+            // Step 1: Fetch the seller's profile directly.
+            const { data: sellerData, error: sellerError } = await supabase
+                .from('users')
+                .select('id, created_at, raw_user_meta_data')
+                .eq('id', userId)
+                .single();
+
+            if (sellerError || !sellerData) {
+                throw sellerError || new Error("Seller not found");
+            }
+            
+            setSeller({
+                id: sellerData.id,
+                full_name: sellerData.raw_user_meta_data?.full_name || 'TeeMart Seller',
+                avatar_url: sellerData.raw_user_meta_data?.avatar_url || '',
+                created_at: sellerData.created_at
+            });
+
+            // Step 2: Fetch the seller's product listings.
             const { data: listingsData, error: listingsError } = await supabase
                 .from('products')
-                .select(`
-                    *,
-                    seller:users(id, created_at, user_metadata)
-                `)
+                .select()
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
             if (listingsError) throw listingsError;
 
-            if (listingsData && listingsData.length > 0) {
-                 const firstProductSeller: any = listingsData[0].seller;
-                 if (firstProductSeller) {
-                    setSeller({
-                        id: firstProductSeller.id,
-                        full_name: firstProductSeller.user_metadata?.full_name || 'TeeMart Seller',
-                        avatar_url: firstProductSeller.user_metadata?.avatar_url || '',
-                        created_at: firstProductSeller.created_at
-                    });
-                 }
+            const transformedListings = (listingsData as any[]).map(item => ({
+                ...item,
+                image: item.image_url || [],
+                postedDate: item.created_at,
+                deliveryFee: item.delivery_fee,
+                price: item.price || 0,
+                category: item.category || '',
+                location: item.location || '',
+                city: item.city || '',
+                condition: item.condition || 'Used',
+                description: item.description || '',
+            })) as Product[];
+            setListings(transformedListings);
 
-                const transformedListings = (listingsData as any[]).map(item => ({
-                    ...item,
-                    image: item.image_url || [],
-                    postedDate: item.created_at,
-                    deliveryFee: item.delivery_fee,
-                    price: item.price || 0,
-                    category: item.category || '',
-                    location: item.location || '',
-                    city: item.city || '',
-                    condition: item.condition || 'Used',
-                    description: item.description || '',
-                })) as Product[];
-                setListings(transformedListings);
-
-                // Fetch reviews for the fetched listings
-                const productIds = transformedListings.map(p => p.id);
-                if (productIds.length > 0) {
-                     const { data: reviewsData, error: reviewsError } = await supabase
-                        .from('reviews')
-                        .select('*, user:profiles(full_name, avatar_url)')
-                        .in('product_id', productIds);
-                    
-                    if (reviewsError) {
-                        // This query might fail if the profiles table has issues. We'll log it but not crash.
-                        console.error("Error fetching reviews:", reviewsError);
-                        setReviews([]);
-                    } else {
-                        setReviews(reviewsData as ReviewWithUser[]);
-                    }
-                } else {
+            // Step 3: Fetch reviews for those listings.
+            const productIds = transformedListings.map(p => p.id);
+            if (productIds.length > 0) {
+                 const { data: reviewsData, error: reviewsError } = await supabase
+                    .from('reviews')
+                    .select('*, user:profiles(full_name, avatar_url)')
+                    .in('product_id', productIds);
+                
+                if (reviewsError) {
+                    // This might fail if RLS or schema cache is an issue. Log it but don't crash the page.
+                    console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
+                } else {
+                    setReviews(reviewsData as ReviewWithUser[]);
                 }
             } else {
-                // If the seller has no listings, try to fetch their profile directly.
-                // This handles cases for new sellers without products yet.
-                const { data: sellerData, error: sellerError } = await supabase
-                    .from('users')
-                    .select('id, created_at, raw_user_meta_data')
-                    .eq('id', userId)
-                    .single();
-
-                if (sellerError) {
-                     console.error("Could not fetch seller profile directly, they may have no listings.", sellerError);
-                     setSeller(null);
-                } else if(sellerData) {
-                    setSeller({
-                        id: sellerData.id,
-                        full_name: sellerData.raw_user_meta_data?.full_name || 'TeeMart Seller',
-                        avatar_url: sellerData.raw_user_meta_data?.avatar_url || '',
-                        created_at: sellerData.created_at
-                    });
-                }
-                setListings([]);
                 setReviews([]);
             }
-
         } catch (error: any) {
             console.error("Error fetching seller data:", error.message);
             setSeller(null); // Ensure seller is null on error to show 'not found'
