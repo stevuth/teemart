@@ -40,7 +40,7 @@ export default function SellerProfilePage() {
     const [loadingListings, setLoadingListings] = useState(true);
     const [loadingReviews, setLoadingReviews] = useState(true);
     
-    const fetchSellerAndListings = useCallback(async () => {
+    const fetchSellerData = useCallback(async () => {
         if (!userId) return;
         setLoadingSeller(true);
         setLoadingListings(true);
@@ -89,55 +89,50 @@ export default function SellerProfilePage() {
 
         } catch (error: any) {
              console.error("Error fetching seller data:", error);
-             // No toast here
         } finally {
             setLoadingListings(false);
         }
     }, [userId]);
-    
+
     const fetchReviews = useCallback(async () => {
-        if (!seller) return;
-        setLoadingReviews(true);
-        try {
-            const { data: reviewsData, error: reviewsError } = await supabase
-                .from('reviews')
-                .select('*, user:users(id, user_metadata)')
-                .in('product_id', listings.map(l => l.id))
-                .order('created_at', { ascending: false });
-            
-            if (reviewsError) throw reviewsError;
+      if (!userId) return;
+      setLoadingReviews(true);
+      try {
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .rpc('get_reviews_for_seller', { seller_id: userId });
 
-            const transformedReviews = reviewsData.map(review => {
-                const reviewUser = review.user as any; 
-                return {
-                ...review,
-                user: reviewUser ? { 
-                    user_metadata: { 
-                        full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
-                        avatar_url: reviewUser.user_metadata?.avatar_url
-                    } 
-                } : { user_metadata: { full_name: 'Unknown User' } }
-                }
-            }) as ReviewWithUser[];
-            setReviews(transformedReviews);
-        } catch (error: any) {
-            console.error("Error fetching reviews:", error);
-            // No toast here
-        } finally {
-            setLoadingReviews(false);
-        }
-    }, [seller, listings]);
+        if (reviewsError) throw reviewsError;
+
+        const transformedReviews = (reviewsData as any[]).map(review => {
+          const reviewUser = review.user_data as any;
+          return {
+            id: review.id,
+            created_at: review.created_at,
+            user_id: review.user_id,
+            product_id: review.product_id,
+            rating: review.rating,
+            comment: review.comment,
+            user: reviewUser ? {
+              user_metadata: {
+                full_name: reviewUser.full_name || 'Unknown User',
+                avatar_url: reviewUser.avatar_url,
+              }
+            } : { user_metadata: { full_name: 'Unknown User' } }
+          }
+        }) as ReviewWithUser[];
+        setReviews(transformedReviews);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    }, [userId]);
     
     useEffect(() => {
-        fetchSellerAndListings();
-    }, [fetchSellerAndListings]);
-
-    useEffect(() => {
-        if (!loadingListings && seller) {
-            fetchReviews();
-        }
-    }, [loadingListings, listings, seller, fetchReviews]);
-
+        fetchSellerData();
+        fetchReviews();
+    }, [fetchSellerData, fetchReviews]);
+    
     const getInitials = (name?: string | null) => {
         if (!name) return 'S';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();

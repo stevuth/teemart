@@ -77,50 +77,41 @@ export default function ProfilePage() {
     }
   }, [user, toast]);
 
-  const fetchReviewsForListings = useCallback(async (listings: Product[]) => {
-      if (listings.length === 0) {
-        setReviews([]);
-        setReviewsLoading(false);
-        return;
-      }
-      setReviewsLoading(true);
-      try {
-        const productIds = listings.map(l => l.id);
-        
+  const fetchReviewsForMyListings = useCallback(async () => {
+    if (!user) return;
+    setReviewsLoading(true);
+    try {
         const { data, error } = await supabase
-          .from('reviews')
-          .select(`
-              *,
-              user:users(
-                  id, user_metadata
-              )
-          `)
-          .in('product_id', productIds)
-          .order('created_at', { ascending: false });
-        
+          .rpc('get_reviews_for_seller', { seller_id: user.id });
+
         if (error) throw error;
         
-        const transformedReviews = data.map(review => {
-            const reviewUser = review.user as any; // Cast to any to access properties safely
+        const transformedReviews = (data as any[]).map(review => {
+            const reviewUser = review.user_data as any;
             return {
-              ...review,
+              id: review.id,
+              created_at: review.created_at,
+              user_id: review.user_id,
+              product_id: review.product_id,
+              rating: review.rating,
+              comment: review.comment,
               user: reviewUser ? { 
                   user_metadata: { 
-                      full_name: reviewUser.user_metadata?.full_name || 'Unknown User',
-                      avatar_url: reviewUser.user_metadata?.avatar_url
+                      full_name: reviewUser.full_name || 'Unknown User',
+                      avatar_url: reviewUser.avatar_url
                   } 
               } : { user_metadata: { full_name: 'Unknown User' } }
             }
         }) as ReviewWithUser[];
         setReviews(transformedReviews);
 
-      } catch (error: any) {
-        console.error("Error fetching reviews:", error.message || error);
-        setReviews([]);
-      } finally {
-        setReviewsLoading(false);
-      }
-  }, []);
+    } catch (error: any) {
+      console.error("Error fetching reviews:", error.message || error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -129,14 +120,9 @@ export default function ProfilePage() {
     }
     if(user) {
       fetchListings();
+      fetchReviewsForMyListings();
     }
-  }, [user, authLoading, router, fetchListings]);
-
-  useEffect(() => {
-    if (!listingsLoading) {
-        fetchReviewsForListings(activeListings);
-    }
-  }, [activeListings, listingsLoading, fetchReviewsForListings]);
+  }, [user, authLoading, router, fetchListings, fetchReviewsForMyListings]);
 
   
   const getInitials = (name?: string | null) => {
@@ -398,5 +384,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    
