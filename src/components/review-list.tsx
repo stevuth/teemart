@@ -112,5 +112,3 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
         </div>
     )
 }
-
-    

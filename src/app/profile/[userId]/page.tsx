@@ -86,11 +86,12 @@ export default function SellerProfilePage() {
                     .in('product_id', productIds)
                     .order('created_at', { ascending: false });
 
-                if (reviewsError) {
+                if (reviewsError && Object.keys(reviewsError).length > 0) {
                     console.error("Error fetching reviews:", reviewsError);
-                    throw reviewsError;
+                    setReviews([]);
+                } else {
+                    setReviews(reviewsData as ReviewWithUser[]);
                 }
-                setReviews(reviewsData as ReviewWithUser[]);
             } else {
                 setReviews([]);
             }
@@ -267,5 +268,4 @@ export default function SellerProfilePage() {
             <Footer />
         </div>
     );
-
-    
+}
