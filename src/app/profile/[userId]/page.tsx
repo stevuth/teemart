@@ -44,84 +44,52 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // Step 1: Fetch all listings which include seller info
+            // Step 1: Fetch seller profile
+            const { data: sellerData, error: sellerError } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url, created_at')
+                .eq('id', userId)
+                .single();
+
+            if (sellerError || !sellerData) {
+                console.error("Error fetching seller profile:", sellerError);
+                throw new Error("Could not fetch seller profile.");
+            }
+            setSeller(sellerData as Seller);
+
+            // Step 2: Fetch seller's listings
             const { data: listingsData, error: listingsError } = await supabase
                 .from('products')
-                .select(`
-                    *,
-                    seller:users(id, created_at, user_metadata)
-                `)
+                .select()
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
-            
+
             if (listingsError) {
                 console.error("Error fetching listings data:", listingsError);
                 throw new Error("Could not fetch seller's listings.");
             }
-
-            if (!listingsData || listingsData.length === 0) {
-                 // If no listings, try fetching the user directly to see if they exist
-                const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-                 if (userError || !userData.user) {
-                    throw new Error("Seller not found.");
-                }
-                const sellerInfo = userData.user;
-                setSeller({
-                    id: sellerInfo.id,
-                    full_name: sellerInfo.user_metadata?.full_name || 'TeeMart Seller',
-                    avatar_url: sellerInfo.user_metadata?.avatar_url || '',
-                    created_at: sellerInfo.created_at,
-                });
-                setListings([]);
-                setReviews([]);
-                return;
-            }
-
-            // Extract seller info from the first listing
-            const firstListingSeller = listingsData[0].seller as any;
-            if (firstListingSeller) {
-                setSeller({
-                    id: firstListingSeller.id,
-                    full_name: firstListingSeller.user_metadata?.full_name || 'TeeMart Seller',
-                    avatar_url: firstListingSeller.user_metadata?.avatar_url,
-                    created_at: firstListingSeller.created_at,
-                });
-            }
-
+            
             const transformedListings = (listingsData as any[]).map(item => ({
                 ...item,
                 image: item.image_url || [],
                 postedDate: item.created_at,
                 deliveryFee: item.delivery_fee,
-                price: item.price || 0,
-                category: item.category || '',
-                location: item.location || '',
-                city: item.city || '',
-                condition: item.condition || 'Used',
-                description: item.description || '',
             })) as Product[];
             setListings(transformedListings);
 
-            // Step 2: Fetch Reviews for those listings
+            // Step 3: Fetch reviews for those listings
             const productIds = transformedListings.map(p => p.id);
             if (productIds.length > 0) {
                  const { data: reviewsData, error: reviewsError } = await supabase
                     .from('reviews')
-                    .select('*, user:users(user_metadata)')
+                    .select('*, user:profiles(full_name, avatar_url)')
                     .in('product_id', productIds);
 
                 if (reviewsError) {
                     console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
                 } else {
-                    const transformedReviews = (reviewsData as any[]).map(r => ({
-                        ...r,
-                        user: {
-                            full_name: r.user.user_metadata?.full_name || 'Anonymous',
-                            avatar_url: r.user.user_metadata?.avatar_url
-                        }
-                    }))
-                    setReviews(transformedReviews as ReviewWithUser[]);
+                    setReviews(reviewsData as ReviewWithUser[]);
                 }
             } else {
                 setReviews([]);
@@ -300,3 +268,6 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
+
+    
