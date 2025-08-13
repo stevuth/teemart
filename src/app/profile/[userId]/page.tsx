@@ -77,15 +77,12 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            // Step 3: Fetch reviews for those listings, including the reviewer's profile data
+            // Step 3: Fetch reviews for those listings
             const productIds = transformedListings.map(p => p.id);
             if (productIds.length > 0) {
                  const { data: reviewsData, error: reviewsError } = await supabase
                     .from('reviews')
-                    .select(`
-                        *,
-                        user:profiles(full_name, avatar_url)
-                    `)
+                    .select(`*, user:profiles(id, full_name, avatar_url)`)
                     .in('product_id', productIds)
                     .order('created_at', { ascending: false });
 
@@ -272,5 +269,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    
