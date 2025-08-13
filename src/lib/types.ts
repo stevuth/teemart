@@ -54,7 +54,6 @@ export type Review = {
   created_at: string;
 };
 
-// For fetching reviews with user data from the public 'profiles' table
 export type ReviewWithUser = Review & {
   user: {
     full_name: string | null;
