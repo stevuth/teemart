@@ -51,7 +51,7 @@ export default function SellerProfilePage() {
                 .eq('id', userId)
                 .single();
 
-            if (sellerError || !sellerData) {
+            if (sellerError) {
                 console.error("Error fetching seller profile:", sellerError);
                 throw new Error("Could not fetch seller profile.");
             }
@@ -86,12 +86,11 @@ export default function SellerProfilePage() {
                     .in('product_id', productIds)
                     .order('created_at', { ascending: false });
 
-                if (reviewsError && Object.keys(reviewsError).length > 0) {
+                if (reviewsError) {
                     console.error("Error fetching reviews:", reviewsError);
-                    setReviews([]);
-                } else {
-                    setReviews(reviewsData as ReviewWithUser[]);
+                    throw reviewsError;
                 }
+                setReviews(reviewsData as ReviewWithUser[]);
             } else {
                 setReviews([]);
             }
@@ -268,4 +267,5 @@ export default function SellerProfilePage() {
             <Footer />
         </div>
     );
-}
+
+    
