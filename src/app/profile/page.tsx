@@ -37,56 +37,56 @@ export default function ProfilePage() {
   const [listingsLoading, setListingsLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-
+  
   const enrichedOrders = useMemo(() => {
     return staticOrders.map(order => {
         return { ...order, product: { name: 'Product Name', image: 'https://placehold.co/80x80.png' } };
     });
   }, []);
   
-  const fetchListings = useCallback(async () => {
-    if (user) {
-      setListingsLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching user's listings:", error.message || error);
-        toast({ title: "Error", description: "Could not fetch your listings.", variant: "destructive" });
-        setActiveListings([]);
-      } else {
-          const transformedData = (data as any[]).map(item => ({
-            ...item,
-            image: item.image_url || [],
-            postedDate: item.created_at,
-            deliveryFee: item.delivery_fee,
-            price: item.price || 0,
-            category: item.category || '',
-            location: item.location || '',
-            city: item.city || '',
-            condition: item.condition || 'Used',
-            description: item.description || '',
-            user_id: item.user_id,
-          })) as Product[];
-          setActiveListings(transformedData);
-      }
-      setListingsLoading(false);
-    }
-  }, [user, toast]);
-
-  const fetchReviewsForMyListings = useCallback(async () => {
+  const fetchUserData = useCallback(async () => {
     if (!user) return;
-    setReviewsLoading(true);
-    try {
-        const { data, error } = await supabase
-          .rpc('get_reviews_for_seller', { seller_id: user.id });
 
-        if (error) throw error;
-        
-        const transformedReviews = (data as any[]).map(review => {
+    setListingsLoading(true);
+    setReviewsLoading(true);
+    
+    try {
+      // Fetch listings and reviews in parallel
+      const [listingsRes, reviewsRes] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase.rpc('get_reviews_for_seller', { seller_id: user.id })
+      ]);
+      
+      const { data: listingsData, error: listingsError } = listingsRes;
+      if (listingsError) {
+        console.error("Error fetching user's listings:", listingsError);
+        toast({ title: "Error", description: "Could not fetch your listings.", variant: "destructive" });
+      } else {
+        const transformedData = (listingsData as any[]).map(item => ({
+          ...item,
+          image: item.image_url || [],
+          postedDate: item.created_at,
+          deliveryFee: item.delivery_fee,
+          price: item.price || 0,
+          category: item.category || '',
+          location: item.location || '',
+          city: item.city || '',
+          condition: item.condition || 'Used',
+          description: item.description || '',
+          user_id: item.user_id,
+        })) as Product[];
+        setActiveListings(transformedData);
+      }
+
+      const { data: reviewsData, error: reviewsError } = reviewsRes;
+      if (reviewsError) {
+        console.error("Error fetching reviews:", reviewsError);
+      } else {
+        const transformedReviews = (reviewsData as any[]).map(review => {
             const reviewUser = review.user_data as any;
             return {
               id: review.id,
@@ -104,26 +104,24 @@ export default function ProfilePage() {
             }
         }) as ReviewWithUser[];
         setReviews(transformedReviews);
-
+      }
     } catch (error: any) {
-      console.error("Error fetching reviews:", error.message || error);
-      setReviews([]);
+        console.error("Error fetching profile data: ", error);
     } finally {
-      setReviewsLoading(false);
+        setListingsLoading(false);
+        setReviewsLoading(false);
     }
-  }, [user]);
+  }, [user, toast]);
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/');
       return;
     }
-    if(user) {
-      fetchListings();
-      fetchReviewsForMyListings();
+    if (user) {
+      fetchUserData();
     }
-  }, [user, authLoading, router, fetchListings, fetchReviewsForMyListings]);
-
+  }, [user, authLoading, router, fetchUserData]);
   
   const getInitials = (name?: string | null) => {
     if (!name) return 'U';
@@ -153,7 +151,7 @@ export default function ProfilePage() {
 
   const onListingDeleted = () => {
     setProductToDelete(null);
-    fetchListings(); // Refetch listings after one is deleted
+    fetchUserData(); // Refetch all user data after a listing is deleted
   }
 
   const loading = authLoading || (user && listingsLoading);

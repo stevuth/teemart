@@ -39,99 +39,89 @@ export default function SellerProfilePage() {
     const [loadingSeller, setLoadingSeller] = useState(true);
     const [loadingListings, setLoadingListings] = useState(true);
     const [loadingReviews, setLoadingReviews] = useState(true);
-    
-    const fetchSellerData = useCallback(async () => {
-        if (!userId) return;
-        setLoadingSeller(true);
-        setLoadingListings(true);
-
-        try {
-            // Fetch seller info
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('id, user_metadata, created_at')
-                .eq('id', userId)
-                .single();
-
-            if (userError || !userData) throw userError || new Error('User not found');
-            
-            const metadata = userData.user_metadata as any;
-            setSeller({
-                id: userData.id,
-                full_name: metadata?.full_name || 'TeeMart Seller',
-                avatar_url: metadata?.avatar_url,
-                created_at: userData.created_at,
-            });
-            setLoadingSeller(false);
-
-            // Fetch seller's listings
-            const { data: listingsData, error: listingsError } = await supabase
-                .from('products')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false });
-
-            if (listingsError) throw listingsError;
-
-            const transformedListings = (listingsData as any[]).map(item => ({
-                ...item,
-                image: item.image_url || [],
-                postedDate: item.created_at,
-                deliveryFee: item.delivery_fee,
-                price: item.price || 0,
-                category: item.category || '',
-                location: item.location || '',
-                city: item.city || '',
-                condition: item.condition || 'Used',
-                description: item.description || '',
-            })) as Product[];
-            setListings(transformedListings);
-
-        } catch (error: any) {
-             console.error("Error fetching seller data:", error);
-        } finally {
-            setLoadingListings(false);
-        }
-    }, [userId]);
-
-    const fetchReviews = useCallback(async () => {
-      if (!userId) return;
-      setLoadingReviews(true);
-      try {
-        const { data: reviewsData, error: reviewsError } = await supabase
-          .rpc('get_reviews_for_seller', { seller_id: userId });
-
-        if (reviewsError) throw reviewsError;
-
-        const transformedReviews = (reviewsData as any[]).map(review => {
-          const reviewUser = review.user_data as any;
-          return {
-            id: review.id,
-            created_at: review.created_at,
-            user_id: review.user_id,
-            product_id: review.product_id,
-            rating: review.rating,
-            comment: review.comment,
-            user: reviewUser ? {
-              user_metadata: {
-                full_name: reviewUser.full_name || 'Unknown User',
-                avatar_url: reviewUser.avatar_url,
-              }
-            } : { user_metadata: { full_name: 'Unknown User' } }
-          }
-        }) as ReviewWithUser[];
-        setReviews(transformedReviews);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-      } finally {
-        setLoadingReviews(false);
-      }
-    }, [userId]);
+    const [reviewSubmittedToggle, setReviewSubmittedToggle] = useState(false);
     
     useEffect(() => {
-        fetchSellerData();
-        fetchReviews();
-    }, [fetchSellerData, fetchReviews]);
+        const fetchAllData = async () => {
+            if (!userId) return;
+
+            setLoadingSeller(true);
+            setLoadingListings(true);
+            setLoadingReviews(true);
+
+            try {
+                // Fetch seller info and listings in parallel
+                const [sellerRes, listingsRes] = await Promise.all([
+                    supabase.from('users').select('id, user_metadata, created_at').eq('id', userId).single(),
+                    supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+                ]);
+                
+                const { data: userData, error: userError } = sellerRes;
+                if (userError || !userData) throw userError || new Error('User not found');
+                
+                const metadata = userData.user_metadata as any;
+                setSeller({
+                    id: userData.id,
+                    full_name: metadata?.full_name || 'TeeMart Seller',
+                    avatar_url: metadata?.avatar_url,
+                    created_at: userData.created_at,
+                });
+                setLoadingSeller(false);
+
+                const { data: listingsData, error: listingsError } = listingsRes;
+                if (listingsError) throw listingsError;
+
+                const transformedListings = (listingsData as any[]).map(item => ({
+                    ...item,
+                    image: item.image_url || [],
+                    postedDate: item.created_at,
+                    deliveryFee: item.delivery_fee,
+                    price: item.price || 0,
+                    category: item.category || '',
+                    location: item.location || '',
+                    city: item.city || '',
+                    condition: item.condition || 'Used',
+                    description: item.description || '',
+                })) as Product[];
+                setListings(transformedListings);
+                setLoadingListings(false);
+
+                // Fetch reviews for the seller
+                const { data: reviewsData, error: reviewsError } = await supabase
+                    .rpc('get_reviews_for_seller', { seller_id: userId });
+
+                if (reviewsError) throw reviewsError;
+
+                const transformedReviews = (reviewsData as any[]).map(review => {
+                    const reviewUser = review.user_data as any;
+                    return {
+                        id: review.id,
+                        created_at: review.created_at,
+                        user_id: review.user_id,
+                        product_id: review.product_id,
+                        rating: review.rating,
+                        comment: review.comment,
+                        user: reviewUser ? {
+                            user_metadata: {
+                                full_name: reviewUser.full_name || 'Unknown User',
+                                avatar_url: reviewUser.avatar_url,
+                            }
+                        } : { user_metadata: { full_name: 'Unknown User' } }
+                    }
+                }) as ReviewWithUser[];
+                setReviews(transformedReviews);
+
+            } catch (error: any) {
+                console.error("Error fetching seller data:", error);
+            } finally {
+                setLoadingSeller(false);
+                setLoadingListings(false);
+                setLoadingReviews(false);
+            }
+        };
+        
+        fetchAllData();
+    }, [userId, reviewSubmittedToggle]);
     
     const getInitials = (name?: string | null) => {
         if (!name) return 'S';
@@ -145,8 +135,8 @@ export default function SellerProfilePage() {
     };
 
     const handleReviewSubmitted = () => {
-        // Refetch reviews after a new one is submitted
-        fetchReviews();
+        // Toggle state to trigger re-fetch
+        setReviewSubmittedToggle(prev => !prev);
     };
 
     const loading = loadingSeller || loadingListings;
