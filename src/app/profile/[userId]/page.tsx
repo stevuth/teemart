@@ -27,12 +27,6 @@ type Seller = {
     created_at: string;
 }
 
-type Profile = {
-    id: string;
-    full_name: string;
-    avatar_url: string;
-}
-
 export default function SellerProfilePage() {
     const params = useParams();
     const userId = params.userId as string;
@@ -76,38 +70,18 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            // Step 1: Fetch reviews for the seller's products
             const productIds = transformedListings.map(p => p.id);
             if (productIds.length > 0) {
                 const { data: reviewsData, error: reviewsError } = await supabase
                     .from('reviews')
-                    .select('*')
+                    .select('*, user:profiles(full_name, avatar_url)')
                     .in('product_id', productIds);
                 
                 if (reviewsError) {
                     console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
                 } else {
-                    const reviewerIds = [...new Set(reviewsData.map(r => r.user_id))];
-                    
-                    // Step 2: Fetch profiles for the reviewers
-                    const { data: profilesData, error: profilesError } = await supabase
-                        .from('profiles')
-                        .select('id, full_name, avatar_url')
-                        .in('id', reviewerIds);
-
-                    if (profilesError) {
-                        console.error("Error fetching reviewer profiles:", profilesError);
-                        // We can still show reviews, just without user info
-                        setReviews(reviewsData.map(r => ({ ...r, user: null })));
-                    } else {
-                        const profilesMap = new Map(profilesData.map(p => [p.id, p]));
-                        const enrichedReviews = reviewsData.map(review => ({
-                            ...review,
-                            user: profilesMap.get(review.user_id) || null
-                        })) as ReviewWithUser[];
-                        setReviews(enrichedReviews);
-                    }
+                    setReviews(reviewsData as ReviewWithUser[]);
                 }
             } else {
                 setReviews([]);

@@ -59,6 +59,6 @@ export type Review = {
 export type ReviewWithUser = Review & {
   user: {
     full_name: string;
-    avatar_url?: string;
+    avatar_url: string | null;
   } | null;
 };

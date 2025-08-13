@@ -70,32 +70,14 @@ export default function ProfilePage() {
       if (productIds.length > 0) {
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select('*')
+          .select('*, user:profiles(full_name, avatar_url)')
           .in('product_id', productIds);
 
         if (reviewsError) {
           console.error("Error fetching reviews:", reviewsError);
           setReviews([]);
         } else {
-            const reviewerIds = [...new Set(reviewsData.map(r => r.user_id))];
-            
-            // Fetch profiles for the reviewers
-            const { data: profilesData, error: profilesError } = await supabase
-                .from('profiles')
-                .select('id, full_name, avatar_url')
-                .in('id', reviewerIds);
-
-            if (profilesError) {
-                console.error("Error fetching reviewer profiles:", profilesError);
-                setReviews(reviewsData.map(r => ({ ...r, user: null })));
-            } else {
-                const profilesMap = new Map(profilesData.map(p => [p.id, p]));
-                const enrichedReviews = reviewsData.map(review => ({
-                    ...review,
-                    user: profilesMap.get(review.user_id) || null
-                })) as ReviewWithUser[];
-                setReviews(enrichedReviews);
-            }
+            setReviews(reviewsData as ReviewWithUser[]);
         }
       } else {
         setReviews([]);
