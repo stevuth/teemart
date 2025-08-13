@@ -18,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { orders as staticOrders } from '@/lib/data';
 import { ProductCard } from '@/components/product-card';
-import type { Order, OrderStatus, Product, ReviewWithUser } from '@/lib/types';
+import type { Order, OrderStatus, Product, Review, ReviewWithUser } from '@/lib/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
@@ -64,18 +64,34 @@ export default function ProfilePage() {
       })) as Product[];
       setActiveListings(transformedData);
 
-      if (transformedData.length > 0) {
-        const productIds = transformedData.map(p => p.id);
+      const productIds = transformedData.map(p => p.id);
+      if (productIds.length > 0) {
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select(`*, user:users(user_metadata)`)
+          .select('*')
           .in('product_id', productIds);
-        
+
         if (reviewsError) {
           console.error("Error fetching reviews:", reviewsError);
           setReviews([]);
         } else {
-          setReviews(reviewsData as ReviewWithUser[]);
+            const reviewerIds = [...new Set(reviewsData.map(r => r.user_id))];
+            const { data: profilesData, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .in('id', reviewerIds);
+
+            if (profilesError) {
+                console.error("Error fetching reviewer profiles:", profilesError);
+                setReviews(reviewsData.map(r => ({ ...r, user: null })));
+            } else {
+                const profilesMap = new Map(profilesData.map(p => [p.id, p]));
+                const enrichedReviews = reviewsData.map(review => ({
+                    ...review,
+                    user: profilesMap.get(review.user_id) || null
+                })) as ReviewWithUser[];
+                setReviews(enrichedReviews);
+            }
         }
       } else {
         setReviews([]);
@@ -348,5 +364,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    

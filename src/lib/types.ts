@@ -55,14 +55,10 @@ export type Review = {
   created_at: string;
 };
 
-// For fetching reviews with user data
+// For fetching reviews with user data from the public 'profiles' table
 export type ReviewWithUser = Review & {
   user: {
-    user_metadata: {
-      full_name: string;
-      avatar_url?: string;
-    }
+    full_name: string;
+    avatar_url?: string;
   } | null;
 };
-
-    

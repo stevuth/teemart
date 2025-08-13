@@ -66,12 +66,12 @@ export function ReviewList({ reviews, listings }: ReviewListProps) {
                                 <div key={review.id}>
                                     <div className="flex items-start gap-4">
                                         <Avatar>
-                                            <AvatarImage src={review.user?.user_metadata.avatar_url} alt={review.user?.user_metadata.full_name || ''} />
-                                            <AvatarFallback>{getInitials(review.user?.user_metadata.full_name)}</AvatarFallback>
+                                            <AvatarImage src={review.user?.avatar_url} alt={review.user?.full_name || ''} />
+                                            <AvatarFallback>{getInitials(review.user?.full_name)}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex-grow">
                                             <div className="flex items-center justify-between">
-                                                <p className="font-semibold">{review.user?.user_metadata.full_name || 'Anonymous'}</p>
+                                                <p className="font-semibold">{review.user?.full_name || 'Anonymous'}</p>
                                                 <p className="text-sm text-muted-foreground">
                                                     {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
                                                 </p>

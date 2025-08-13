@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
 import { Loader2, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
-import type { Product, ReviewWithUser } from '@/lib/types';
+import type { Product, Review, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ReviewForm } from '@/components/review-form';
@@ -25,6 +25,12 @@ type Seller = {
     full_name: string;
     avatar_url: string;
     created_at: string;
+}
+
+type Profile = {
+    id: string;
+    full_name: string;
+    avatar_url: string;
 }
 
 export default function SellerProfilePage() {
@@ -44,21 +50,15 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // Fetch seller info and listings
+            // Fetch seller info and listings concurrently
             const [sellerRes, listingsRes] = await Promise.all([
-                supabase.from('users').select('id, user_metadata, created_at').eq('id', userId).single(),
+                supabase.from('profiles').select('*').eq('id', userId).single(),
                 supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
             ]);
 
             if (sellerRes.error || !sellerRes.data) throw sellerRes.error || new Error('User not found');
             
-            const metadata = sellerRes.data.user_metadata as any;
-            setSeller({
-                id: sellerRes.data.id,
-                full_name: metadata?.full_name || 'TeeMart Seller',
-                avatar_url: metadata?.avatar_url,
-                created_at: sellerRes.data.created_at,
-            });
+            setSeller(sellerRes.data as Seller);
 
             if (listingsRes.error) throw listingsRes.error;
 
@@ -76,22 +76,39 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            // Fetch reviews for the fetched listings
-            if (transformedListings.length > 0) {
-                const productIds = transformedListings.map(p => p.id);
+            // Step 1: Fetch reviews for the seller's products
+            const productIds = transformedListings.map(p => p.id);
+            if (productIds.length > 0) {
                 const { data: reviewsData, error: reviewsError } = await supabase
                     .from('reviews')
-                    .select(`
-                        *,
-                        user:users(user_metadata)
-                    `)
+                    .select('*')
                     .in('product_id', productIds);
                 
                 if (reviewsError) {
+                    // Log error but don't show toast
                     console.error("Error fetching reviews:", reviewsError);
                     setReviews([]);
                 } else {
-                    setReviews(reviewsData as ReviewWithUser[]);
+                    const reviewerIds = [...new Set(reviewsData.map(r => r.user_id))];
+                    
+                    // Step 2: Fetch profiles for the reviewers
+                    const { data: profilesData, error: profilesError } = await supabase
+                        .from('profiles')
+                        .select('id, full_name, avatar_url')
+                        .in('id', reviewerIds);
+
+                    if (profilesError) {
+                        console.error("Error fetching reviewer profiles:", profilesError);
+                        // We can still show reviews, just without user info
+                        setReviews(reviewsData.map(r => ({ ...r, user: null })));
+                    } else {
+                        const profilesMap = new Map(profilesData.map(p => [p.id, p]));
+                        const enrichedReviews = reviewsData.map(review => ({
+                            ...review,
+                            user: profilesMap.get(review.user_id) || null
+                        })) as ReviewWithUser[];
+                        setReviews(enrichedReviews);
+                    }
                 }
             } else {
                 setReviews([]);
@@ -265,5 +282,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    
