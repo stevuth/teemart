@@ -36,18 +36,14 @@ export default function SellerProfilePage() {
     const [seller, setSeller] = useState<Seller | null>(null);
     const [listings, setListings] = useState<Product[]>([]);
     const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
-    const [loadingSeller, setLoadingSeller] = useState(true);
-    const [loadingListings, setLoadingListings] = useState(true);
-    const [loadingReviews, setLoadingReviews] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [reviewSubmittedToggle, setReviewSubmittedToggle] = useState(false);
     
     useEffect(() => {
         const fetchAllData = async () => {
             if (!userId) return;
 
-            setLoadingSeller(true);
-            setLoadingListings(true);
-            setLoadingReviews(true);
+            setLoading(true);
 
             try {
                 // Fetch seller info and listings in parallel
@@ -56,22 +52,19 @@ export default function SellerProfilePage() {
                     supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: false })
                 ]);
                 
-                const { data: userData, error: userError } = sellerRes;
-                if (userError || !userData) throw userError || new Error('User not found');
+                if (sellerRes.error || !sellerRes.data) throw sellerRes.error || new Error('User not found');
                 
-                const metadata = userData.user_metadata as any;
+                const metadata = sellerRes.data.user_metadata as any;
                 setSeller({
-                    id: userData.id,
+                    id: sellerRes.data.id,
                     full_name: metadata?.full_name || 'TeeMart Seller',
                     avatar_url: metadata?.avatar_url,
-                    created_at: userData.created_at,
+                    created_at: sellerRes.data.created_at,
                 });
-                setLoadingSeller(false);
 
-                const { data: listingsData, error: listingsError } = listingsRes;
-                if (listingsError) throw listingsError;
+                if (listingsRes.error) throw listingsRes.error;
 
-                const transformedListings = (listingsData as any[]).map(item => ({
+                const transformedListings = (listingsRes.data as any[]).map(item => ({
                     ...item,
                     image: item.image_url || [],
                     postedDate: item.created_at,
@@ -84,39 +77,39 @@ export default function SellerProfilePage() {
                     description: item.description || '',
                 })) as Product[];
                 setListings(transformedListings);
-                setLoadingListings(false);
 
-                // Fetch reviews for the seller
+                // Fetch reviews for the seller using the RPC function
                 const { data: reviewsData, error: reviewsError } = await supabase
                     .rpc('get_reviews_for_seller', { seller_id: userId });
 
-                if (reviewsError) throw reviewsError;
-
-                const transformedReviews = (reviewsData as any[]).map(review => {
-                    const reviewUser = review.user_data as any;
-                    return {
-                        id: review.id,
-                        created_at: review.created_at,
-                        user_id: review.user_id,
-                        product_id: review.product_id,
-                        rating: review.rating,
-                        comment: review.comment,
-                        user: reviewUser ? {
-                            user_metadata: {
-                                full_name: reviewUser.full_name || 'Unknown User',
-                                avatar_url: reviewUser.avatar_url,
-                            }
-                        } : { user_metadata: { full_name: 'Unknown User' } }
-                    }
-                }) as ReviewWithUser[];
-                setReviews(transformedReviews);
+                if (reviewsError) {
+                    // Log error but don't show toast to user
+                    console.error("Error fetching reviews:", reviewsError);
+                } else {
+                     const transformedReviews = (reviewsData as any[]).map(review => {
+                        const reviewUser = review.user_data as any;
+                        return {
+                            id: review.id,
+                            created_at: review.created_at,
+                            user_id: review.user_id,
+                            product_id: review.product_id,
+                            rating: review.rating,
+                            comment: review.comment,
+                            user: reviewUser ? {
+                                user_metadata: {
+                                    full_name: reviewUser.full_name || 'Unknown User',
+                                    avatar_url: reviewUser.avatar_url,
+                                }
+                            } : { user_metadata: { full_name: 'Unknown User' } }
+                        }
+                    }) as ReviewWithUser[];
+                    setReviews(transformedReviews);
+                }
 
             } catch (error: any) {
                 console.error("Error fetching seller data:", error);
             } finally {
-                setLoadingSeller(false);
-                setLoadingListings(false);
-                setLoadingReviews(false);
+                setLoading(false);
             }
         };
         
@@ -135,11 +128,8 @@ export default function SellerProfilePage() {
     };
 
     const handleReviewSubmitted = () => {
-        // Toggle state to trigger re-fetch
         setReviewSubmittedToggle(prev => !prev);
     };
-
-    const loading = loadingSeller || loadingListings;
 
     if (loading) {
         return (
@@ -224,7 +214,7 @@ export default function SellerProfilePage() {
                             </div>
                             <div className="flex items-center gap-3">
                                 <Star className="h-4 w-4 text-primary" />
-                                <span>4.9 (125 reviews)</span>
+                                <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
                             </div>
                         </div>
                     </div>
@@ -236,7 +226,7 @@ export default function SellerProfilePage() {
                     <Tabs defaultValue="listings">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="listings">Seller's Listings ({listings.length})</TabsTrigger>
-                            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                            <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="listings" className="mt-6">
@@ -265,22 +255,16 @@ export default function SellerProfilePage() {
                         </TabsContent>
 
                         <TabsContent value="reviews" className="mt-6">
-                             {loadingReviews ? (
-                                <div className="flex justify-center items-center py-16">
-                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                </div>
-                            ) : (
-                                <div className="space-y-8">
-                                    <ReviewList reviews={reviews} listings={listings} />
-                                    {currentUser && currentUser.id !== seller.id && listings.length > 0 && (
-                                        <ReviewForm 
-                                            listings={listings}
-                                            sellerId={seller.id}
-                                            onReviewSubmitted={handleReviewSubmitted} 
-                                        />
-                                    )}
-                                </div>
-                            )}
+                             <div className="space-y-8">
+                                <ReviewList reviews={reviews} listings={listings} />
+                                {currentUser && currentUser.id !== seller.id && listings.length > 0 && (
+                                    <ReviewForm 
+                                        listings={listings}
+                                        sellerId={seller.id}
+                                        onReviewSubmitted={handleReviewSubmitted} 
+                                    />
+                                )}
+                            </div>
                         </TabsContent>
                     </Tabs>
                 </div>
@@ -288,4 +272,5 @@ export default function SellerProfilePage() {
             <Footer />
         </div>
     );
-}
+
+    
