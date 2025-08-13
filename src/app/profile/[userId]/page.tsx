@@ -44,71 +44,53 @@ export default function SellerProfilePage() {
         setLoading(true);
 
         try {
-            // Step 1: Fetch the seller's profile from the public profiles table.
-            const { data: sellerData, error: sellerError } = await supabase
-                .from('profiles')
-                .select('id, full_name, avatar_url')
-                .eq('id', userId)
-                .single();
-            
-            if (sellerError) {
-                if (sellerError.code === 'PGRST116') { 
-                    setSeller(null);
-                } else {
-                    throw sellerError;
-                }
-            } else {
-                 setSeller({
-                    id: sellerData.id,
-                    full_name: sellerData.full_name || 'TeeMart Seller',
-                    avatar_url: sellerData.avatar_url || '',
-                    created_at: '', // Placeholder as we can't query auth.users directly
-                });
+            const { data, error } = await supabase
+                .rpc('get_seller_profile_and_listings', { p_user_id: userId });
+
+            if (error) {
+                console.error("Error fetching seller data:", error);
+                throw error;
             }
 
-            // Step 2: Fetch the seller's product listings.
-            const { data: listingsData, error: listingsError } = await supabase
-                .from('products')
-                .select()
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false });
+            if (data) {
+                // Set Seller
+                if (data.seller) {
+                    setSeller({
+                        id: data.seller.id,
+                        full_name: data.seller.full_name || 'TeeMart Seller',
+                        avatar_url: data.seller.avatar_url || '',
+                        created_at: '', // Placeholder, as this isn't in profiles table
+                    });
+                } else {
+                     setSeller(null);
+                }
 
-            if (listingsError) throw listingsError;
-
-            const transformedListings = (listingsData as any[]).map(item => ({
-                ...item,
-                image: item.image_url || [],
-                postedDate: item.created_at,
-                deliveryFee: item.delivery_fee,
-                price: item.price || 0,
-                category: item.category || '',
-                location: item.location || '',
-                city: item.city || '',
-                condition: item.condition || 'Used',
-                description: item.description || '',
-            })) as Product[];
-            setListings(transformedListings);
-
-            // Step 3: Fetch reviews for those listings.
-            const productIds = transformedListings.map(p => p.id);
-            if (productIds.length > 0) {
-                 const { data: reviewsData, error: reviewsError } = await supabase
-                    .from('reviews')
-                    .select('*, user:profiles(full_name, avatar_url)')
-                    .in('product_id', productIds);
+                // Set Listings
+                const transformedListings = (data.listings as any[]).map(item => ({
+                    ...item,
+                    image: item.image_url || [],
+                    postedDate: item.created_at,
+                    deliveryFee: item.delivery_fee,
+                    price: item.price || 0,
+                    category: item.category || '',
+                    location: item.location || '',
+                    city: item.city || '',
+                    condition: item.condition || 'Used',
+                    description: item.description || '',
+                })) as Product[];
+                setListings(transformedListings);
                 
-                if (reviewsError) {
-                    console.error("Error fetching reviews:", reviewsError);
-                    setReviews([]);
-                } else {
-                    setReviews(reviewsData as ReviewWithUser[]);
-                }
+                // Set Reviews
+                setReviews(data.reviews as ReviewWithUser[]);
             } else {
-                setReviews([]);
+                 setSeller(null);
+                 setListings([]);
+                 setReviews([]);
             }
+
         } catch (error: any) {
             console.error("Error fetching seller data:", error.message);
-            setSeller(null); // Ensure seller is null on error to show 'not found'
+            setSeller(null);
         } finally {
             setLoading(false);
         }
