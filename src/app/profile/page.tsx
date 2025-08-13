@@ -116,12 +116,11 @@ export default function ProfilePage() {
 
       } catch (error: any) {
         console.error("Error fetching reviews:", error.message || error);
-        toast({ title: "Error", description: "Could not fetch reviews for your listings.", variant: "destructive" });
         setReviews([]);
       } finally {
         setReviewsLoading(false);
       }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {

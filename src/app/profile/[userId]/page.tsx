@@ -129,11 +129,10 @@ export default function SellerProfilePage() {
             setReviews(transformedReviews);
         } catch (error: any) {
             console.error("Error fetching reviews:", error);
-            toast({ title: "Error", description: "Could not fetch reviews.", variant: "destructive" });
         } finally {
             setLoadingReviews(false);
         }
-    }, [toast]);
+    }, []);
     
     useEffect(() => {
         fetchSellerAndListings();
