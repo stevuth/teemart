@@ -41,17 +41,15 @@ export default function SellerProfilePage() {
 
     const fetchAllData = useCallback(async () => {
         if (!userId) return;
-
         setLoading(true);
 
         try {
-            // Fetch seller info, listings, and reviews in parallel
-            const [sellerRes, listingsRes, reviewsRes] = await Promise.all([
+            // Fetch seller info and listings
+            const [sellerRes, listingsRes] = await Promise.all([
                 supabase.from('users').select('id, user_metadata, created_at').eq('id', userId).single(),
                 supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-                supabase.rpc('get_reviews_for_seller', { seller_id: userId })
             ]);
-            
+
             if (sellerRes.error || !sellerRes.data) throw sellerRes.error || new Error('User not found');
             
             const metadata = sellerRes.data.user_metadata as any;
@@ -78,40 +76,37 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            if (reviewsRes.error) {
-                console.error("Error fetching reviews:", reviewsRes.error);
-                setReviews([]);
+            // Fetch reviews for the fetched listings
+            if (transformedListings.length > 0) {
+                const productIds = transformedListings.map(p => p.id);
+                const { data: reviewsData, error: reviewsError } = await supabase
+                    .from('reviews')
+                    .select(`
+                        *,
+                        user:users(user_metadata)
+                    `)
+                    .in('product_id', productIds);
+                
+                if (reviewsError) {
+                    console.error("Error fetching reviews:", reviewsError);
+                    setReviews([]);
+                } else {
+                    setReviews(reviewsData as ReviewWithUser[]);
+                }
             } else {
-                 const transformedReviews = (reviewsRes.data as any[]).map(review => {
-                    const reviewUser = review.user_data as any;
-                    return {
-                        id: review.id,
-                        created_at: review.created_at,
-                        user_id: review.user_id,
-                        product_id: review.product_id,
-                        rating: review.rating,
-                        comment: review.comment,
-                        user: reviewUser ? {
-                            user_metadata: {
-                                full_name: reviewUser.full_name || 'Unknown User',
-                                avatar_url: reviewUser.avatar_url,
-                            }
-                        } : { user_metadata: { full_name: 'Unknown User' } }
-                    }
-                }) as ReviewWithUser[];
-                setReviews(transformedReviews);
+                setReviews([]);
             }
 
         } catch (error: any) {
-            console.error("Error fetching seller data:", error);
+            console.error("Error fetching seller data:", error.message);
         } finally {
             setLoading(false);
         }
-    }, [userId]);
+    }, [userId, reviewSubmittedToggle]);
     
     useEffect(() => {
         fetchAllData();
-    }, [userId, fetchAllData, reviewSubmittedToggle]);
+    }, [fetchAllData]);
     
     const getInitials = (name?: string | null) => {
         if (!name) return 'S';
@@ -270,3 +265,5 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
+    

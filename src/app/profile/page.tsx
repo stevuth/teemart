@@ -45,63 +45,42 @@ export default function ProfilePage() {
   
   const fetchUserData = useCallback(async () => {
     if (!user) return;
-
     setLoading(true);
     
     try {
-      const [listingsRes, reviewsRes] = await Promise.all([
-        supabase
-          .from('products')
-          .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase.rpc('get_reviews_for_seller', { seller_id: user.id })
-      ]);
-      
-      const { data: listingsData, error: listingsError } = listingsRes;
-      if (listingsError) {
-        console.error("Error fetching user's listings:", listingsError);
-        toast({ title: "Error", description: "Could not fetch your listings.", variant: "destructive" });
+      const { data: listingsData, error: listingsError } = await supabase
+        .from('products')
+        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (listingsError) throw listingsError;
+
+      const transformedData = (listingsData as any[]).map(item => ({
+        ...item,
+        image: item.image_url || [],
+        postedDate: item.created_at,
+        deliveryFee: item.delivery_fee,
+      })) as Product[];
+      setActiveListings(transformedData);
+
+      if (transformedData.length > 0) {
+        const productIds = transformedData.map(p => p.id);
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select(`*, user:users(user_metadata)`)
+          .in('product_id', productIds);
+        
+        if (reviewsError) {
+          console.error("Error fetching reviews:", reviewsError);
+          setReviews([]);
+        } else {
+          setReviews(reviewsData as ReviewWithUser[]);
+        }
       } else {
-        const transformedData = (listingsData as any[]).map(item => ({
-          ...item,
-          image: item.image_url || [],
-          postedDate: item.created_at,
-          deliveryFee: item.delivery_fee,
-          price: item.price || 0,
-          category: item.category || '',
-          location: item.location || '',
-          city: item.city || '',
-          condition: item.condition || 'Used',
-          description: item.description || '',
-          user_id: item.user_id,
-        })) as Product[];
-        setActiveListings(transformedData);
+        setReviews([]);
       }
 
-      const { data: reviewsData, error: reviewsError } = reviewsRes;
-      if (reviewsError) {
-        console.error("Error fetching reviews:", reviewsError);
-      } else {
-        const transformedReviews = (reviewsData as any[]).map(review => {
-            const reviewUser = review.user_data as any;
-            return {
-              id: review.id,
-              created_at: review.created_at,
-              user_id: review.user_id,
-              product_id: review.product_id,
-              rating: review.rating,
-              comment: review.comment,
-              user: reviewUser ? { 
-                  user_metadata: { 
-                      full_name: reviewUser.full_name || 'Unknown User',
-                      avatar_url: reviewUser.avatar_url
-                  } 
-              } : { user_metadata: { full_name: 'Unknown User' } }
-            }
-        }) as ReviewWithUser[];
-        setReviews(transformedReviews);
-      }
     } catch (error: any) {
         console.error("Error fetching profile data: ", error);
         toast({ title: "Error", description: "Could not fetch your data.", variant: "destructive" });
@@ -369,3 +348,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
