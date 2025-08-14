@@ -50,6 +50,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
             
             if (error) {
                 console.error("Error fetching messages", error);
+                toast({ title: "Error", description: "Failed to load messages.", variant: "destructive" });
             } else {
                 setMessages(data);
             }
@@ -59,7 +60,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
         if (conversationId) {
             fetchMessages();
         }
-    }, [conversationId]);
+    }, [conversationId, toast]);
     
      useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,7 +73,11 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
                 (payload) => {
-                    setMessages(currentMessages => [...currentMessages, payload.new as Message]);
+                    const newMessagePayload = payload.new as Message;
+                    // Avoid adding duplicate messages from the sender's optimistic update
+                    if (newMessagePayload.sender_id !== user?.id) {
+                         setMessages(currentMessages => [...currentMessages, newMessagePayload]);
+                    }
                 }
             )
             .subscribe();
@@ -80,7 +85,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId]);
+    }, [conversationId, user?.id]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -90,16 +95,29 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
         setNewMessage('');
         setIsSending(true);
 
-        const { error } = await supabase.from('messages').insert({
+        const optimisticMessage: Message = {
+            id: `temp-${Date.now()}`,
+            created_at: new Date().toISOString(),
+            content,
+            sender_id: user.id
+        }
+        setMessages(current => [...current, optimisticMessage]);
+
+        const { data, error } = await supabase.from('messages').insert({
             conversation_id: conversationId,
             sender_id: user.id,
             recipient_id: recipient.id,
             content: content,
-        });
+        }).select().single();
 
         if (error) {
             toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
-            setNewMessage(content); // Restore message on failure
+            // Revert optimistic update
+            setMessages(current => current.filter(m => m.id !== optimisticMessage.id));
+            setNewMessage(content);
+        } else {
+             // Replace optimistic message with the real one from the database
+             setMessages(current => current.map(m => m.id === optimisticMessage.id ? (data as Message) : m));
         }
         setIsSending(false);
     };
@@ -130,26 +148,31 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                             <div
                                 key={message.id}
                                 className={cn(
-                                    "flex items-end gap-2",
-                                    message.sender_id === user?.id ? "justify-end" : "justify-start"
+                                    "flex flex-col items-end gap-2",
+                                    message.sender_id === user?.id ? "items-end" : "items-start"
                                 )}
                             >
-                                {message.sender_id !== user?.id && (
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={recipient.avatar_url || ''} />
-                                        <AvatarFallback>{getInitials(recipient.full_name)}</AvatarFallback>
-                                    </Avatar>
-                                )}
-                                <div
-                                    className={cn(
-                                        "max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-2xl",
-                                        message.sender_id === user?.id
-                                            ? "bg-primary text-primary-foreground rounded-br-none"
-                                            : "bg-background rounded-bl-none border"
+                                <div className={cn("flex items-end gap-2", message.sender_id === user?.id ? "flex-row-reverse" : "flex-row")}>
+                                     {message.sender_id !== user?.id && (
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={recipient.avatar_url || ''} />
+                                            <AvatarFallback>{getInitials(recipient.full_name)}</AvatarFallback>
+                                        </Avatar>
                                     )}
-                                >
-                                    <p className="text-sm">{message.content}</p>
+                                    <div
+                                        className={cn(
+                                            "max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-2xl",
+                                            message.sender_id === user?.id
+                                                ? "bg-primary text-primary-foreground rounded-br-none"
+                                                : "bg-background rounded-bl-none border"
+                                        )}
+                                    >
+                                        <p className="text-sm">{message.content}</p>
+                                    </div>
                                 </div>
+                                <p className={cn("text-xs text-muted-foreground px-2", message.sender_id === user?.id ? "text-right" : "text-left ml-10")}>
+                                    {format(new Date(message.created_at), 'HH:mm')}
+                                </p>
                             </div>
                         ))}
                          <div ref={messagesEndRef} />
