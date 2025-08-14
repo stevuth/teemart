@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase-client';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -304,38 +304,22 @@ export default function ProfilePage() {
                   </TabsContent>
                   
                   <TabsContent value="my-orders" className="mt-6">
-                      <div className="space-y-4">
-                          {enrichedOrders.map(order => (
-                              <div key={order.id} className="border rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
-                                  <div className="flex items-center gap-4">
-                                      <Image src={order.product!.image} alt={order.product!.name} width={80} height={80} className="rounded-md object-cover" />
-                                      <div>
-                                          <p className="font-semibold text-lg">{order.product!.name}</p>
-                                          <div className="text-sm text-muted-foreground mt-1 space-y-1">
-                                              <div className="flex items-center gap-2">
-                                                  <User className="h-4 w-4" />
-                                                  <span>{order.buyerName}</span>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                  <CalendarDays className="h-4 w-4" />
-                                                  <span>Ordered on: {format(parseISO(order.orderDate), 'PPP')}</span>
-                                              </div>
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <Badge variant="outline" className={cn("text-base", getStatusBadgeClass(order.status))}>
-                                      {order.status}
-                                  </Badge>
-                              </div>
-                          ))}
-                      </div>
+                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                        <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-xl font-medium">No Orders Yet</h3>
+                        <p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="purchase-history" className="mt-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {/* Placeholder */}
-                      </div>
-                      <Button variant="link" className="mt-4">View all purchases <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                        <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-xl font-medium">No Purchase History</h3>
+                        <p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p>
+                        <Button asChild className="mt-6" variant="default">
+                            <Link href="/">Start Shopping</Link>
+                        </Button>
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="reviews" className="mt-6">
@@ -356,5 +340,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    
