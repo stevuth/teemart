@@ -11,13 +11,16 @@ import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-export function CheckoutForm() {
-    const [subtotal, setSubtotal] = useState('50000');
+type CheckoutFormProps = {
+    subtotal: number;
+}
+
+export function CheckoutForm({ subtotal }: CheckoutFormProps) {
     const [shippingFee, setShippingFee] = useState('2500');
     const { toast } = useToast();
 
     const calculations = useMemo(() => {
-        const subtotalNum = parseFloat(subtotal) || 0;
+        const subtotalNum = subtotal || 0;
         const shippingFeeNum = parseFloat(shippingFee) || 0;
 
         const buyerEscrowShare = subtotalNum * 0.03;
@@ -57,22 +60,12 @@ export function CheckoutForm() {
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
-                <CardDescription>Enter your order details and review the final amounts below.</CardDescription>
+                <CardDescription>Review your order details and the final amounts below.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-6">
                     {/* --- INPUTS --- */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="subtotal">Item(s) Subtotal (₦)</Label>
-                            <Input 
-                                id="subtotal" 
-                                type="number" 
-                                placeholder="e.g., 50000" 
-                                value={subtotal}
-                                onChange={(e) => setSubtotal(e.target.value)}
-                            />
-                        </div>
+                    <div className="grid grid-cols-1 gap-4">
                          <div className="space-y-2">
                             <Label htmlFor="shipping">Shipping Fee (₦) <span className="text-muted-foreground">(Optional)</span></Label>
                             <Input 
