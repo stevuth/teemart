@@ -138,32 +138,15 @@ export default function SellerProfilePage() {
 
         setIsChatting(true);
         try {
-            // Check if a conversation already exists
-            const { data: existingConvo, error: existingError } = await supabase
-                .from('conversations')
-                .select('id')
-                .or(`and(participant_one_id.eq.${currentUser.id},participant_two_id.eq.${seller.id}),and(participant_one_id.eq.${seller.id},participant_two_id.eq.${currentUser.id})`)
-                .maybeSingle();
+            const { data, error } = await supabase.rpc('get_or_create_conversation', {
+                p_participant_one_id: currentUser.id,
+                p_participant_two_id: seller.id
+            });
 
-            if (existingError) throw existingError;
+            if (error) throw error;
+            
+            router.push(`/messages?conversationId=${data}`);
 
-            if (existingConvo) {
-                router.push(`/messages?conversationId=${existingConvo.id}`);
-            } else {
-                // Create a new conversation
-                const { data: newConvo, error: newConvoError } = await supabase
-                    .from('conversations')
-                    .insert({
-                        participant_one_id: currentUser.id,
-                        participant_two_id: seller.id,
-                    })
-                    .select('id')
-                    .single();
-                
-                if (newConvoError) throw newConvoError;
-                
-                router.push(`/messages?conversationId=${newConvo.id}`);
-            }
         } catch (error: any) {
             console.error("Error starting conversation:", error);
             toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
