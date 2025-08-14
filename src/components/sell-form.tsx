@@ -35,10 +35,14 @@ const locations: string[] = [
 const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  price: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-    message: "Price must be a positive number.",
-  }),
-  deliveryFee: z.string().optional(),
+  price: z.preprocess(
+    (val) => (typeof val === 'string' ? parseFloat(val) : val),
+    z.number({ invalid_type_error: "Price must be a number." }).positive({ message: "Price must be a positive number." })
+  ),
+  deliveryFee: z.preprocess(
+    (val) => (val === '' || val === undefined || val === null ? undefined : (typeof val === 'string' ? parseFloat(val) : val)),
+    z.number({ invalid_type_error: "Delivery fee must be a number." }).positive().optional()
+  ),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
@@ -80,8 +84,8 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price ? String(existingProduct.price) : "",
-      deliveryFee: existingProduct?.deliveryFee ? String(existingProduct.deliveryFee) : "",
+      price: existingProduct?.price,
+      deliveryFee: existingProduct?.deliveryFee,
       category: existingProduct?.category,
       condition: existingProduct?.condition,
       location: existingProduct?.location || '',
@@ -133,7 +137,6 @@ export function SellForm({ existingProduct }: SellFormProps) {
     const newFiles = [...imageFiles];
     
     const removedPreview = newPreviews.splice(index, 1)[0];
-    // Check if the removed preview is a blob URL (new upload) or existing URL
     if (removedPreview.startsWith('blob:')) {
       const fileIndex = imageFiles.findIndex(file => URL.createObjectURL(file) === removedPreview);
       if(fileIndex > -1) {
@@ -159,7 +162,6 @@ export function SellForm({ existingProduct }: SellFormProps) {
     try {
         let imageUrls: string[] = isEditMode ? imagePreviews.filter(p => !p.startsWith('blob:')) : [];
         
-        // 1. Upload new images to Supabase Storage
         if (imageFiles.length > 0) {
             for (const imageFile of imageFiles) {
                 const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
@@ -178,21 +180,19 @@ export function SellForm({ existingProduct }: SellFormProps) {
             return;
         }
 
-        // 2. Prepare product data for DB
         const productData = {
             user_id: user.id,
             name: data.name,
             description: data.description,
-            price: data.price, // Pass as string
+            price: data.price,
             category: data.category,
             condition: data.condition,
             location: data.location,
             city: data.city,
             image_url: imageUrls,
-            delivery_fee: data.deliveryFee && data.deliveryFee !== '' ? data.deliveryFee : null, // Pass as string or null
+            delivery_fee: data.deliveryFee,
         };
 
-        // 3. Upsert (Insert or Update) product in DB
         if (isEditMode && existingProduct) {
             const { error } = await supabase
                 .from('products')
@@ -271,7 +271,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Price (₦)</FormLabel>
                         <FormControl>
-                        <Input type="text" inputMode="decimal" placeholder="Enter price" {...field} />
+                        <Input type="number" step="any" placeholder="Enter price" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -284,7 +284,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Delivery Fee (₦) <span className="text-muted-foreground">(Optional)</span></FormLabel>
                         <FormControl>
-                        <Input type="text" inputMode="decimal" placeholder="Enter delivery fee" {...field} value={field.value ?? ''} />
+                          <Input type="number" step="any" placeholder="Enter delivery fee" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
