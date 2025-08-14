@@ -22,12 +22,14 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
 import { Badge } from './ui/badge';
+import { useNotifications } from '@/hooks/use-notifications';
 
 
 export function Header() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { cartCount } = useCart();
+  const { notificationCount } = useNotifications();
   const router = useRouter();
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setSignupModalOpen] = useState(false);
@@ -98,7 +100,14 @@ export function Header() {
                {user && (
                  <Button asChild size="icon" variant="ghost" aria-label="Messages">
                     <Link href="/messages">
-                        <MessageSquare className="h-5 w-5" />
+                       <div className="relative">
+                          <MessageSquare className="h-5 w-5" />
+                          {notificationCount > 0 && (
+                            <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                              {notificationCount}
+                            </Badge>
+                          )}
+                        </div>
                     </Link>
                 </Button>
                )}

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/hooks/use-notifications';
 
 type Message = {
     id: string;
@@ -33,12 +34,27 @@ type ChatInterfaceProps = {
 export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps) {
     const { user } = useAuth();
     const { toast } = useToast();
+    const { decrementCount } = useNotifications();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+    const markMessagesAsRead = useCallback(async () => {
+        if (!user || !conversationId) return;
+        const { error } = await supabase.rpc('mark_messages_as_read', {
+            p_conversation_id: conversationId,
+            p_user_id: user.id
+        });
+        if (error) {
+            console.error("Error marking messages as read:", error);
+        } else {
+             // This function will trigger a refetch in the notification context
+             decrementCount(0);
+        }
+    }, [conversationId, user, decrementCount]);
+    
     useEffect(() => {
         const fetchMessages = async () => {
             setLoading(true);
@@ -53,6 +69,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                 toast({ title: "Error", description: "Failed to load messages.", variant: "destructive" });
             } else {
                 setMessages(data);
+                markMessagesAsRead();
             }
             setLoading(false);
         };
@@ -60,7 +77,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
         if (conversationId) {
             fetchMessages();
         }
-    }, [conversationId, toast]);
+    }, [conversationId, toast, markMessagesAsRead]);
     
      useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -77,6 +94,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                     // Avoid adding duplicate messages from the sender's optimistic update
                     if (newMessagePayload.sender_id !== user?.id) {
                          setMessages(currentMessages => [...currentMessages, newMessagePayload]);
+                         markMessagesAsRead();
                     }
                 }
             )
@@ -85,7 +103,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId, user?.id]);
+    }, [conversationId, user?.id, markMessagesAsRead]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
