@@ -6,7 +6,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, MessageCircle, ShoppingCart, Truck, ShieldCheck } from 'lucide-react';
+import { MapPin, MessageCircle, ShoppingCart, Truck, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import Link from 'next/link';
@@ -77,9 +77,13 @@ export function ProductCard({ product, actions }: ProductCardProps) {
         <CardContent className="p-3 sm:p-4 flex-grow">
             <div className="flex justify-between items-start gap-2 mb-2">
                 <Badge variant="outline" className="text-xs">{product.category}</Badge>
-                {product.seller?.is_verified && (
+                {product.seller?.is_verified ? (
                     <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs">
                         <ShieldCheck className="h-3 w-3" /> Verified Seller
+                    </Badge>
+                ) : (
+                    <Badge variant="outline" className="gap-1 text-xs text-muted-foreground">
+                        <ShieldAlert className="h-3 w-3" /> Not Verified
                     </Badge>
                 )}
             </div>
@@ -125,3 +129,4 @@ export function ProductCard({ product, actions }: ProductCardProps) {
     </Link>
   );
 }
+
