@@ -66,7 +66,7 @@ export default function SellerProfilePage() {
             // Step 2: Fetch seller's listings
             const { data: listingsData, error: listingsError } = await supabase
                 .from('products')
-                .select('*, seller:profiles!inner(id, full_name, avatar_url, is_verified)')
+                .select('*, seller:profiles(id, full_name, avatar_url, is_verified)')
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 

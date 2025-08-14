@@ -41,7 +41,7 @@ export default function ProductDetailPage() {
                 .from('products')
                 .select(`
                     *,
-                    seller:profiles!inner(id, full_name, avatar_url, is_verified)
+                    seller:profiles(id, full_name, avatar_url, is_verified)
                 `)
                 .eq('id', productId)
                 .single();
@@ -93,7 +93,7 @@ export default function ProductDetailPage() {
                     // This is a simplified version, ideally you'd have a better matching system.
                     const { data: realProducts, error } = await supabase
                         .from('products')
-                        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id, seller:profiles!inner(id, full_name, avatar_url, is_verified)')
+                        .select('*, seller:profiles(id, full_name, avatar_url, is_verified)')
                         .in('name', recommendedProducts.map(p => p.name))
                         .limit(3);
 
