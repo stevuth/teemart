@@ -229,10 +229,6 @@ export default function SellerProfilePage() {
                     </div>
                     <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8 pt-8 md:pt-0">
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-3">
-                                <MapPin className="h-4 w-4 text-primary" />
-                                <span>Lagos, Nigeria</span>
-                            </div>
                             {seller.created_at && (
                                 <div className="flex items-center gap-3">
                                     <CalendarDays className="h-4 w-4 text-primary" />
