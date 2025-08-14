@@ -192,18 +192,16 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
     return (
         <>
         <Dialog open={!!viewingImage} onOpenChange={(isOpen) => !isOpen && setViewingImage(null)}>
-             <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-transparent border-0">
-                <div className="relative w-full h-full">
+            <DialogContent className="max-w-4xl max-h-[90vh] p-2 bg-transparent border-0 flex items-center justify-center">
                 {viewingImage && (
                     <Image 
                         src={viewingImage} 
                         alt="Full screen image view"
                         width={1920}
                         height={1080}
-                        className="w-full h-full object-contain"
+                        className="w-auto h-auto max-w-full max-h-full object-contain"
                     />
                 )}
-                </div>
             </DialogContent>
         </Dialog>
         <div className="flex flex-col h-full">
@@ -310,3 +308,5 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
         </>
     );
 }
+
+    
