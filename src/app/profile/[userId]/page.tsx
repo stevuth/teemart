@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -20,6 +20,7 @@ import { ReviewForm } from '@/components/review-form';
 import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 type Seller = {
     id: string;
@@ -30,14 +31,17 @@ type Seller = {
 
 export default function SellerProfilePage() {
     const params = useParams();
+    const router = useRouter();
     const userId = params.userId as string;
     const { user: currentUser } = useAuth();
     const { addToCart } = useCart();
+    const { toast } = useToast();
 
     const [seller, setSeller] = useState<Seller | null>(null);
     const [listings, setListings] = useState<Product[]>([]);
     const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isChatting, setIsChatting] = useState(false);
     const [reviewSubmittedToggle, setReviewSubmittedToggle] = useState(false);
 
     const fetchAllData = useCallback(async () => {
@@ -125,6 +129,49 @@ export default function SellerProfilePage() {
     const handleReviewSubmitted = () => {
         setReviewSubmittedToggle(prev => !prev);
     };
+    
+    const handleChatWithSeller = async () => {
+        if (!currentUser || !seller) {
+            toast({ title: "Please log in", description: "You need to be logged in to chat with a seller.", variant: "destructive" });
+            return;
+        }
+
+        setIsChatting(true);
+        try {
+            // Check if a conversation already exists
+            const { data: existingConvo, error: existingError } = await supabase
+                .from('conversations')
+                .select('id')
+                .or(`and(participant_one_id.eq.${currentUser.id},participant_two_id.eq.${seller.id}),and(participant_one_id.eq.${seller.id},participant_two_id.eq.${currentUser.id})`)
+                .maybeSingle();
+
+            if (existingError) throw existingError;
+
+            if (existingConvo) {
+                router.push(`/messages?conversationId=${existingConvo.id}`);
+            } else {
+                // Create a new conversation
+                const { data: newConvo, error: newConvoError } = await supabase
+                    .from('conversations')
+                    .insert({
+                        participant_one_id: currentUser.id,
+                        participant_two_id: seller.id,
+                    })
+                    .select('id')
+                    .single();
+                
+                if (newConvoError) throw newConvoError;
+                
+                router.push(`/messages?conversationId=${newConvo.id}`);
+            }
+        } catch (error: any) {
+            console.error("Error starting conversation:", error);
+            toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
+        } finally {
+            setIsChatting(false);
+        }
+    }
+
 
     if (loading) {
         return (
@@ -216,8 +263,8 @@ export default function SellerProfilePage() {
                         </div>
                         {currentUser && currentUser.id !== seller.id && (
                             <div className="mt-8">
-                                <Button>
-                                    <MessageSquare className="mr-2 h-4 w-4"/>
+                                <Button onClick={handleChatWithSeller} disabled={isChatting}>
+                                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                                     Chat with Seller
                                 </Button>
                             </div>
