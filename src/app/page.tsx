@@ -34,7 +34,7 @@ export default function Home() {
       setLoading(true);
       const { data, error } = await supabase
         .from('products')
-        .select('*, seller:profiles(id, full_name, avatar_url, is_verified)')
+        .select('*, seller:profiles!user_id(id, full_name, avatar_url, is_verified)')
         .order('created_at', { ascending: false });
 
       if (error) {

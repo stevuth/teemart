@@ -41,7 +41,7 @@ export default function ProductDetailPage() {
                 .from('products')
                 .select(`
                     *,
-                    seller:users(id, user_metadata)
+                    seller:profiles!user_id(id, full_name, avatar_url, is_verified)
                 `)
                 .eq('id', productId)
                 .single();
@@ -64,8 +64,9 @@ export default function ProductDetailPage() {
                     description: data.description || '',
                     seller: {
                         id: sellerData.id,
-                        full_name: sellerData.user_metadata?.full_name || 'TeeMart Seller',
-                        avatar_url: sellerData.user_metadata?.avatar_url,
+                        full_name: sellerData.full_name || 'TeeMart Seller',
+                        avatar_url: sellerData.avatar_url,
+                        is_verified: sellerData.is_verified || false,
                     }
                 } as ProductWithSeller;
                 setProduct(transformedData);
@@ -92,7 +93,7 @@ export default function ProductDetailPage() {
                     // This is a simplified version, ideally you'd have a better matching system.
                     const { data: realProducts, error } = await supabase
                         .from('products')
-                        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
+                        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id, seller:profiles!user_id(id, full_name, avatar_url, is_verified)')
                         .in('name', recommendedProducts.map(p => p.name))
                         .limit(3);
 
@@ -103,6 +104,7 @@ export default function ProductDetailPage() {
                         image: item.image_url || [],
                         postedDate: item.created_at,
                         deliveryFee: item.delivery_fee,
+                        seller: item.seller,
                     })) as Product[];
                     setRecommended(transformed);
 
@@ -217,8 +219,11 @@ export default function ProductDetailPage() {
                                         <AvatarFallback>{getInitials(product.seller.full_name)}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-bold text-lg">{product.seller.full_name}</p>
                                         <div className="flex items-center gap-2">
+                                            <p className="font-bold text-lg">{product.seller.full_name}</p>
+                                            {product.seller.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
                                             <div className="flex items-center gap-0.5">
                                                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                                                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
