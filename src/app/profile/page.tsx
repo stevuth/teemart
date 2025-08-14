@@ -229,7 +229,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="flex items-center gap-3">
                           <CalendarDays className="h-4 w-4 text-primary" />
-                          <span>Member since {creationTime ? new Date(creationTime).getFullYear() : ''}</span>
+                          <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : ''}</span>
                       </div>
                       <div className="flex items-center gap-3">
                           <Star className="h-4 w-4 text-primary" />

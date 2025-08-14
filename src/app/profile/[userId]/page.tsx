@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { ReviewForm } from '@/components/review-form';
 import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
+import { format } from 'date-fns';
 
 type Seller = {
     id: string;
@@ -205,7 +206,7 @@ export default function SellerProfilePage() {
                             {seller.created_at && (
                                 <div className="flex items-center gap-3">
                                     <CalendarDays className="h-4 w-4 text-primary" />
-                                    <span>Member since {new Date(seller.created_at).getFullYear()}</span>
+                                    <span>Member since {format(new Date(seller.created_at), 'MMMM yyyy')}</span>
                                 </div>
                             )}
                             <div className="flex items-center gap-3">
