@@ -88,7 +88,9 @@ export default function CartPage() {
                                 <span>Total</span>
                                 <span>₦{total.toLocaleString()}</span>
                             </div>
-                            <Button className="w-full" size="lg">Proceed to Checkout</Button>
+                            <Button asChild className="w-full" size="lg">
+                                <Link href="/checkout">Proceed to Checkout</Link>
+                            </Button>
                         </div>
                     </div>
                 </div>
