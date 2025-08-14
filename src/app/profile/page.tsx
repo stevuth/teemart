@@ -29,7 +29,7 @@ import { ReviewList } from '@/components/review-list';
 import { VerificationForm } from '@/components/verification-form';
 
 export default function ProfilePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, profile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState<Product[]>([]);
@@ -52,7 +52,7 @@ export default function ProfilePage() {
       // Fetch listings
       const { data: listingsData, error: listingsError } = await supabase
         .from('products')
-        .select('id, name, price, image_url, category, location, city, condition, description, created_at, delivery_fee, user_id')
+        .select('*, seller:profiles(id, full_name, avatar_url, is_verified)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -69,6 +69,7 @@ export default function ProfilePage() {
         city: item.city || '',
         condition: item.condition || 'Used',
         description: item.description || '',
+        seller: item.seller,
       })) as Product[];
       setActiveListings(transformedData);
 
@@ -218,7 +219,7 @@ export default function ProfilePage() {
                       <h1 className="text-3xl font-bold">{displayName}</h1>
                       <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
                           <p className="text-muted-foreground">TeeMart Seller</p>
-                          {user.email_confirmed_at && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
+                           {profile?.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
                       </div>
                   </div>
               </div>
