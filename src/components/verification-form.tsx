@@ -12,15 +12,18 @@ import { Loader2, CheckCircle, XCircle, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 
 type VerificationStatus = 'unverified' | 'verifying' | 'verified' | 'failed';
 
 export function VerificationForm() {
+    const { user, profile, setProfile } = useAuth();
     const [nin, setNin] = useState('');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [extractedNin, setExtractedNin] = useState<string | null>(null);
-    const [status, setStatus] = useState<VerificationStatus>('unverified');
+    const [status, setStatus] = useState<VerificationStatus>(profile?.is_verified ? 'verified' : 'unverified');
     const [progress, setProgress] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
@@ -39,6 +42,10 @@ export function VerificationForm() {
                 toast({ title: "Invalid File Type", description: "Please upload a JPG or PNG image.", variant: "destructive" });
                 return;
             }
+            if (file.size > 2 * 1024 * 1024) { // 2MB Limit
+                toast({ title: "File Too Large", description: "Image must be smaller than 2MB.", variant: "destructive" });
+                return;
+            }
             setImageFile(file);
             setImagePreview(URL.createObjectURL(file));
             setStatus('unverified');
@@ -47,6 +54,10 @@ export function VerificationForm() {
     };
 
     const handleVerification = async () => {
+        if (!user) {
+            toast({ title: "Not logged in", description: "You must be logged in to verify your account.", variant: "destructive" });
+            return;
+        }
         if (nin.length !== 11) {
             toast({ title: "Invalid NIN", description: "Please enter a valid 11-digit NIN.", variant: "destructive" });
             return;
@@ -79,7 +90,15 @@ export function VerificationForm() {
                 setExtractedNin(foundNin);
 
                 if (foundNin === nin) {
+                    const { error } = await supabase
+                        .from('profiles')
+                        .update({ is_verified: true })
+                        .eq('id', user.id);
+                    
+                    if (error) throw error;
+                    
                     setStatus('verified');
+                    setProfile({ ...profile, is_verified: true }); // Update auth context
                     toast({ title: "Verification Successful!", description: "Your NIN has been verified.", className: "bg-green-100 text-green-800 border-green-300" });
                 } else {
                     setStatus('failed');
@@ -88,12 +107,12 @@ export function VerificationForm() {
             } else {
                 setStatus('failed');
                 setExtractedNin('Not found');
-                toast({ title: "OCR Failed", description: "Could not detect an 11-digit NIN in the image. Please try a clearer picture.", variant: "destructive" });
+                toast({ title: "Unable to verify your credentials", description: "Upload a more clearer picture.", variant: "destructive" });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
             setStatus('failed');
-            toast({ title: "An Error Occurred", description: "Something went wrong during verification. Please try again.", variant: "destructive" });
+            toast({ title: "An Error Occurred", description: error.message || "Something went wrong during verification. Please try again.", variant: "destructive" });
         }
     };
     
@@ -208,4 +227,3 @@ export function VerificationForm() {
         </Card>
     );
 }
-

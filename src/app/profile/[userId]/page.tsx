@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
-import { Loader2, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart, MessageSquare } from 'lucide-react';
+import { Loader2, Star, CalendarDays, Package, ShieldCheck, ShoppingCart, MessageSquare } from 'lucide-react';
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,7 @@ type Seller = {
     full_name: string;
     avatar_url: string;
     created_at: string;
+    is_verified: boolean;
 }
 
 export default function SellerProfilePage() {
@@ -52,7 +53,7 @@ export default function SellerProfilePage() {
             // Step 1: Fetch seller profile
             const { data: sellerData, error: sellerError } = await supabase
                 .from('profiles')
-                .select('id, full_name, avatar_url, created_at')
+                .select('id, full_name, avatar_url, created_at, is_verified')
                 .eq('id', userId)
                 .single();
 
@@ -65,7 +66,7 @@ export default function SellerProfilePage() {
             // Step 2: Fetch seller's listings
             const { data: listingsData, error: listingsError } = await supabase
                 .from('products')
-                .select()
+                .select('*, seller:profiles(id, full_name, avatar_url, is_verified)')
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
@@ -79,6 +80,7 @@ export default function SellerProfilePage() {
                 image: item.image_url || [],
                 postedDate: item.created_at,
                 deliveryFee: item.delivery_fee,
+                seller: item.seller
             })) as Product[];
             setListings(transformedListings);
 
@@ -221,20 +223,23 @@ export default function SellerProfilePage() {
                         </Avatar>
                         <div className="text-center md:text-left">
                             <h1 className="text-3xl font-bold">{seller.full_name}</h1>
-                            <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
-                                <p className="text-muted-foreground">TeeMart Seller</p>
-                                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
-                            </div>
+                            <p className="text-muted-foreground">TeeMart Seller</p>
                         </div>
                     </div>
                     <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8 pt-8 md:pt-0">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
                             {seller.created_at && (
                                 <div className="flex items-center gap-3">
                                     <CalendarDays className="h-4 w-4 text-primary" />
                                     <span>Member since {format(new Date(seller.created_at), 'MMMM yyyy')}</span>
                                 </div>
                             )}
+                             <div className="flex items-center gap-3">
+                                <ShieldCheck className="h-4 w-4 text-primary" />
+                                 <Badge variant={seller.is_verified ? "secondary" : "destructive"} className={seller.is_verified ? "bg-green-100 text-green-800 border-green-300" : "bg-red-100 text-red-800 border-red-300"}>
+                                    {seller.is_verified ? "Verified" : "Not Verified"}
+                                </Badge>
+                            </div>
                             <div className="flex items-center gap-3">
                                 <Star className="h-4 w-4 text-primary" />
                                 <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>

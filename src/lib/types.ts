@@ -1,4 +1,12 @@
+
 import type { User } from "@supabase/supabase-js";
+
+export type Profile = {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+    is_verified: boolean;
+};
 
 export type Product = {
   id: string;
@@ -14,6 +22,7 @@ export type Product = {
   'data-ai-hint'?: string;
   deliveryFee?: number;
   user_id: string;
+  seller?: Profile;
 };
 
 export type ProductWithSeller = Product & {
@@ -21,6 +30,7 @@ export type ProductWithSeller = Product & {
     id: string;
     full_name: string;
     avatar_url?: string;
+    is_verified: boolean;
   }
 }
 
@@ -60,5 +70,3 @@ export type ReviewWithUser = Review & {
     avatar_url: string | null;
   } | null;
 };
-
-    
