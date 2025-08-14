@@ -237,10 +237,6 @@ export default function ProfilePage() {
                       </div>
                   </div>
                   <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                      <Button variant="outline" className="w-full sm:w-auto">
-                          <MessageSquare className="mr-2 h-4 w-4"/>
-                          Messages
-                      </Button>
                       <Button variant="destructive" onClick={() => supabase.auth.signOut()} className="w-full sm:w-auto">
                         Sign Out
                       </Button>
