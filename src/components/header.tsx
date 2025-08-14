@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, Store, LogOut, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, User, Store, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase-client';
 import { LoginModal } from './auth/login-modal';
@@ -95,6 +95,13 @@ export function Header() {
                   </div>
                 </Link>
               </Button>
+               {user && (
+                 <Button asChild size="icon" variant="ghost" aria-label="Messages">
+                    <Link href="/messages">
+                        <MessageSquare className="h-5 w-5" />
+                    </Link>
+                </Button>
+               )}
 
               {user ? (
                  <DropdownMenu>
@@ -119,8 +126,12 @@ export function Header() {
                     <DropdownMenuItem asChild>
                       <Link href="/profile">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
+                        <span>My Profile</span>
                       </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

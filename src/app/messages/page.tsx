@@ -50,18 +50,20 @@ function MessagingPage() {
                 console.error('Error fetching conversations', error);
             } else {
                 setConversations(data || []);
-                // If a conversation was passed in URL, but we have others, select the first one if the passed one isn't there
-                if (!selectedConversationId && data && data.length > 0) {
+                const conversationIdFromUrl = searchParams.get('conversationId');
+                if (conversationIdFromUrl && data.some((c: Conversation) => c.id === conversationIdFromUrl)) {
+                    setSelectedConversationId(conversationIdFromUrl);
+                } else if (!selectedConversationId && data && data.length > 0) {
                     setSelectedConversationId(data[0].id);
                 }
             }
             setLoading(false);
         };
 
-        if (!authLoading) {
+        if (!authLoading && user) {
             fetchConversations();
         }
-    }, [user, authLoading, selectedConversationId]);
+    }, [user, authLoading, searchParams]);
 
     const getInitials = (name?: string | null) => {
         if (!name) return '?';
@@ -130,9 +132,15 @@ function MessagingPage() {
                         />
                     ) : (
                         <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground">
-                            <MessageSquare className="h-24 w-24 mb-4" />
-                            <h2 className="text-xl font-bold">Select a conversation</h2>
-                            <p>Choose a conversation from the left to start chatting.</p>
+                             {loading ? (
+                                <Skeleton className="h-24 w-24 rounded-full" />
+                             ) : (
+                                <>
+                                    <MessageSquare className="h-24 w-24 mb-4" />
+                                    <h2 className="text-xl font-bold">Select a conversation</h2>
+                                    <p>Choose a conversation from the left to start chatting.</p>
+                                </>
+                             )}
                         </div>
                     )}
                 </div>
@@ -145,7 +153,7 @@ function MessagingPage() {
 export default function MessagesPage() {
     return (
         // Suspense is required for pages that use useSearchParams
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
             <MessagingPage />
         </Suspense>
     )

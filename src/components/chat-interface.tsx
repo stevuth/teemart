@@ -162,7 +162,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                         placeholder="Type your message..."
                         autoComplete="off"
                     />
-                    <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+                    <Button type="submit" size="icon" disabled={!newMessage.trim() || isSubmitting}>
                         <Send className="h-4 w-4" />
                     </Button>
                 </form>
