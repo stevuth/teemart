@@ -13,15 +13,15 @@ import { cn } from '@/lib/utils';
 
 type CheckoutFormProps = {
     subtotal: number;
+    shippingFee: number;
 }
 
-export function CheckoutForm({ subtotal }: CheckoutFormProps) {
-    const [shippingFee, setShippingFee] = useState('2500');
+export function CheckoutForm({ subtotal, shippingFee }: CheckoutFormProps) {
     const { toast } = useToast();
 
     const calculations = useMemo(() => {
         const subtotalNum = subtotal || 0;
-        const shippingFeeNum = parseFloat(shippingFee) || 0;
+        const shippingFeeNum = shippingFee || 0;
 
         const buyerEscrowShare = subtotalNum * 0.03;
         const sellerEscrowShare = subtotalNum * 0.02;
@@ -64,22 +64,7 @@ export function CheckoutForm({ subtotal }: CheckoutFormProps) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-6">
-                    {/* --- INPUTS --- */}
-                    <div className="grid grid-cols-1 gap-4">
-                         <div className="space-y-2">
-                            <Label htmlFor="shipping">Shipping Fee (₦) <span className="text-muted-foreground">(Optional)</span></Label>
-                            <Input 
-                                id="shipping" 
-                                type="number" 
-                                placeholder="e.g., 2500" 
-                                value={shippingFee}
-                                onChange={(e) => setShippingFee(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <Separator />
-
+                    
                     {/* --- ESCROW BREAKDOWN --- */}
                     <div>
                         <h3 className="text-lg font-medium mb-4 flex items-center gap-2">

@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const { cartItems } = useCart();
   
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const shippingFee = cartItems.reduce((acc, item) => acc + (item.deliveryFee || 0) * item.quantity, 0);
 
   if (cartItems.length === 0) {
     return (
@@ -42,7 +43,7 @@ export default function CheckoutPage() {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Secure Checkout</h1>
             <p className="mt-2 text-lg text-muted-foreground">Complete your purchase with TeeMart Escrow Protection.</p>
           </div>
-          <CheckoutForm subtotal={subtotal} />
+          <CheckoutForm subtotal={subtotal} shippingFee={shippingFee} />
         </div>
       </main>
       <Footer />
