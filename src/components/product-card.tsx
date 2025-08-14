@@ -79,9 +79,12 @@ export function ProductCard({ product, actions }: ProductCardProps) {
             <Badge variant="outline" className="text-xs">{product.category}</Badge>
             <Badge variant="outline" className="text-xs">{product.condition}</Badge>
             </div>
-            <CardTitle className="text-base sm:text-lg font-bold leading-tight group-hover:underline">
+            <CardTitle className="text-base sm:text-lg font-bold leading-tight group-hover:underline mb-2">
                 {product.name}
             </CardTitle>
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {product.description}
+            </p>
         </CardContent>
         <CardFooter className="p-3 sm:p-4 pt-2 flex flex-col items-start gap-3">
             <div>
