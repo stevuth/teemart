@@ -6,7 +6,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, MessageCircle, ShoppingCart, Truck, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { MapPin, MessageCircle, ShoppingCart, Truck, ShieldCheck, ShieldAlert, Tag } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import Link from 'next/link';
@@ -39,7 +39,7 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
 
   const CardContentComponent = (
     <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg w-full">
-        <CardHeader className="p-0 relative aspect-[4/3]">
+        <CardHeader className="p-0 relative aspect-[4/3] group">
             {hasMultipleImages ? (
             <Carousel className="w-full h-full" opts={{ loop: true }}>
                 <CarouselContent>
@@ -73,6 +73,7 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                 />
             </div>
             )}
+             <Badge variant="secondary" className="absolute top-2 left-2 z-10">{product.condition}</Badge>
         </CardHeader>
         <CardContent className="p-3 sm:p-4 flex-grow">
             <div className="flex justify-between items-start gap-2 mb-2">
