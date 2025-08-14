@@ -17,6 +17,8 @@ import { formatDistanceToNow } from 'date-fns';
 type Conversation = {
     id: string;
     last_message_at: string;
+    last_message_content: string | null;
+    last_message_sender_id: string | null;
     other_participant: {
         id: string;
         full_name: string;
@@ -109,10 +111,20 @@ function MessagingPage() {
                                     </Avatar>
                                     <div className="flex-grow overflow-hidden">
                                         <p className="font-semibold truncate">{convo.other_participant.full_name}</p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {convo.last_message_at ? `Last message ${formatDistanceToNow(new Date(convo.last_message_at), { addSuffix: true })}` : 'No messages yet'}
+                                        <p className="text-sm text-muted-foreground truncate">
+                                            {convo.last_message_content ? (
+                                                <>
+                                                    {convo.last_message_sender_id === user?.id && 'You: '}
+                                                    {convo.last_message_content}
+                                                </>
+                                            ) : 'No messages yet'}
                                         </p>
                                     </div>
+                                    {convo.last_message_at && (
+                                        <p className="text-xs text-muted-foreground self-start flex-shrink-0">
+                                            {formatDistanceToNow(new Date(convo.last_message_at), { addSuffix: true })}
+                                        </p>
+                                    )}
                                 </div>
                             ))
                         ) : (
