@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
-import { Loader2, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { Loader2, Star, MapPin, CalendarDays, Package, ShieldCheck, ShoppingCart, MessageSquare } from 'lucide-react';
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -197,8 +197,8 @@ export default function SellerProfilePage() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground pt-8 md:pt-0">
+                    <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8 pt-8 md:pt-0">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
                             <div className="flex items-center gap-3">
                                 <MapPin className="h-4 w-4 text-primary" />
                                 <span>Lagos, Nigeria</span>
@@ -214,6 +214,14 @@ export default function SellerProfilePage() {
                                 <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
                             </div>
                         </div>
+                        {currentUser && currentUser.id !== seller.id && (
+                            <div className="mt-8">
+                                <Button>
+                                    <MessageSquare className="mr-2 h-4 w-4"/>
+                                    Chat with Seller
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -270,3 +278,4 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
