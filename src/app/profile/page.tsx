@@ -272,7 +272,8 @@ export default function ProfilePage() {
                           {activeListings.map(product => 
                             <ProductCard 
                                 key={product.id} 
-                                product={product} 
+                                product={product}
+                                isClickable={false}
                                 actions={
                                     <>
                                         <Button asChild size="sm" variant="outline" className="w-full">

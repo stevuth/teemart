@@ -15,9 +15,10 @@ import { useRouter } from 'next/navigation';
 type ProductCardProps = {
   product: Product;
   actions?: React.ReactNode;
+  isClickable?: boolean;
 };
 
-export function ProductCard({ product, actions }: ProductCardProps) {
+export function ProductCard({ product, actions, isClickable = true }: ProductCardProps) {
   const { addToCart } = useCart();
   const router = useRouter();
 
@@ -36,9 +37,8 @@ export function ProductCard({ product, actions }: ProductCardProps) {
   const images = Array.isArray(product.image) ? product.image : [product.image];
   const hasMultipleImages = images.length > 1;
 
-  return (
-    <Link href={`/product/${product.id}`} className="flex h-full group">
-        <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg w-full">
+  const CardContentComponent = (
+    <Card className="flex flex-col overflow-hidden h-full transition-shadow hover:shadow-lg rounded-none sm:rounded-lg w-full">
         <CardHeader className="p-0 relative aspect-[4/3]">
             {hasMultipleImages ? (
             <Carousel className="w-full h-full" opts={{ loop: true }}>
@@ -126,7 +126,19 @@ export function ProductCard({ product, actions }: ProductCardProps) {
             </div>
         </CardFooter>
         </Card>
-    </Link>
   );
-}
 
+    if (isClickable) {
+        return (
+            <Link href={`/product/${product.id}`} className="flex h-full group">
+                {CardContentComponent}
+            </Link>
+        )
+    }
+
+    return (
+        <div className="flex h-full group">
+            {CardContentComponent}
+        </div>
+    )
+}
