@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, Paperclip, X } from 'lucide-react';
+import { Loader2, Send, Paperclip, X, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -32,9 +32,10 @@ type Recipient = {
 type ChatInterfaceProps = {
     conversationId: string;
     recipient: Recipient;
+    onBack?: () => void;
 }
 
-export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps) {
+export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfaceProps) {
     const { user } = useAuth();
     const { toast } = useToast();
     const { decrementCount } = useNotifications();
@@ -205,7 +206,10 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
             </DialogContent>
         </Dialog>
         <div className="flex flex-col h-full">
-            <div className="p-4 border-b flex items-center gap-4">
+            <div className="p-4 border-b flex items-center gap-3">
+                 <Button onClick={onBack} variant="ghost" size="icon" className="md:hidden mr-2">
+                    <ArrowLeft className="h-5 w-5" />
+                 </Button>
                 <Avatar className="h-10 w-10">
                     <AvatarImage src={recipient.avatar_url || ''} />
                     <AvatarFallback>{getInitials(recipient.full_name)}</AvatarFallback>

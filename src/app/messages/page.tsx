@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/hooks/use-auth';
@@ -11,8 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChatInterface } from '@/components/chat-interface';
 import { cn } from '@/lib/utils';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, ArrowLeft } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 type Conversation = {
     id: string;
@@ -29,6 +30,9 @@ type Conversation = {
 function MessagingPage() {
     const { user, loading: authLoading } = useAuth();
     const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -37,6 +41,8 @@ function MessagingPage() {
         const conversationId = searchParams.get('conversationId');
         if (conversationId) {
             setSelectedConversationId(conversationId);
+        } else {
+            setSelectedConversationId(null);
         }
     }, [searchParams]);
 
@@ -53,10 +59,11 @@ function MessagingPage() {
             } else {
                 setConversations(data || []);
                 const conversationIdFromUrl = searchParams.get('conversationId');
-                if (conversationIdFromUrl && data.some((c: Conversation) => c.id === conversationIdFromUrl)) {
-                    setSelectedConversationId(conversationIdFromUrl);
-                } else if (!selectedConversationId && data && data.length > 0) {
-                    setSelectedConversationId(data[0].id);
+                // Auto-select first conversation on desktop if none is selected
+                if (!conversationIdFromUrl && data && data.length > 0) {
+                     if (window.innerWidth >= 768) { // md breakpoint
+                        handleSelectConversation(data[0].id)
+                    }
                 }
             }
             setLoading(false);
@@ -65,7 +72,19 @@ function MessagingPage() {
         if (!authLoading && user) {
             fetchConversations();
         }
-    }, [user, authLoading, searchParams]);
+    }, [user, authLoading]);
+
+    const handleSelectConversation = (conversationId: string) => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.set('conversationId', conversationId);
+        router.push(`${pathname}?${newParams.toString()}`);
+    }
+
+    const handleBackToList = () => {
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete('conversationId');
+        router.push(`${pathname}?${newParams.toString()}`);
+    }
 
     const getInitials = (name?: string | null) => {
         if (!name) return '?';
@@ -77,8 +96,13 @@ function MessagingPage() {
     return (
         <div className="flex flex-col h-screen">
             <Header />
-            <main className="flex-grow flex border-t">
-                <div className="flex-shrink-0 w-full md:w-80 lg:w-96 border-r flex flex-col">
+            <main className="flex-grow flex border-t overflow-hidden relative">
+                {/* Conversation List */}
+                <div className={cn(
+                    "flex-shrink-0 w-full md:w-80 lg:w-96 border-r flex flex-col transition-transform duration-300 ease-in-out",
+                    "md:translate-x-0",
+                    selectedConversationId ? "-translate-x-full" : "translate-x-0"
+                )}>
                     <div className="p-4 border-b">
                         <h1 className="text-xl font-bold">Messages</h1>
                     </div>
@@ -99,7 +123,7 @@ function MessagingPage() {
                              conversations.map(convo => (
                                 <div
                                     key={convo.id}
-                                    onClick={() => setSelectedConversationId(convo.id)}
+                                    onClick={() => handleSelectConversation(convo.id)}
                                     className={cn(
                                         "flex items-center gap-3 p-4 cursor-pointer hover:bg-accent",
                                         selectedConversationId === convo.id && 'bg-accent'
@@ -136,14 +160,21 @@ function MessagingPage() {
                         )}
                     </div>
                 </div>
-                <div className="flex-grow flex flex-col bg-secondary/30">
+
+                {/* Chat Interface */}
+                <div className={cn(
+                    "flex-grow flex-col bg-secondary/30 absolute inset-0 md:relative transition-transform duration-300 ease-in-out",
+                    "md:translate-x-0 flex",
+                    selectedConversationId ? "translate-x-0" : "translate-x-full"
+                )}>
                     {selectedConversation ? (
                         <ChatInterface
                             conversationId={selectedConversation.id}
                             recipient={selectedConversation.other_participant}
+                            onBack={handleBackToList}
                         />
                     ) : (
-                        <div className="flex-grow flex flex-col items-center justify-center text-muted-foreground">
+                        <div className="hidden md:flex flex-grow flex-col items-center justify-center text-muted-foreground">
                              {loading ? (
                                 <Skeleton className="h-24 w-24 rounded-full" />
                              ) : (
