@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, Store, LogOut, LayoutDashboard, Heart } from 'lucide-react';
+import { ShoppingCart, User, Store, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase-client';
 import { LoginModal } from './auth/login-modal';
@@ -121,11 +121,6 @@ export function Header() {
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         <span>Profile</span>
                       </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
