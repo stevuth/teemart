@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 
 type Message = {
     id: string;
@@ -43,6 +44,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
     const [isSending, setIsSending] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [viewingImage, setViewingImage] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -188,6 +190,22 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
     }
 
     return (
+        <>
+        <Dialog open={!!viewingImage} onOpenChange={(isOpen) => !isOpen && setViewingImage(null)}>
+             <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-transparent border-0">
+                <div className="relative w-full h-full">
+                {viewingImage && (
+                    <Image 
+                        src={viewingImage} 
+                        alt="Full screen image view"
+                        width={1920}
+                        height={1080}
+                        className="w-full h-full object-contain"
+                    />
+                )}
+                </div>
+            </DialogContent>
+        </Dialog>
         <div className="flex flex-col h-full">
             <div className="p-4 border-b flex items-center gap-4">
                 <Avatar className="h-10 w-10">
@@ -228,14 +246,17 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                                         )}
                                     >
                                         {message.image_url && (
-                                            <div className="relative h-48 w-48 mb-2">
-                                                <Image src={message.image_url} alt="Sent image" layout="fill" className="rounded-md object-cover" />
+                                            <button 
+                                                onClick={() => setViewingImage(message.image_url!)}
+                                                className="relative h-48 w-48 mb-2 cursor-pointer group"
+                                            >
+                                                <Image src={message.image_url} alt="Sent image" layout="fill" className="rounded-md object-cover transition-transform group-hover:scale-105" />
                                                  {message.id.startsWith('temp-') && (
                                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                                         <Loader2 className="h-6 w-6 animate-spin text-white" />
                                                     </div>
                                                 )}
-                                            </div>
+                                            </button>
                                         )}
                                         {message.content && <p className="text-sm whitespace-pre-wrap">{message.content}</p>}
                                     </div>
@@ -286,5 +307,6 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                 </form>
             </div>
         </div>
+        </>
     );
 }
