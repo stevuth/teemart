@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase-client';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteProductDialog } from '@/components/delete-product-dialog';
 import { ReviewList } from '@/components/review-list';
+import { VerificationForm } from '@/components/verification-form';
 
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
@@ -244,11 +245,12 @@ export default function ProfilePage() {
 
           <div>
               <Tabs defaultValue="active-listings">
-                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
                       <TabsTrigger value="active-listings">Active Listings ({activeListings.length})</TabsTrigger>
                       <TabsTrigger value="my-orders">My Orders</TabsTrigger>
                       <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
                       <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
+                       <TabsTrigger value="verification">Verification</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="active-listings" className="mt-6">
@@ -322,6 +324,10 @@ export default function ProfilePage() {
                       ) : (
                           <ReviewList reviews={reviews} listings={activeListings} />
                       )}
+                  </TabsContent>
+
+                   <TabsContent value="verification" className="mt-6">
+                        <VerificationForm />
                   </TabsContent>
               </Tabs>
           </div>
