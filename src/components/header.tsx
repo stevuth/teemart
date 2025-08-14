@@ -122,10 +122,6 @@ export function Header() {
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
-                     <DropdownMenuItem onClick={() => toast({ title: 'Coming Soon!', description: 'Watchlist functionality is coming soon.'})}>
-                        <Heart className="mr-2 h-4 w-4" />
-                        <span>Watchlist</span>
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
