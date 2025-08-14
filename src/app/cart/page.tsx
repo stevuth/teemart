@@ -5,7 +5,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
 import Image from 'next/image';
@@ -16,7 +16,7 @@ export default function CartPage() {
   const { toast } = useToast();
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shipping = cartItems.length > 0 ? 5000 : 0;
+  const shipping = cartItems.reduce((acc, item) => acc + (item.deliveryFee || 0) * item.quantity, 0);
   const total = subtotal + shipping;
 
   const handleClearCart = () => {
@@ -48,6 +48,12 @@ export default function CartPage() {
                                         <div className="flex-grow">
                                             <p className="font-semibold text-lg">{item.name}</p>
                                             <p className="text-muted-foreground mt-1">₦{item.price.toLocaleString()}</p>
+                                            {item.deliveryFee && item.deliveryFee > 0 && (
+                                                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                                    <Truck className="h-4 w-4 mr-1.5" />
+                                                    <span>Delivery: ₦{item.deliveryFee.toLocaleString()}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-center">
@@ -81,7 +87,7 @@ export default function CartPage() {
                             </div>
                             <div className="flex justify-between text-muted-foreground">
                                 <span>Shipping</span>
-                                <span>₦{shipping.toLocaleString()}</span>
+                                <span>{shipping > 0 ? `₦${shipping.toLocaleString()}` : 'Free'}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-xl">
