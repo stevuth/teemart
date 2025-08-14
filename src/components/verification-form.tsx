@@ -82,14 +82,16 @@ export function VerificationForm() {
         try {
             const { data: { text } } = await worker.recognize(imageFile);
             await worker.terminate();
-
-            const extracted = text.match(/\d{11}/);
             
-            if (extracted && extracted[0]) {
-                const foundNin = extracted[0];
-                setExtractedNin(foundNin);
+            // Extract all sequences of 11 digits from the OCR text
+            const allFoundNins = text.match(/\d{11}/g) || [];
+            
+            if (allFoundNins.length > 0) {
+                // Check if the user-entered NIN is present in any of the found sequences
+                const isMatch = allFoundNins.includes(nin);
+                setExtractedNin(allFoundNins.join(', ')); // Show all found NINs for debugging
 
-                if (foundNin === nin) {
+                if (isMatch) {
                     const { error } = await supabase
                         .from('profiles')
                         .update({ is_verified: true })
@@ -107,7 +109,7 @@ export function VerificationForm() {
             } else {
                 setStatus('failed');
                 setExtractedNin('Not found');
-                toast({ title: "Unable to verify your credentials", description: "Upload a more clearer picture.", variant: "destructive" });
+                toast({ title: "Unable to verify your credentials", description: "Could not detect an 11-digit number in the image. Please upload a clearer picture.", variant: "destructive" });
             }
         } catch (error: any) {
             console.error(error);
@@ -204,7 +206,7 @@ export function VerificationForm() {
 
                         {extractedNin && (
                             <div className="text-sm">
-                                <strong>NIN found in image:</strong> {extractedNin}
+                                <strong>NIN(s) found in image:</strong> {extractedNin}
                             </div>
                         )}
 
@@ -227,3 +229,5 @@ export function VerificationForm() {
         </Card>
     );
 }
+
+    
