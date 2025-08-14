@@ -36,6 +36,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -83,10 +84,11 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !user) return;
+        if (!newMessage.trim() || !user || isSending) return;
 
         const content = newMessage;
         setNewMessage('');
+        setIsSending(true);
 
         const { error } = await supabase.from('messages').insert({
             conversation_id: conversationId,
@@ -99,6 +101,7 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
             toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
             setNewMessage(content); // Restore message on failure
         }
+        setIsSending(false);
     };
     
     const getInitials = (name?: string | null) => {
@@ -162,8 +165,8 @@ export function ChatInterface({ conversationId, recipient }: ChatInterfaceProps)
                         placeholder="Type your message..."
                         autoComplete="off"
                     />
-                    <Button type="submit" size="icon" disabled={!newMessage.trim() || isSubmitting}>
-                        <Send className="h-4 w-4" />
+                    <Button type="submit" size="icon" disabled={!newMessage.trim() || isSending}>
+                        {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                 </form>
             </div>
