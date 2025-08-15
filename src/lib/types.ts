@@ -6,6 +6,7 @@ export type Profile = {
     full_name: string;
     avatar_url: string;
     is_verified: boolean;
+    phone?: string;
     nin_image_url?: string;
     selfie_image_url?: string;
     verification_payment_status?: 'unpaid' | 'paid';
