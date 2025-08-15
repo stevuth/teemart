@@ -17,7 +17,7 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-        <div className="flex flex-col min-h-screen bg-secondary/20">
+        <div className="flex flex-col min-h-screen bg-background">
           <Header />
           <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
              <div className="text-center py-16 border-2 border-dashed rounded-lg max-w-2xl mx-auto">
@@ -35,7 +35,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-secondary/20">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="max-w-2xl mx-auto">
