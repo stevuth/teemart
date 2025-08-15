@@ -20,6 +20,77 @@ import { Separator } from '@/components/ui/separator';
 import { ProductCard } from '@/components/product-card';
 import { recommendProducts, RecommendProductsInput } from '@/ai/flows/product-recommendations';
 import { useCart } from '@/hooks/use-cart';
+import type { Metadata, ResolvingMetadata } from 'next'
+
+type Props = {
+  params: { id: string }
+}
+
+async function getProductForMetadata(id: string): Promise<ProductWithSeller | null> {
+    const { data, error } = await supabase
+        .from('products')
+        .select(`*, seller:profiles(id, full_name, avatar_url, is_verified)`)
+        .eq('id', id)
+        .single();
+    if (error || !data) {
+        return null;
+    }
+    const sellerData = data.seller as any;
+    return {
+        ...data,
+        image: data.image_url || [],
+        postedDate: data.created_at,
+        deliveryFee: data.delivery_fee,
+        price: data.price || 0,
+        category: data.category || '',
+        location: data.location || '',
+        city: data.city || '',
+        condition: data.condition || 'Used',
+        description: data.description || '',
+        seller: {
+            id: sellerData.id,
+            full_name: sellerData.full_name || 'TeeMart Seller',
+            avatar_url: sellerData.avatar_url,
+            is_verified: sellerData.is_verified || false,
+        }
+    } as ProductWithSeller;
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const id = params.id
+  const product = await getProductForMetadata(id)
+
+  if (!product) {
+    return {
+      title: 'Product Not Found | TeeMart',
+      description: 'The product you are looking for could not be found.',
+    }
+  }
+  
+  const previousImages = (await parent).openGraph?.images || []
+  const displayImage = Array.isArray(product.image) && product.image.length > 0 ? product.image[0] : (product.image as string || '');
+
+  return {
+    title: `${product.name} | TeeMart Marketplace`,
+    description: product.description.substring(0, 160), // Keep it concise for meta descriptions
+    openGraph: {
+      title: `${product.name} on TeeMart`,
+      description: product.description.substring(0, 160),
+      images: [displayImage, ...previousImages],
+      url: `/product/${product.id}`,
+      type: 'article',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: `${product.name} on TeeMart`,
+        description: product.description.substring(0, 160),
+        images: [displayImage],
+    },
+  }
+}
 
 export default function ProductDetailPage() {
     const params = useParams();
