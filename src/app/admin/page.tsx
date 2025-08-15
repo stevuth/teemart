@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
 import { LogOut, Shield, Loader2 } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
+import { UserTable } from '@/components/user-table';
 
 export default function AdminDashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -17,7 +18,6 @@ export default function AdminDashboardPage() {
       if (!user) {
         router.replace('/admin/login');
       } else if (profile?.role !== 'admin') {
-        // User is logged in but not an admin, redirect them away
         router.replace('/');
       }
     }
@@ -58,6 +58,7 @@ export default function AdminDashboardPage() {
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="grid gap-4 md:gap-8">
           <VerificationQueue />
+          <UserTable />
         </div>
       </main>
     </div>
