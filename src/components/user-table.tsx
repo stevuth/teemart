@@ -22,6 +22,7 @@ type UserProfile = {
   id: string;
   full_name: string;
   email: string;
+  phone: string | null;
   role: string | null;
   is_verified: boolean;
   created_at: string;
@@ -71,6 +72,7 @@ export function UserTable() {
               <TableRow>
                 <TableHead>Full Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone Number</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Verification</TableHead>
                 <TableHead className="text-right">Joined On</TableHead>
@@ -81,6 +83,7 @@ export function UserTable() {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone || 'N/A'}</TableCell>
                   <TableCell>
                     {user.role ? (
                         <Badge variant="secondary">{user.role}</Badge>
