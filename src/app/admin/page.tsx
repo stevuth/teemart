@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, Shield, Loader2 } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
 import { UserTable } from '@/components/user-table';
+import { SellerTable } from '@/components/seller-table';
 
 export default function AdminDashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -59,6 +60,7 @@ export default function AdminDashboardPage() {
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="grid gap-4 md:gap-8">
           <VerificationQueue />
+          <SellerTable />
           <UserTable />
         </div>
       </main>
