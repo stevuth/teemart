@@ -6,7 +6,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Marketplace } from '@/components/marketplace';
 import { CategoryShowcase } from '@/components/category-showcase';
-import type { Category, Product } from '@/lib/types';
+import type { Category, Product, HeroImage } from '@/lib/types';
 import type { FilterValues } from '@/components/product-filters';
 import { ProductFilters } from '@/components/product-filters';
 import { ProductHeroCarousel } from '@/components/product-hero-carousel';
@@ -17,7 +17,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingHero, setLoadingHero] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
   const [globalSearchTerm, setGlobalSearchTerm] = useState('');
   const [filters, setFilters] = useState<Omit<FilterValues, 'category'>>({
@@ -65,7 +67,24 @@ export default function Home() {
       setLoading(false);
     };
 
+    const fetchHeroImages = async () => {
+      setLoadingHero(true);
+      const { data, error } = await supabase
+        .from('hero_images')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching hero images:', error.message);
+        setHeroImages([]); // Fallback to empty
+      } else {
+        setHeroImages(data);
+      }
+      setLoadingHero(false);
+    };
+
     fetchProducts();
+    fetchHeroImages();
   }, [toast]);
 
 
@@ -99,16 +118,14 @@ export default function Home() {
     search: globalSearchTerm,
   };
   
-  const featuredProducts = products.slice(0, 5);
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <SearchSection onSearch={setGlobalSearchTerm} />
-      {loading ? (
+      {loadingHero ? (
         <Skeleton className="w-full aspect-[21/9]" />
       ) : (
-        <ProductHeroCarousel products={featuredProducts} />
+        <ProductHeroCarousel images={heroImages} />
       )}
       <main className="flex-grow container mx-auto px-0 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 lg:gap-8">

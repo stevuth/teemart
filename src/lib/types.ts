@@ -39,6 +39,14 @@ export type ProductWithSeller = Product & {
   }
 }
 
+export type HeroImage = {
+  id: string;
+  image_url: string;
+  alt_text: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
 export const categories = ['Cars', 'Electronics', 'Real Estate', 'Furniture', 'Phones'] as const;
 export type Category = (typeof categories)[number];
 
