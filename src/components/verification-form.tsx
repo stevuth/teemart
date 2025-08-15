@@ -2,40 +2,43 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { createWorker } from 'tesseract.js';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, Upload } from 'lucide-react';
+import { Loader2, CheckCircle, Upload, CreditCard, UserCheck, PartyPopper, Camera } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
+import { SelfieCapture } from './selfie-capture';
 
-type VerificationStatus = 'unverified' | 'verifying' | 'verified' | 'failed';
+type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
 export function VerificationForm() {
     const { user, profile, setProfile } = useAuth();
-    const [nin, setNin] = useState('');
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [extractedNin, setExtractedNin] = useState<string | null>(null);
-    const [status, setStatus] = useState<VerificationStatus>(profile?.is_verified ? 'verified' : 'unverified');
-    const [progress, setProgress] = useState(0);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+    
+    const [status, setStatus] = useState<VerificationStatus>(() => {
+        if (profile?.is_verified) return 'verified';
+        if (profile?.nin_image_url && profile?.selfie_image_url) return 'submitted';
+        if (profile?.verification_payment_status === 'paid') return 'paid';
+        return 'unverified';
+    });
 
-    const handleNinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, ''); // Allow only digits
-        if (value.length <= 11) {
-            setNin(value);
-        }
-    };
+    const [ninImageFile, setNinImageFile] = useState<File | null>(null);
+    const [ninImagePreview, setNinImagePreview] = useState<string | null>(null);
+    const [selfieDataUrl, setSelfieDataUrl] = useState<string | null>(null);
+    
+    const [isPaying, setIsPaying] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showSelfieCapture, setShowSelfieCapture] = useState(false);
+    
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleNinImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -46,188 +49,195 @@ export function VerificationForm() {
                 toast({ title: "File Too Large", description: "Image must be smaller than 2MB.", variant: "destructive" });
                 return;
             }
-            setImageFile(file);
-            setImagePreview(URL.createObjectURL(file));
-            setStatus('unverified');
-            setExtractedNin(null);
-        }
-    };
-
-    const handleVerification = async () => {
-        if (!user) {
-            toast({ title: "Not logged in", description: "You must be logged in to verify your account.", variant: "destructive" });
-            return;
-        }
-        if (nin.length !== 11) {
-            toast({ title: "Invalid NIN", description: "Please enter a valid 11-digit NIN.", variant: "destructive" });
-            return;
-        }
-        if (!imageFile) {
-            toast({ title: "No Image", description: "Please upload an image of your NIN slip.", variant: "destructive" });
-            return;
-        }
-
-        setStatus('verifying');
-        setExtractedNin(null);
-        setProgress(0);
-
-        const worker = await createWorker('eng', 1, {
-            logger: m => {
-                if (m.status === 'recognizing text') {
-                    setProgress(Math.round(m.progress * 100));
-                }
-            },
-        });
-        
-        try {
-            const { data: { text } } = await worker.recognize(imageFile);
-            await worker.terminate();
-            
-            // Extract all sequences of 11 digits from the OCR text
-            const allFoundNins = text.match(/\d{11}/g) || [];
-            
-            if (allFoundNins.length > 0) {
-                // Check if the user-entered NIN is present in any of the found sequences
-                const isMatch = allFoundNins.includes(nin);
-                setExtractedNin(allFoundNins.join(', ')); // Show all found NINs for debugging
-
-                if (isMatch) {
-                    const { error } = await supabase
-                        .from('profiles')
-                        .update({ is_verified: true })
-                        .eq('id', user.id);
-                    
-                    if (error) throw error;
-                    
-                    setStatus('verified');
-                    setProfile({ ...profile, is_verified: true }); // Update auth context
-                    toast({ title: "Verification Successful!", description: "Your NIN has been verified.", className: "bg-green-100 text-green-800 border-green-300" });
-                } else {
-                    setStatus('failed');
-                    toast({ title: "Verification Failed", description: "The NIN in the image does not match the one you entered.", variant: "destructive" });
-                }
-            } else {
-                setStatus('failed');
-                setExtractedNin('Not found');
-                toast({ title: "Unable to verify your credentials", description: "Could not detect an 11-digit number in the image. Please upload a clearer picture.", variant: "destructive" });
-            }
-        } catch (error: any) {
-            console.error(error);
-            setStatus('failed');
-            toast({ title: "An Error Occurred", description: error.message || "Something went wrong during verification. Please try again.", variant: "destructive" });
+            setNinImageFile(file);
+            setNinImagePreview(URL.createObjectURL(file));
         }
     };
     
-    const resetForm = () => {
-        setNin('');
-        setImageFile(null);
-        setImagePreview(null);
-        setExtractedNin(null);
-        setStatus('unverified');
-        setProgress(0);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
+    const handlePayment = async () => {
+        if (!user) return;
+        setIsPaying(true);
+
+        // This is a mock payment simulation.
+        // In a real app, you would integrate a payment gateway like Paystack or Flutterwave here.
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ verification_payment_status: 'paid' })
+                .eq('id', user.id);
+
+            if (error) throw error;
+            
+            toast({ title: "Payment Successful!", description: "You can now proceed with verification." });
+            setProfile(prev => prev ? { ...prev, verification_payment_status: 'paid' } : null);
+            setStatus('paid');
+
+        } catch (error: any) {
+            toast({ title: "Payment Failed", description: error.message, variant: "destructive"});
+        } finally {
+            setIsPaying(false);
         }
     }
 
-    const isVerifying = status === 'verifying';
+    const handleSubmitVerification = async () => {
+        if (!user || !ninImageFile || !selfieDataUrl) {
+            toast({ title: "Missing Information", description: "Please provide both a NIN image and a selfie.", variant: "destructive"});
+            return;
+        }
+        setIsSubmitting(true);
+        
+        try {
+            // Upload NIN image
+            const ninFileName = `${user.id}/${Date.now()}_nin.png`;
+            const { data: ninUploadData, error: ninUploadError } = await supabase.storage
+                .from('verification-documents')
+                .upload(ninFileName, ninImageFile);
+            if (ninUploadError) throw ninUploadError;
+            const { data: { publicUrl: ninPublicUrl } } = supabase.storage.from('verification-documents').getPublicUrl(ninUploadData.path);
+
+            // Upload Selfie image
+            const selfieFileName = `${user.id}/${Date.now()}_selfie.png`;
+            const selfieFile = await (await fetch(selfieDataUrl)).blob();
+            const { data: selfieUploadData, error: selfieUploadError } = await supabase.storage
+                .from('verification-documents')
+                .upload(selfieFileName, selfieFile);
+            if (selfieUploadError) throw selfieUploadError;
+            const { data: { publicUrl: selfiePublicUrl } } = supabase.storage.from('verification-documents').getPublicUrl(selfieUploadData.path);
+            
+            // Update profile with URLs
+            const { error: profileUpdateError } = await supabase
+                .from('profiles')
+                .update({ nin_image_url: ninPublicUrl, selfie_image_url: selfiePublicUrl })
+                .eq('id', user.id);
+            
+            if (profileUpdateError) throw profileUpdateError;
+
+            setProfile(prev => prev ? { ...prev, nin_image_url: ninPublicUrl, selfie_image_url: selfiePublicUrl } : null);
+            setStatus('submitted');
+            toast({ title: "Submission Successful", description: "Your documents are under review. This may take up to 24 hours." });
+
+        } catch (error: any) {
+            console.error("Submission Error:", error);
+            toast({ title: "Submission Failed", description: error.message, variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+    
+    if (showSelfieCapture) {
+        return (
+            <SelfieCapture 
+                onSelfieTaken={(dataUrl) => {
+                    setSelfieDataUrl(dataUrl);
+                    setShowSelfieCapture(false);
+                }}
+                onClose={() => setShowSelfieCapture(false)}
+            />
+        )
+    }
 
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
                 <CardTitle>Identity Verification</CardTitle>
-                <CardDescription>Verify your identity using your National Identification Number (NIN) to increase trust.</CardDescription>
+                <CardDescription>
+                    {status === 'unverified' && 'A one-time fee of ₦1,000 is required to verify your identity.'}
+                    {status === 'paid' && 'Submit your NIN and a selfie to complete verification.'}
+                    {status === 'submitted' && 'Your documents have been submitted and are pending review.'}
+                    {status === 'verified' && 'Your identity has been successfully verified!'}
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
 
-                {status === 'verified' ? (
+                {status === 'verified' && (
                      <Alert variant="default" className="bg-green-100 border-green-300 text-green-800">
-                        <CheckCircle className="h-4 w-4 text-green-800" />
+                        <UserCheck className="h-4 w-4 text-green-800" />
                         <AlertTitle>You are Verified!</AlertTitle>
                         <AlertDescription>
-                           Your identity has been successfully verified. A verified badge will now appear on your profile.
+                           A verified badge will now appear on your profile, increasing trust with buyers.
                         </AlertDescription>
                     </Alert>
-                ) : (
-                    <>
-                        <div className="space-y-2">
-                            <Label htmlFor="nin">NIN Number (11 digits)</Label>
-                            <Input
-                                id="nin"
-                                type="text"
-                                value={nin}
-                                onChange={handleNinChange}
-                                placeholder="Enter your 11-digit NIN"
-                                maxLength={11}
-                                disabled={isVerifying}
-                            />
-                        </div>
+                )}
 
+                {status === 'unverified' && (
+                    <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg">
+                        <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-xl font-bold">One-Time Fee: ₦1,000</h3>
+                        <p className="text-muted-foreground mb-6">Complete the payment to proceed with verification.</p>
+                        <Button onClick={handlePayment} disabled={isPaying} size="lg">
+                            {isPaying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Pay Now
+                        </Button>
+                    </div>
+                )}
+                
+                {status === 'paid' && (
+                    <div className="space-y-6">
+                        <Alert variant="default" className="bg-blue-100 border-blue-300 text-blue-800">
+                           <PartyPopper className="h-4 w-4 text-blue-800" />
+                           <AlertTitle>Payment Successful!</AlertTitle>
+                           <AlertDescription>Please submit your documents for review.</AlertDescription>
+                        </Alert>
+                        
                         <div className="space-y-2">
-                            <Label>NIN Slip/Card Image</Label>
-                            <div 
-                                className={cn(
-                                    "relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors",
-                                    isVerifying && "cursor-not-allowed opacity-50"
-                                )}
-                                onClick={() => !isVerifying && fileInputRef.current?.click()}
+                            <Label>1. Upload NIN Slip/Card Image</Label>
+                             <div 
+                                className="relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                                onClick={() => !isSubmitting && fileInputRef.current?.click()}
                             >
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/jpeg, image/png"
-                                    onChange={handleImageChange}
-                                    className="hidden"
-                                    disabled={isVerifying}
-                                />
-                                {imagePreview ? (
+                                <input ref={fileInputRef} type="file" accept="image/jpeg, image/png" onChange={handleNinImageChange} className="hidden" disabled={isSubmitting} />
+                                {ninImagePreview ? (
                                     <div className="relative h-40 w-full">
-                                        <Image src={imagePreview} alt="NIN Preview" layout="fill" className="object-contain rounded-md" />
+                                        <Image src={ninImagePreview} alt="NIN Preview" layout="fill" className="object-contain rounded-md" />
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                                         <Upload className="h-8 w-8" />
-                                        <span>Click to upload or drag & drop</span>
+                                        <span>Click to upload NIN document</span>
                                         <span className="text-xs">PNG or JPG (max 2MB)</span>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {status === 'failed' && (
-                             <Alert variant="destructive">
-                                <XCircle className="h-4 w-4" />
-                                <AlertTitle>Verification Failed</AlertTitle>
-                                <AlertDescription>
-                                   Please check your details and try again. If the issue persists, upload a clearer image.
-                                </AlertDescription>
-                            </Alert>
-                        )}
-
-                        {extractedNin && (
-                            <div className="text-sm">
-                                <strong>NIN(s) found in image:</strong> {extractedNin}
+                        <div className="space-y-2">
+                            <Label>2. Take a Selfie</Label>
+                            <div className="border rounded-lg p-4 flex items-center justify-between">
+                                {selfieDataUrl ? (
+                                    <div className="flex items-center gap-4">
+                                        <Image src={selfieDataUrl} alt="Selfie Preview" width={64} height={64} className="rounded-md" />
+                                        <p className="text-green-600 font-medium flex items-center gap-2"><CheckCircle className="h-5 w-5" /> Selfie captured!</p>
+                                    </div>
+                                ) : (
+                                    <p className="text-muted-foreground">A clear selfie is required.</p>
+                                )}
+                                <Button variant="outline" onClick={() => setShowSelfieCapture(true)} disabled={isSubmitting}>
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    {selfieDataUrl ? 'Retake Selfie' : 'Open Camera'}
+                                </Button>
                             </div>
-                        )}
-
-                        <div className="flex flex-col sm:flex-row gap-2">
-                            <Button onClick={handleVerification} disabled={isVerifying || nin.length !== 11 || !imageFile} className="w-full">
-                                {isVerifying ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Verifying... ({progress}%)
-                                    </>
-                                ) : 'Verify Now'}
-                            </Button>
-                            <Button onClick={resetForm} variant="outline" disabled={isVerifying} className="w-full">
-                                Reset
-                            </Button>
                         </div>
-                    </>
+                        
+                        <Button onClick={handleSubmitVerification} disabled={isSubmitting || !ninImageFile || !selfieDataUrl} className="w-full" size="lg">
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Submit for Verification
+                        </Button>
+                    </div>
                 )}
+
+                {status === 'submitted' && (
+                     <Alert>
+                        <UserCheck className="h-4 w-4" />
+                        <AlertTitle>Documents Submitted for Review</AlertTitle>
+                        <AlertDescription>
+                           Your verification is pending. We will notify you once the review is complete (usually within 24 hours).
+                        </AlertDescription>
+                    </Alert>
+                )}
+
             </CardContent>
         </Card>
     );
 }
-
-    
