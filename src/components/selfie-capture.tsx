@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Loader2, Camera, X, RefreshCw } from 'lucide-react';
-import { useToast } from './hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
@@ -148,4 +148,3 @@ export function SelfieCapture({ onSelfieTaken, onClose }: SelfieCaptureProps) {
         </div>
     );
 }
-
