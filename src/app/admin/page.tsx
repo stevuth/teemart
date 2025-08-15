@@ -1,20 +1,39 @@
 "use client";
 
-import { supabase } from '@/lib/supabase-client';
+import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield } from 'lucide-react';
+import { LogOut, Shield, Loader2 } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
 
 export default function AdminDashboardPage() {
-  const { user } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+  const router = useRouter();
 
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.replace('/admin/login');
+      } else if (profile?.role !== 'admin') {
+        // User is logged in but not an admin, redirect them away
+        router.replace('/');
+      }
+    }
+  }, [user, profile, authLoading, router]);
+  
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    router.push('/admin/login');
   };
 
-  if (!user) {
-    return null; // The layout will handle redirection
+  if (authLoading || !profile || !user) {
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+  
+  if (profile.role !== 'admin') {
+     return <div className="flex h-screen items-center justify-center"><p>Access Denied.</p></div>;
   }
 
   return (
