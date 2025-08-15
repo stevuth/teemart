@@ -37,17 +37,30 @@ export function AdminDeleteProductDialog({ product, isOpen, onClose, onDeleted }
       const imageUrls = product.image;
       if (imageUrls && imageUrls.length > 0) {
         const filePaths = imageUrls.map(url => {
-            const urlParts = new URL(url);
-            // The path starts after the 'product-images' bucket name in the URL path.
-            return decodeURIComponent(urlParts.pathname.split('/product-images/')[1]);
+            // A more robust way to extract the path after the bucket name.
+            // Example URL: https://<project>.supabase.co/storage/v1/object/public/product-images/user_id/image.png
+            // We want to extract 'user_id/image.png'
+            try {
+              const urlObject = new URL(url);
+              const pathSegments = urlObject.pathname.split('/');
+              // Find the index of the bucket name and slice from there
+              const bucketIndex = pathSegments.indexOf('product-images');
+              if (bucketIndex !== -1) {
+                return pathSegments.slice(bucketIndex + 1).join('/');
+              }
+              return '';
+            } catch (e) {
+                console.error("Invalid image URL:", url, e);
+                return '';
+            }
         }).filter(Boolean);
 
         if (filePaths.length > 0) {
             const { error: storageError } = await supabase.storage.from('product-images').remove(filePaths);
             if (storageError) {
-              console.error("Storage Error:", storageError);
-              // Non-fatal, we can still delete the DB record.
-              toast({ title: "Warning", description: "Could not delete product images, but removed listing.", variant: "destructive" });
+              // Log the error but don't stop the DB deletion.
+              console.error("Storage Deletion Error:", storageError);
+              toast({ title: "Image Deletion Warning", description: "Could not delete all product images from storage.", variant: "destructive" });
             }
         }
       }
