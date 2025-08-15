@@ -27,8 +27,10 @@ const nextConfig: NextConfig = {
   },
   // Allow requests from the development environment's origin
   experimental: {
-    allowedDevOrigins: ["*.cloudworkstations.dev"],
+    // This property is now at the top level, so we leave experimental empty
+    // or remove it if not needed for other features.
   },
+  allowedDevOrigins: ["*.cloudworkstations.dev"],
 };
 
 export default nextConfig;
