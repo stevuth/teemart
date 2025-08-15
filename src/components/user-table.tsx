@@ -59,7 +59,7 @@ export function UserTable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Registered Users</CardTitle>
+        <CardTitle>Registered Users ({users.length})</CardTitle>
         <CardDescription>A list of all users who have registered on the platform.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,7 +67,7 @@ export function UserTable() {
           <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
         ) : (
           <Table>
-            <TableCaption>{users.length > 0 ? 'A list of all registered users.' : 'No users found.'}</TableCaption>
+            <TableCaption>{users.length > 0 ? `A list of all ${users.length} registered users.` : 'No users found.'}</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Full Name</TableHead>
