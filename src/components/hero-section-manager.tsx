@@ -53,8 +53,8 @@ export function HeroSectionManager() {
         toast({ title: "Invalid File Type", description: "Please use JPG, PNG, or WEBP.", variant: "destructive" });
         return;
       }
-      if (file.size > 2 * 1024 * 1024) { // 2MB Limit
-        toast({ title: "File Too Large", description: "Image must be under 2MB.", variant: "destructive" });
+      if (file.size > 6 * 1024 * 1024) { // 6MB Limit
+        toast({ title: "File Too Large", description: "Image must be under 6MB.", variant: "destructive" });
         return;
       }
       setFileToUpload(file);
@@ -160,7 +160,7 @@ export function HeroSectionManager() {
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Upload className="h-8 w-8" />
                 <span>Click to select an image</span>
-                <span className="text-xs">PNG, JPG, or WEBP (max 2MB)</span>
+                <span className="text-xs">PNG, JPG, or WEBP (max 6MB)</span>
               </div>
             )}
           </div>
