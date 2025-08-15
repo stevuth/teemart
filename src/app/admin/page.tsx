@@ -1,19 +1,23 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield, Loader2 } from 'lucide-react';
+import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
 import { UserTable } from '@/components/user-table';
 import { SellerTable } from '@/components/seller-table';
+import { cn } from '@/lib/utils';
+
+type AdminView = 'verification' | 'sellers' | 'users';
 
 export default function AdminDashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [activeView, setActiveView] = useState<AdminView>('verification');
 
   useEffect(() => {
     if (!authLoading) {
@@ -38,15 +42,32 @@ export default function AdminDashboardPage() {
      return <div className="flex h-screen items-center justify-center"><p>Access Denied.</p></div>;
   }
 
+  const renderContent = () => {
+    switch (activeView) {
+      case 'verification':
+        return <VerificationQueue />;
+      case 'sellers':
+        return <SellerTable />;
+      case 'users':
+        return <UserTable />;
+      default:
+        return <VerificationQueue />;
+    }
+  };
+
+  const navItems = [
+    { id: 'verification', label: 'Verification Queue', icon: UserCheck },
+    { id: 'sellers', label: 'Sellers & Listings', icon: ShoppingBag },
+    { id: 'users', label: 'Registered Users', icon: Users },
+  ];
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-          <a href="/admin" className="flex items-center gap-2 text-lg font-semibold md:text-base">
-            <Shield className="h-6 w-6" />
-            <span>TeeMart Admin</span>
-          </a>
-        </nav>
+      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-10">
+        <div className="flex items-center gap-2 text-lg font-semibold md:text-base">
+          <Shield className="h-6 w-6" />
+          <span>TeeMart Admin</span>
+        </div>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial text-right">
              <p className="text-sm text-muted-foreground">Signed in as {user.email}</p>
@@ -57,13 +78,26 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4 md:gap-8">
-          <VerificationQueue />
-          <SellerTable />
-          <UserTable />
-        </div>
-      </main>
+      <div className="flex flex-1">
+        <aside className="w-64 border-r bg-secondary/30 p-4">
+          <nav className="flex flex-col gap-2">
+            {navItems.map(item => (
+                <Button
+                    key={item.id}
+                    variant={activeView === item.id ? 'default' : 'ghost'}
+                    className="justify-start gap-3"
+                    onClick={() => setActiveView(item.id as AdminView)}
+                >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                </Button>
+            ))}
+          </nav>
+        </aside>
+        <main className="flex-1 p-4 md:p-8 overflow-auto">
+            {renderContent()}
+        </main>
+      </div>
     </div>
   );
 }
