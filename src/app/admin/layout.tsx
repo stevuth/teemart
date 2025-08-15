@@ -1,55 +1,40 @@
+
 "use client";
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase-client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        router.push('/admin/login');
-      } else {
-        setUser(session.user);
+    if (!authLoading) {
+      if (!user) {
+        router.replace('/admin/login');
+      } else if (profile?.role !== 'admin') {
+        // User is logged in but not an admin, redirect them away
+        router.replace('/');
       }
-      setLoading(false);
-    };
+    }
+  }, [user, profile, authLoading, router]);
 
-    getSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        router.push('/admin/login');
-      } else {
-        setUser(session?.user ?? null);
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router]);
-
-  if (loading) {
+  if (authLoading || !profile) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
-
-  if (user) {
+  
+  // If user is logged in and is an admin, show the admin content
+  if (user && profile.role === 'admin') {
     return <>{children}</>;
   }
 
-  return null;
+  // Fallback while redirecting
+  return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
 }

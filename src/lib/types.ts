@@ -9,6 +9,7 @@ export type Profile = {
     nin_image_url?: string;
     selfie_image_url?: string;
     verification_payment_status?: 'unpaid' | 'paid';
+    role?: string; // Add role to profile type
 };
 
 export type Product = {
