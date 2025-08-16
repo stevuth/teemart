@@ -13,11 +13,11 @@ export function Footer() {
       {
         title: 'Buy & Sell',
         links: [
-            { name: 'All Categories', href: '#' },
-            { name: 'Cars', href: '#' },
-            { name: 'Electronics', href: '#' },
-            { name: 'Property', href: '#' },
-            { name: 'Mobile Phones', href: '#' },
+            { name: 'All Categories', href: '/' },
+            { name: 'Cars', href: '/' },
+            { name: 'Electronics', href: '/' },
+            { name: 'Property', href: '/' },
+            { name: 'Mobile Phones', href: '/' },
         ],
       },
       {
@@ -34,8 +34,8 @@ export function Footer() {
         links: [
             { name: 'Help/FAQ', href: '#' },
             { name: 'Safety Tips', href: '#' },
-            { name: 'Terms of Service', href: '#' },
-            { name: 'Privacy Policy', href: '#' },
+            { name: 'Terms of Service', href: '/terms' },
+            { name: 'Privacy Policy', href: '/privacy' },
         ],
       },
   ];
