@@ -18,7 +18,6 @@ import { Loader2, Ban, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
-import { banUser, unbanUser } from './admin/actions';
 
 type UserProfile = {
   id: string;
@@ -61,21 +60,6 @@ export function UserTable() {
     fetchUsers();
   }, [supabase]);
 
-  const handleBanToggle = async (user: UserProfile) => {
-    const isCurrentlyBanned = user.banned_until && new Date(user.banned_until) > new Date();
-    setUpdatingId(user.id);
-    const action = isCurrentlyBanned ? unbanUser : banUser;
-    const { error } = await action(user.id);
-
-    if (error) {
-        toast({ title: "Operation failed", description: error.message, variant: "destructive" });
-    } else {
-        toast({ title: "Success", description: `User has been ${isCurrentlyBanned ? 'unbanned' : 'banned'}.` });
-        fetchUsers();
-    }
-    setUpdatingId(null);
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -95,13 +79,11 @@ export function UserTable() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined On</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => {
                 const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
-                const isSelf = user.id === adminUser?.id;
                 return (
                     <TableRow key={user.id} className={isBanned ? 'bg-destructive/10' : ''}>
                     <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
@@ -115,17 +97,6 @@ export function UserTable() {
                       )}
                     </TableCell>
                     <TableCell>{format(new Date(user.created_at), 'PPP')}</TableCell>
-                    <TableCell className="text-right">
-                       <Button 
-                          size="sm" 
-                          variant={isBanned ? "secondary" : "destructive"} 
-                          onClick={() => handleBanToggle(user)}
-                          disabled={updatingId === user.id || isSelf}
-                        >
-                          {updatingId === user.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : (isBanned ? <ShieldCheck className="mr-2 h-4 w-4" /> : <Ban className="mr-2 h-4 w-4" />) }
-                          {isBanned ? "Unban" : "Ban"}
-                       </Button>
-                    </TableCell>
                     </TableRow>
                 )
               })}
@@ -136,4 +107,3 @@ export function UserTable() {
     </Card>
   );
 }
-
