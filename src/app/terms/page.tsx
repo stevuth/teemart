@@ -12,38 +12,38 @@ export default function TermsOfServicePage() {
           <CardHeader>
             <CardTitle className="text-3xl">Terms of Service</CardTitle>
           </CardHeader>
-          <CardContent className="prose prose-lg max-w-none">
-            <p>Last updated: {new Date().toLocaleDateString()}</p>
+          <CardContent className="prose prose-lg max-w-none space-y-4">
+            <div>Last updated: {new Date().toLocaleDateString()}</div>
             
             <h2>1. Acceptance of Terms</h2>
-            <p>
+            <div>
               By accessing and using TeeMart (the "Service"), you accept and agree to be bound by the terms and provision of this agreement. In addition, when using these particular services, you shall be subject to any posted guidelines or rules applicable to such services.
-            </p>
+            </div>
 
             <h2>2. User Conduct</h2>
-            <p>
+            <div>
               You agree not to use the Service to post or otherwise transmit any content that is unlawful, fraudulent, threatening, abusive, libelous, defamatory, obscene or otherwise objectionable. You are responsible for all content that you upload, post, email or otherwise transmit via the Service.
-            </p>
+            </div>
             
             <h2>3. Listings</h2>
-            <p>
+            <div>
               Sellers are responsible for the accuracy of their listings. Prohibited items may not be listed. TeeMart reserves the right to remove any listing for any reason. Buyers are responsible for reading the full item listing before making a purchase.
-            </p>
+            </div>
 
             <h2>4. Limitation of Liability</h2>
-            <p>
+            <div>
               TeeMart acts as a marketplace and is not directly involved in the transaction between buyers and sellers. We do not guarantee the quality, safety, or legality of items advertised, the truth or accuracy of listings, the ability of sellers to sell items, or the ability of buyers to pay for items.
-            </p>
+            </div>
 
             <h2>5. Changes to the Agreement</h2>
-            <p>
+            <div>
               We reserve the right to modify these terms from time to time at our sole discretion. Therefore, you should review these page periodically. Your continued use of the Website or our service after any such change constitutes your acceptance of the new Terms.
-            </p>
+            </div>
             
             <h2>Contact Us</h2>
-            <p>
+            <div>
               If you have any questions about these Terms, please contact us.
-            </p>
+            </div>
           </CardContent>
         </Card>
       </main>
