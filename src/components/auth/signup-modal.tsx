@@ -46,7 +46,6 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
-      phone: data.phoneNumber,
       options: {
         data: {
           full_name: data.displayName,
