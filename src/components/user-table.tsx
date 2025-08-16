@@ -56,7 +56,7 @@ export function UserTable() {
 
   useEffect(() => {
     fetchUsers();
-  }, [toast]);
+  }, []);
 
   const handleBanToggle = async (user: UserProfile) => {
     setUpdatingId(user.id);
@@ -80,13 +80,7 @@ export function UserTable() {
             description: `${user.email} has been successfully ${action === 'ban' ? 'banned' : 'unbanned'}.`
         });
         
-        // Update the user's status locally for immediate UI feedback
-        setUsers(currentUsers => currentUsers.map(u => {
-            if (u.id === user.id) {
-                return { ...u, banned_until: isBanned ? null : new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString() };
-            }
-            return u;
-        }));
+        fetchUsers();
 
     } catch (error: any) {
         toast({

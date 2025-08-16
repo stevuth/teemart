@@ -18,6 +18,9 @@ export async function POST(req: NextRequest, { params }: { params: { userId: str
 
     try {
         const { data: { user: requestingUser } } = await supabaseAdmin.auth.getUser(req.cookies.get('supabase-auth-token')?.value ?? '');
+        if (!requestingUser) {
+             return NextResponse.json({ error: 'Forbidden: Not authenticated' }, { status: 401 });
+        }
         const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', requestingUser?.id).single();
 
         if (profile?.role !== 'admin') {

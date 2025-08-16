@@ -6,6 +6,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase-client';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Profile } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const getSessionAndProfile = async () => {
@@ -37,6 +39,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser ?? null);
 
         if (currentUser) {
+            if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
+                await supabase.auth.signOut();
+                toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
+                return;
+            }
+            
             const { data: profileData, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -57,8 +65,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         const currentUser = session?.user;
         setUser(currentUser ?? null);
-
+        
         if (currentUser) {
+             if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
+                await supabase.auth.signOut();
+                toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
+                setProfile(null);
+                setLoading(false);
+                return;
+            }
             const { data: profileData, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -78,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
   
   return (
     <AuthContext.Provider value={{ user, session, loading, profile, setProfile }}>
