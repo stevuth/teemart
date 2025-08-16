@@ -14,9 +14,10 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Loader2, ShieldCheck, ShieldAlert, Slash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Button } from './ui/button';
 
 type UserProfile = {
   id: string;
@@ -26,35 +27,77 @@ type UserProfile = {
   role: string | null;
   is_verified: boolean;
   created_at: string;
+  banned_until: string | null;
 };
 
 export function UserTable() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.rpc('get_all_users');
+    
+    if (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch the list of users.",
+        variant: "destructive"
+      });
+      setUsers([]);
+    } else {
+      setUsers(data as UserProfile[]);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-
-      const { data, error } = await supabase.rpc('get_all_users');
-      
-      if (error) {
-        console.error("Error fetching users:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch the list of users.",
-          variant: "destructive"
-        });
-        setUsers([]);
-      } else {
-        setUsers(data as UserProfile[]);
-      }
-      setLoading(false);
-    };
-
     fetchUsers();
   }, [toast]);
+
+  const handleBanToggle = async (user: UserProfile) => {
+    setUpdatingId(user.id);
+    const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
+    const action = isBanned ? 'unban' : 'ban';
+
+    try {
+        const response = await fetch(`/api/admin/users/${user.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'An unknown error occurred');
+        }
+        
+        toast({
+            title: `User ${action === 'ban' ? 'Banned' : 'Unbanned'}`,
+            description: `${user.email} has been successfully ${action === 'ban' ? 'banned' : 'unbanned'}.`
+        });
+        
+        // Update the user's status locally for immediate UI feedback
+        setUsers(currentUsers => currentUsers.map(u => {
+            if (u.id === user.id) {
+                return { ...u, banned_until: isBanned ? null : new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString() };
+            }
+            return u;
+        }));
+
+    } catch (error: any) {
+        toast({
+            title: "Operation Failed",
+            description: error.message,
+            variant: "destructive"
+        });
+    } finally {
+        setUpdatingId(null);
+    }
+  };
 
   return (
     <Card>
@@ -72,39 +115,40 @@ export function UserTable() {
               <TableRow>
                 <TableHead>Full Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Phone Number</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Verification</TableHead>
-                <TableHead className="text-right">Joined On</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Joined On</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phone || 'N/A'}</TableCell>
-                  <TableCell>
-                    {user.role ? (
-                        <Badge variant="secondary">{user.role}</Badge>
-                    ) : (
-                        <span className="text-muted-foreground">User</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.is_verified ? (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs">
-                          <ShieldCheck className="h-3 w-3" /> Verified
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="gap-1 text-xs text-muted-foreground">
-                          <ShieldAlert className="h-3 w-3" /> Not Verified
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">{format(new Date(user.created_at), 'PPP')}</TableCell>
-                </TableRow>
-              ))}
+              {users.map((user) => {
+                const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
+                return (
+                    <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {isBanned ? (
+                        <Badge variant="destructive">Banned</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{format(new Date(user.created_at), 'PPP')}</TableCell>
+                    <TableCell className="text-right">
+                        <Button
+                            variant={isBanned ? "outline" : "destructive"}
+                            size="sm"
+                            onClick={() => handleBanToggle(user)}
+                            disabled={updatingId === user.id}
+                        >
+                            {updatingId === user.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Slash className="mr-2 h-4 w-4" />}
+                            {isBanned ? 'Unban' : 'Ban'}
+                        </Button>
+                    </TableCell>
+                    </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         )}
