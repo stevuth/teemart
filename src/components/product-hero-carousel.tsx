@@ -21,10 +21,6 @@ type ProductHeroCarouselProps = {
 }
 
 export function ProductHeroCarousel({ images }: ProductHeroCarouselProps) {
-  const plugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })
-  );
-
   if (!images || images.length === 0) {
     return (
         <section className="w-full bg-secondary/30 py-8">
@@ -48,9 +44,13 @@ export function ProductHeroCarousel({ images }: ProductHeroCarouselProps) {
             align: "start",
             loop: true,
           }}
-          plugins={[plugin.current]}
-          onMouseEnter={plugin.current.stop}
-          onMouseLeave={plugin.current.reset}
+          plugins={[
+            Autoplay({
+              delay: 5000,
+              stopOnInteraction: true,
+              stopOnMouseEnter: true,
+            }),
+          ]}
           className="w-full"
         >
           <CarouselContent>
