@@ -18,6 +18,7 @@ import { Loader2, ShieldCheck, ShieldAlert, Slash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 type UserProfile = {
   id: string;
@@ -35,6 +36,7 @@ export function UserTable() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { session } = useAuth();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -59,6 +61,10 @@ export function UserTable() {
   }, []);
 
   const handleBanToggle = async (user: UserProfile) => {
+    if (!session) {
+        toast({ title: 'Authentication Error', description: 'You must be logged in to perform this action.', variant: 'destructive' });
+        return;
+    }
     setUpdatingId(user.id);
     const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
     const action = isBanned ? 'unban' : 'ban';
@@ -66,13 +72,17 @@ export function UserTable() {
     try {
         const response = await fetch(`/api/admin/users/${user.id}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
             body: JSON.stringify({ action }),
         });
 
+        const responseData = await response.json();
+
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'An unknown error occurred');
+            throw new Error(responseData.error || 'An unknown error occurred');
         }
         
         toast({

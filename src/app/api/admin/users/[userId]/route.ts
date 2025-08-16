@@ -8,31 +8,54 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(req: NextRequest, { params }: { params: { userId: string } }) {
-    const { userId } = params;
-    const { action } = await req.json(); // 'ban' or 'unban'
-
-    if (!userId || !action) {
-        return NextResponse.json({ error: 'Missing user ID or action' }, { status: 400 });
+async function verifyAdmin(req: NextRequest): Promise<{ error?: NextResponse, userId?: string }> {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+        return { error: NextResponse.json({ error: 'Forbidden: Missing Authorization header' }, { status: 401 }) };
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+        return { error: NextResponse.json({ error: 'Forbidden: Invalid Authorization header format' }, { status: 401 }) };
     }
 
-    try {
-        const { data: { user: requestingUser } } = await supabaseAdmin.auth.getUser(req.cookies.get('supabase-auth-token')?.value ?? '');
-        if (!requestingUser) {
-             return NextResponse.json({ error: 'Forbidden: Not authenticated' }, { status: 401 });
-        }
-        const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', requestingUser?.id).single();
-
-        if (profile?.role !== 'admin') {
-            return NextResponse.json({ error: 'Forbidden: Not an admin' }, { status: 403 });
-        }
-    } catch(e) {
-        return NextResponse.json({ error: 'Forbidden: Could not verify admin role' }, { status: 403 });
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError || !user) {
+        const status = userError?.status || 401;
+        return { error: NextResponse.json({ error: userError?.message || 'Forbidden: Invalid token' }, { status }) };
     }
     
+    const { data: profile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+    
+    if (profileError || profile?.role !== 'admin') {
+        return { error: NextResponse.json({ error: 'Forbidden: Not an admin' }, { status: 403 }) };
+    }
+    
+    return { userId: user.id };
+}
+
+
+export async function POST(req: NextRequest, { params }: { params: { userId: string } }) {
+    const { userId: targetUserId } = params;
+    const { action } = await req.json(); // 'ban' or 'unban'
+
+    if (!targetUserId || !action) {
+        return NextResponse.json({ error: 'Missing user ID or action' }, { status: 400 });
+    }
+    
+    // Perform admin verification
+    const { error: adminError } = await verifyAdmin(req);
+    if (adminError) {
+        return adminError;
+    }
+
     if (action === 'ban') {
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-            userId,
+            targetUserId,
             { ban_duration: '36500d' } // Ban for 100 years, effectively permanent
         );
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -41,7 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: { userId: str
 
     if (action === 'unban') {
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-            userId,
+            targetUserId,
             { ban_duration: 'none' }
         );
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
