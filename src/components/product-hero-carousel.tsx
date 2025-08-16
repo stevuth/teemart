@@ -7,8 +7,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel"
 import Autoplay from 'embla-carousel-autoplay'
 import type { HeroImage } from '@/lib/types'
@@ -68,8 +66,6 @@ export function ProductHeroCarousel({ images }: ProductHeroCarouselProps) {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="absolute left-4 h-10 w-10 text-white bg-black/30 hover:bg-black/50 border-none" />
-          <CarouselNext className="absolute right-4 h-10 w-10 text-white bg-black/30 hover:bg-black/50 border-none" />
         </Carousel>
     </section>
   )
