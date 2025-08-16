@@ -6,14 +6,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal } from 'lucide-react';
+import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, Mail } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
 import { UserTable } from '@/components/user-table';
 import { SellerTable } from '@/components/seller-table';
 import { HeroSectionManager } from '@/components/hero-section-manager';
+import { ContactMessagesTable } from '@/components/contact-messages-table';
 import { cn } from '@/lib/utils';
 
-type AdminView = 'verification' | 'sellers' | 'users' | 'hero';
+type AdminView = 'verification' | 'sellers' | 'users' | 'hero' | 'messages';
 
 export default function AdminDashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -53,6 +54,8 @@ export default function AdminDashboardPage() {
         return <UserTable />;
       case 'hero':
         return <HeroSectionManager />;
+      case 'messages':
+        return <ContactMessagesTable />;
       default:
         return <VerificationQueue />;
     }
@@ -62,6 +65,7 @@ export default function AdminDashboardPage() {
     { id: 'verification', label: 'Verification Queue', icon: UserCheck },
     { id: 'sellers', label: 'Sellers & Listings', icon: ShoppingBag },
     { id: 'users', label: 'Registered Users', icon: Users },
+    { id: 'messages', label: 'Contact Messages', icon: Mail },
     { id: 'hero', label: 'Hero Section', icon: GalleryHorizontal },
   ];
 

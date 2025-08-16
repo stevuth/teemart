@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { Separator } from "./ui/separator";
+import { supabase } from "@/lib/supabase-client";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -35,18 +35,29 @@ export function ContactForm() {
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: ContactFormValues) => {
-    // In a real application, you would send this data to a backend endpoint.
-    // For this prototype, we'll just simulate a delay and show a success message.
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log("Contact form submitted:", data);
-    
-    toast({
-      title: "Message Sent!",
-      description: "Thanks for reaching out. We'll get back to you soon.",
-    });
+    try {
+      const { error } = await supabase.from('contact_messages').insert({
+        name: data.name,
+        email: data.email,
+        message: data.message,
+      });
 
-    form.reset();
+      if (error) throw error;
+
+      toast({
+        title: "Message Sent!",
+        description: "Thanks for reaching out. We'll get back to you soon.",
+      });
+      form.reset();
+
+    } catch (error: any) {
+      console.error("Contact form submission error:", error);
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Could not send your message. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
