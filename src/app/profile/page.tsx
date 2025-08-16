@@ -44,7 +44,7 @@ export default function ProfilePage() {
   }, []);
   
   const fetchUserData = useCallback(async () => {
-    if (!user) return;
+    if (!user || !supabase) return;
     setLoading(true);
     
     try {
@@ -103,10 +103,10 @@ export default function ProfilePage() {
       router.push('/');
       return;
     }
-    if (user) {
+    if (user && supabase) {
       fetchUserData();
     }
-  }, [user, authLoading, router, fetchUserData]);
+  }, [user, authLoading, router, fetchUserData, supabase]);
   
   const getInitials = (name?: string | null) => {
     if (!name) return 'U';
@@ -114,7 +114,7 @@ export default function ProfilePage() {
   }
 
   const handleResendVerification = async () => {
-    if (user) {
+    if (user && supabase) {
        const { error } = await supabase.auth.resend({
             type: 'signup',
             email: user.email!,
@@ -234,7 +234,7 @@ export default function ProfilePage() {
                       </div>
                   </div>
                   <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                      <Button variant="destructive" onClick={() => supabase.auth.signOut()} className="w-full sm:w-auto">
+                      <Button variant="destructive" onClick={() => supabase?.auth.signOut()} className="w-full sm:w-auto">
                         Sign Out
                       </Button>
                   </div>

@@ -3,10 +3,10 @@
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session, SupabaseClient } from '@supabase/supabase-js';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Profile } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
 import { createSupabaseBrowserClient } from '@/utils/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import type { Profile } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -36,22 +36,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser ?? null);
 
         if (currentUser) {
-            if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
-                await supabase.auth.signOut();
-                toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
-                setUser(null);
-                setSession(null);
-                setProfile(null);
-            } else {
-                const { data: profileData, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                if (error) console.error("Error fetching profile:", error);
-                else setProfile(profileData);
-            }
+            const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) console.error("Error fetching profile:", error);
+            else setProfile(profileData);
         }
       } catch (error: any) {
         console.error("Error in initial session/profile fetch:", error.message)
@@ -69,20 +61,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser ?? null);
         
         if (currentUser) {
-             if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
-                await supabase.auth.signOut();
-                toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
-                setProfile(null);
-             } else {
-                const { data: profileData, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                if (error) console.error("Error refetching profile on auth change:", error);
-                else setProfile(profileData);
-             }
+             const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) console.error("Error refetching profile on auth change:", error);
+            else setProfile(profileData);
         } else {
             setProfile(null);
         }
@@ -101,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   if (loading) {
     return (
         <div className="w-full h-screen flex items-center justify-center">
-            <Skeleton className="w-full h-full" />
+            <Loader2 className="h-8 w-8 animate-spin" />
         </div>
     );
   }
@@ -111,4 +97,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+}

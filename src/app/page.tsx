@@ -33,6 +33,8 @@ export default function Home() {
   const { supabase } = useAuth();
 
   useEffect(() => {
+    if (!supabase) return;
+
     const fetchProducts = async () => {
       setLoading(true);
       const { data, error } = await supabase
