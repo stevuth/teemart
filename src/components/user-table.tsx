@@ -18,7 +18,7 @@ import { Loader2, ShieldCheck, ShieldAlert, Slash } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
-import { useAuth } from '@/hooks/use-auth';
+import { banUser, unbanUser } from '@/app/admin/actions';
 
 type UserProfile = {
   id: string;
@@ -36,7 +36,6 @@ export function UserTable() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { session } = useAuth();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -61,33 +60,21 @@ export function UserTable() {
   }, []);
 
   const handleBanToggle = async (user: UserProfile) => {
-    if (!session) {
-        toast({ title: 'Authentication Error', description: 'You must be logged in to perform this action.', variant: 'destructive' });
-        return;
-    }
     setUpdatingId(user.id);
     const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
-    const action = isBanned ? 'unban' : 'ban';
+    const action = isBanned ? unbanUser : banUser;
+    const actionName = isBanned ? 'unban' : 'ban';
 
     try {
-        const response = await fetch(`/api/admin/users/${user.id}`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({ action }),
-        });
+        const result = await action(user.id);
 
-        const responseData = await response.json();
-
-        if (!response.ok) {
-            throw new Error(responseData.error || 'An unknown error occurred');
+        if (result.error) {
+            throw new Error(result.error);
         }
         
         toast({
-            title: `User ${action === 'ban' ? 'Banned' : 'Unbanned'}`,
-            description: `${user.email} has been successfully ${action === 'ban' ? 'banned' : 'unbanned'}.`
+            title: `User ${actionName === 'ban' ? 'Banned' : 'Unbanned'}`,
+            description: `${user.email} has been successfully ${actionName === 'ban' ? 'banned' : 'unbanned'}.`
         });
         
         fetchUsers();
