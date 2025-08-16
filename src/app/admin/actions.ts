@@ -1,30 +1,17 @@
 
 'use server';
 
-import { createServerClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
-/**
- * Verifies if the current user is an admin.
- * Throws an error if not an admin.
- */
-async function verifyAdmin() {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        throw new Error('You must be logged in to perform this action.');
-    }
-
-    const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-    
-    if (error || profile?.role !== 'admin') {
-        throw new Error('Forbidden: You do not have administrative privileges.');
-    }
+async function getAdminSupabase() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    return createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    });
 }
 
 /**
@@ -34,8 +21,7 @@ async function verifyAdmin() {
  */
 export async function banUser(targetUserId: string) {
     try {
-        await verifyAdmin();
-        const supabaseAdmin = createAdminClient();
+        const supabaseAdmin = await getAdminSupabase();
 
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
             targetUserId,
@@ -58,8 +44,7 @@ export async function banUser(targetUserId: string) {
  */
 export async function unbanUser(targetUserId: string) {
     try {
-        await verifyAdmin();
-        const supabaseAdmin = createAdminClient();
+        const supabaseAdmin = await getAdminSupabase();
         
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
             targetUserId,

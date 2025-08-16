@@ -6,9 +6,7 @@ import { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Profile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { createBrowserClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/utils/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +20,7 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [supabase] = useState(() => createBrowserClient());
+  const [supabase] = useState(() => createSupabaseBrowserClient());
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -56,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
         }
       } catch (error: any) {
-        console.error("Configuration error:", error.message)
+        console.error("Error in initial session/profile fetch:", error.message)
       } finally {
         setLoading(false);
       }
@@ -82,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     .eq('id', currentUser.id)
                     .single();
                 
-                if (error) console.error("Error refetching profile:", error);
+                if (error) console.error("Error refetching profile on auth change:", error);
                 else setProfile(profileData);
              }
         } else {

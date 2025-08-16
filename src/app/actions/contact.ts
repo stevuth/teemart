@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient } from '@/utils/supabase/server';
 
 /**
  * Sends a reply to a contact message and updates its status in the database.
@@ -11,8 +11,7 @@ import { createAdminClient } from '@/lib/supabase/server';
  * @returns An object with either a success flag or an error message.
  */
 export async function sendReplyAction(messageId: string, replyContent: string) {
-    const supabase = createAdminClient();
-    
+    const supabase = createSupabaseServerClient();
     // In a real app, you'd use a service like Resend or Nodemailer to send an email.
     // For this prototype, we will just update the database and log to console.
     

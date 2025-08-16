@@ -1,8 +1,8 @@
 
 "use server"
 
-import { createServerClient } from '@/lib/supabase/server';
 import { ProductWithSeller } from '@/lib/types';
+import { createSupabaseServerClient } from '@/utils/supabase/server';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ProductDetailClient } from '@/components/product-detail-client';
@@ -12,8 +12,7 @@ type Props = {
 }
 
 async function getProduct(id: string): Promise<ProductWithSeller | null> {
-    const supabase = createServerClient();
-
+    const supabase = createSupabaseServerClient();
     const { data, error } = await supabase
         .from('products')
         .select(`*, seller:profiles(id, full_name, avatar_url, is_verified)`)
