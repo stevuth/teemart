@@ -4,6 +4,8 @@ import { Footer } from '@/components/footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Link from 'next/link';
+import { ContactForm } from '@/components/contact-form';
+import { Separator } from '@/components/ui/separator';
 
 const faqs = [
   {
@@ -54,12 +56,12 @@ export default function HelpPage() {
                 </AccordionItem>
               ))}
             </Accordion>
-            <div className="mt-8 text-center text-muted-foreground">
-                <p>Can't find the answer you're looking for?</p>
-                <p>Contact us through our social media channels or check our <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>.</p>
-            </div>
           </CardContent>
         </Card>
+
+        <div className="mt-12">
+            <ContactForm />
+        </div>
       </main>
       <Footer />
     </div>
