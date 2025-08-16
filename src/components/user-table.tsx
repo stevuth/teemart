@@ -115,6 +115,7 @@ export function UserTable() {
               <TableRow>
                 <TableHead>Full Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined On</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -127,6 +128,7 @@ export function UserTable() {
                     <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone || 'N/A'}</TableCell>
                     <TableCell>
                       {isBanned ? (
                         <Badge variant="destructive">Banned</Badge>
