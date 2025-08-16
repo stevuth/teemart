@@ -2,7 +2,6 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
 
 interface NotificationContextType {
@@ -16,7 +15,7 @@ export const NotificationContext = createContext<NotificationContextType>({
 });
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   const [notificationCount, setNotificationCount] = useState(0);
 
   const fetchUnreadCount = useCallback(async () => {
@@ -32,7 +31,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error fetching unread message count:", error);
       setNotificationCount(0);
     }
-  }, [user]);
+  }, [user, supabase]);
 
   useEffect(() => {
     fetchUnreadCount();
@@ -60,7 +59,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, supabase]);
 
   const decrementCount = useCallback((amount: number) => {
     // A simple way to trigger a refetch after marking messages as read

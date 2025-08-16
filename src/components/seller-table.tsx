@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Table,
   TableBody,
@@ -45,6 +45,7 @@ export function SellerTable() {
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const { toast } = useToast();
+    const { supabase } = useAuth();
 
     const fetchSellers = useCallback(async () => {
         setLoading(true);
@@ -63,7 +64,7 @@ export function SellerTable() {
             setSellers(data as SellerWithProducts[]);
         }
         setLoading(false);
-    }, [toast]);
+    }, [toast, supabase]);
 
     useEffect(() => {
         fetchSellers();

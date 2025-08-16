@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Table,
   TableBody,
@@ -36,6 +36,7 @@ export function UserTable() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { supabase } = useAuth();
 
   const fetchUsers = async () => {
     setLoading(true);

@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/use-notifications';
 import Image from 'next/image';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 type Message = {
     id: string;
@@ -36,7 +35,7 @@ type ChatInterfaceProps = {
 }
 
 export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfaceProps) {
-    const { user } = useAuth();
+    const { user, supabase } = useAuth();
     const { toast } = useToast();
     const { decrementCount } = useNotifications();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -60,7 +59,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         } else {
              decrementCount(0);
         }
-    }, [conversationId, user, decrementCount]);
+    }, [conversationId, user, supabase, decrementCount]);
     
     useEffect(() => {
         const fetchMessages = async () => {
@@ -84,7 +83,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         if (conversationId) {
             fetchMessages();
         }
-    }, [conversationId, toast, markMessagesAsRead]);
+    }, [conversationId, toast, markMessagesAsRead, supabase]);
     
      useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,7 +108,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId, user?.id, markMessagesAsRead]);
+    }, [conversationId, user?.id, markMessagesAsRead, supabase]);
     
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -312,5 +311,3 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         </>
     );
 }
-
-    

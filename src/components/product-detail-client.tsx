@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase-client';
 import { Product, ProductWithSeller } from '@/lib/types';
 import { ShoppingCart, MessageCircle, MapPin, Truck, ShieldCheck, Star } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -18,6 +17,7 @@ import { ProductCard } from '@/components/product-card';
 import { recommendProducts, RecommendProductsInput } from '@/ai/flows/product-recommendations';
 import { useCart } from '@/hooks/use-cart';
 import { Skeleton } from './ui/skeleton';
+import { useAuth } from '@/hooks/use-auth';
 
 type ProductDetailClientProps = {
   product: ProductWithSeller;
@@ -25,6 +25,7 @@ type ProductDetailClientProps = {
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
     const { addToCart } = useCart();
+    const { supabase } = useAuth();
     
     const [recommended, setRecommended] = useState<Product[]>([]);
     const [recommending, setRecommending] = useState(true);
@@ -67,7 +68,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             }
             fetchRecommendations();
         }
-    }, [product]);
+    }, [product, supabase]);
     
     const getInitials = (name?: string | null) => {
         if (!name) return 'S';

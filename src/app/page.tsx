@@ -11,7 +11,7 @@ import type { FilterValues } from '@/components/product-filters';
 import { ProductFilters } from '@/components/product-filters';
 import { ProductHeroCarousel } from '@/components/product-hero-carousel';
 import { SearchSection } from '@/components/search-section';
-import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -30,6 +30,7 @@ export default function Home() {
     datePosted: 'any',
   });
   const { toast } = useToast();
+  const { supabase } = useAuth();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -85,7 +86,7 @@ export default function Home() {
 
     fetchProducts();
     fetchHeroImages();
-  }, [toast]);
+  }, [toast, supabase]);
 
 
   const handleCategorySelect = (category: Category | '') => {

@@ -6,14 +6,12 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase-client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChatInterface } from '@/components/chat-interface';
 import { cn } from '@/lib/utils';
-import { MessageSquare, ArrowLeft } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { Button } from '@/components/ui/button';
 
 type Conversation = {
     id: string;
@@ -28,7 +26,7 @@ type Conversation = {
 }
 
 function MessagingPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, supabase } = useAuth();
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
@@ -72,7 +70,7 @@ function MessagingPage() {
         if (!authLoading && user) {
             fetchConversations();
         }
-    }, [user, authLoading]);
+    }, [user, authLoading, searchParams, supabase]);
 
     const handleSelectConversation = (conversationId: string) => {
         const newParams = new URLSearchParams(searchParams.toString());

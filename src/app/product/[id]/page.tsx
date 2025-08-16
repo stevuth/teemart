@@ -1,5 +1,8 @@
 
-import { supabase } from '@/lib/supabase-client';
+"use server"
+
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { ProductWithSeller } from '@/lib/types';
 import type { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -10,6 +13,19 @@ type Props = {
 }
 
 async function getProduct(id: string): Promise<ProductWithSeller | null> {
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return cookieStore.get(name)?.value
+                },
+            },
+        }
+    );
+
     const { data, error } = await supabase
         .from('products')
         .select(`*, seller:profiles(id, full_name, avatar_url, is_verified)`)

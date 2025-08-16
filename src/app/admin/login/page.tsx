@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { supabase } = useAuth();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -25,7 +27,7 @@ export default function LoginPage() {
       }
     };
     checkUser();
-  }, [router]);
+  }, [router, supabase]);
 
 
   const handleLogin = async (e: React.FormEvent) => {

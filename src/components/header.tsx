@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, User, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase-client';
 import { LoginModal } from './auth/login-modal';
 import { SignupModal } from './auth/signup-modal';
 import {
@@ -27,7 +26,7 @@ import Image from 'next/image';
 
 
 export function Header() {
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   const { toast } = useToast();
   const { cartCount } = useCart();
   const { notificationCount } = useNotifications();

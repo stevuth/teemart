@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -10,7 +11,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/hooks/use-auth";
 import type { Product } from "@/lib/types";
 import { StarRatingInput } from "./star-rating-input";
@@ -31,7 +31,7 @@ type ReviewFormProps = {
 
 export function ReviewForm({ listings, sellerId, onReviewSubmitted }: ReviewFormProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
 
   const form = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewFormSchema),

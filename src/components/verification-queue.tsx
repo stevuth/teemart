@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +22,7 @@ export function VerificationQueue() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { supabase } = useAuth();
 
   const fetchVerificationRequests = async () => {
     setLoading(true);

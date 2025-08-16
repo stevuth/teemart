@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase-client";
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -23,6 +23,7 @@ type ContactFormValues = z.infer<typeof formSchema>;
 
 export function ContactForm() {
   const { toast } = useToast();
+  const { supabase } = useAuth();
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {

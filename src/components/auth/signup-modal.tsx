@@ -4,13 +4,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { supabase } from "@/lib/supabase-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -29,6 +29,7 @@ type SignupModalProps = {
 
 export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalProps) {
   const { toast } = useToast();
+  const { supabase } = useAuth();
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {

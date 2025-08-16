@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Mail, ChevronsUpDown, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -70,6 +70,7 @@ export function ContactMessagesTable() {
     const [messages, setMessages] = useState<ContactMessage[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const { supabase } = useAuth();
 
     const fetchMessages = useCallback(async () => {
         setLoading(true);
@@ -85,7 +86,7 @@ export function ContactMessagesTable() {
             setMessages(data as ContactMessage[]);
         }
         setLoading(false);
-    }, [toast]);
+    }, [toast, supabase]);
 
     useEffect(() => {
         fetchMessages();

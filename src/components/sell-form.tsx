@@ -13,7 +13,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X } from "lucide-react";
 import { categories, conditions, Product } from "@/lib/types";
-import { supabase } from "@/lib/supabase-client";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -73,7 +72,7 @@ type SellFormProps = {
 
 export function SellForm({ existingProduct }: SellFormProps) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   const router = useRouter();
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);

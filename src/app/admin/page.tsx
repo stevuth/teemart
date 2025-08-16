@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
 import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, Mail } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
@@ -12,12 +11,11 @@ import { UserTable } from '@/components/user-table';
 import { SellerTable } from '@/components/seller-table';
 import { HeroSectionManager } from '@/components/hero-section-manager';
 import { ContactMessagesTable } from '@/components/contact-messages-table';
-import { cn } from '@/lib/utils';
 
 type AdminView = 'verification' | 'sellers' | 'users' | 'hero' | 'messages';
 
 export default function AdminDashboardPage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, supabase } = useAuth();
   const router = useRouter();
   const [activeView, setActiveView] = useState<AdminView>('verification');
 

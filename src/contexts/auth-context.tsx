@@ -2,8 +2,8 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase-client';
+import { User, Session, createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Profile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +16,11 @@ interface AuthContextType {
   loading: boolean;
   profile: Profile | null;
   setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  supabase: SupabaseClient;
 }
+
+// A dummy client to satisfy the initial context type. It won't be used.
+const dummySupabase = createClient('http://localhost', 'dummykey');
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -24,13 +28,11 @@ export const AuthContext = createContext<AuthContextType>({
   loading: true,
   profile: null,
   setProfile: () => {},
+  supabase: dummySupabase,
 });
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [supabase, setSupabase] = useState<SupabaseClient>(dummySupabase);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -39,29 +41,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      console.error("Supabase credentials missing. Check your .env file.");
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Supabase credentials missing. Check your environment variables.");
       setConfigError("Supabase URL or Anon Key is not configured. Please check your environment variables.");
       setLoading(false);
       return;
     }
 
+    const client = createClient(supabaseUrl, supabaseAnonKey);
+    setSupabase(client);
+
     const getSessionAndProfile = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await client.auth.getSession();
         setSession(session);
         const currentUser = session?.user;
         setUser(currentUser ?? null);
 
         if (currentUser) {
-            // Check if user is banned before setting profile
             if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
-                await supabase.auth.signOut();
+                await client.auth.signOut();
                 toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
                 setUser(null);
                 setSession(null);
                 setProfile(null);
             } else {
-                const { data: profileData, error } = await supabase
+                const { data: profileData, error } = await client
                     .from('profiles')
                     .select('*')
                     .eq('id', currentUser.id)
@@ -76,20 +83,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     getSessionAndProfile();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = client.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         const currentUser = session?.user;
         setUser(currentUser ?? null);
         
         if (currentUser) {
-            // Re-check for ban on auth state change
              if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
-                await supabase.auth.signOut();
+                await client.auth.signOut();
                 toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
                 setProfile(null);
              } else {
-                const { data: profileData, error } = await supabase
+                const { data: profileData, error } = await client
                     .from('profiles')
                     .select('*')
                     .eq('id', currentUser.id)
@@ -111,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [toast]);
   
-  const value = { user, session, loading, profile, setProfile };
+  const value = { user, session, loading, profile, setProfile, supabase };
 
   if (configError) {
     return (

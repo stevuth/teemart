@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/lib/supabase-client';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,7 @@ export function HeroSectionManager() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { supabase } = useAuth();
 
   const fetchImages = useCallback(async () => {
     setLoading(true);
@@ -40,7 +41,7 @@ export function HeroSectionManager() {
       setImages(data);
     }
     setLoading(false);
-  }, [toast]);
+  }, [toast, supabase]);
 
   useEffect(() => {
     fetchImages();

@@ -12,9 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase-client";
+import { useAuth } from '@/hooks/use-auth';
 import type { Product } from "@/lib/types";
 import { Loader2 } from 'lucide-react';
 
@@ -28,6 +27,7 @@ type DeleteProductDialogProps = {
 export function DeleteProductDialog({ product, isOpen, onClose, onDeleted }: DeleteProductDialogProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { supabase } = useAuth();
 
   const handleDelete = async () => {
     if (!product) return;

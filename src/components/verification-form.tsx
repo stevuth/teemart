@@ -11,14 +11,13 @@ import { Loader2, CheckCircle, Upload, CreditCard, UserCheck, PartyPopper, Camer
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
 import { SelfieCapture } from './selfie-capture';
 
 type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
 export function VerificationForm() {
-    const { user, profile, setProfile } = useAuth();
+    const { user, profile, setProfile, supabase } = useAuth();
     const { toast } = useToast();
     
     const [status, setStatus] = useState<VerificationStatus>(() => {

@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -34,7 +33,7 @@ export default function SellerProfilePage() {
     const params = useParams();
     const router = useRouter();
     const userId = params.userId as string;
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, supabase } = useAuth();
     const { addToCart } = useCart();
     const { toast } = useToast();
 
@@ -111,7 +110,7 @@ export default function SellerProfilePage() {
         } finally {
             setLoading(false);
         }
-    }, [userId, reviewSubmittedToggle]);
+    }, [userId, reviewSubmittedToggle, supabase]);
     
     useEffect(() => {
         fetchAllData();
@@ -309,7 +308,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    
-
-    

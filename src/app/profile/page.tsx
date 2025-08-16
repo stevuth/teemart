@@ -9,7 +9,6 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/lib/supabase-client';
 import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -29,7 +28,7 @@ import { ReviewList } from '@/components/review-list';
 import { VerificationForm } from '@/components/verification-form';
 
 export default function ProfilePage() {
-  const { user, loading: authLoading, profile } = useAuth();
+  const { user, loading: authLoading, profile, supabase } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState<Product[]>([]);
@@ -97,7 +96,7 @@ export default function ProfilePage() {
     } finally {
         setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, supabase]);
 
   useEffect(() => {
     if (!authLoading && !user) {

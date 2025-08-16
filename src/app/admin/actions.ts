@@ -5,30 +5,35 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 
-// This is a server-side only file. The environment variables are safe here.
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getSupabaseAdmin = () => {
+  // This is a server-side only file. The environment variables are safe here.
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+const getSupabaseWithUser = () => {
+  const cookieStore = cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+        cookies: {
+            get(name: string) {
+                return cookieStore.get(name)?.value
+            },
+        },
+    }
+  );
+}
 
 /**
  * Verifies if the current user is an admin.
  * Throws an error if not an admin.
  */
 async function verifyAdmin() {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
-                },
-            },
-        }
-    )
-
+    const supabase = getSupabaseWithUser();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -54,6 +59,7 @@ async function verifyAdmin() {
 export async function banUser(targetUserId: string) {
     try {
         await verifyAdmin();
+        const supabaseAdmin = getSupabaseAdmin();
 
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
             targetUserId,
@@ -77,6 +83,7 @@ export async function banUser(targetUserId: string) {
 export async function unbanUser(targetUserId: string) {
     try {
         await verifyAdmin();
+        const supabaseAdmin = getSupabaseAdmin();
         
         const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
             targetUserId,
