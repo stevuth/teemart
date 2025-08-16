@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, Store, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase-client';
 import { LoginModal } from './auth/login-modal';
@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
 import { Badge } from './ui/badge';
 import { useNotifications } from '@/hooks/use-notifications';
+import Image from 'next/image';
 
 
 export function Header() {
@@ -74,7 +75,7 @@ export function Header() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
-                <Store className="h-7 w-7" />
+                <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={32} height={32} className="h-8 w-8" />
                 <span className="text-xl font-bold tracking-tight">TeeMart</span>
               </Link>
             </div>
