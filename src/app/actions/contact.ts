@@ -1,21 +1,7 @@
 
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
-
-// Re-create a temporary admin client for this server action
-// This is safe because this file is marked 'use server' and will only run on the server
-const getSupabaseAdmin = () => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Supabase credentials are not set for server action.');
-    }
-    
-    return createClient(supabaseUrl, supabaseServiceKey);
-}
-
+import { createAdminClient } from '@/lib/supabase/server';
 
 /**
  * Sends a reply to a contact message and updates its status in the database.
@@ -25,7 +11,7 @@ const getSupabaseAdmin = () => {
  * @returns An object with either a success flag or an error message.
  */
 export async function sendReplyAction(messageId: string, replyContent: string) {
-    const supabase = getSupabaseAdmin();
+    const supabase = createAdminClient();
     
     // In a real app, you'd use a service like Resend or Nodemailer to send an email.
     // For this prototype, we will just update the database and log to console.

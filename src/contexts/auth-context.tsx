@@ -2,14 +2,13 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { User, Session, createClient } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase-client'; // Import the pre-configured client
+import { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Profile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { createBrowserClient } from '@/lib/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -20,16 +19,10 @@ interface AuthContextType {
   supabase: SupabaseClient;
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  session: null,
-  loading: true,
-  profile: null,
-  setProfile: () => {},
-  supabase: supabase, // Use the imported client
-});
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [supabase] = useState(() => createBrowserClient());
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -103,17 +96,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast, supabase]);
   
   const value = { user, session, loading, profile, setProfile, supabase };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {loading ? (
-         <div className="w-full h-screen flex items-center justify-center">
+  if (loading) {
+    return (
+        <div className="w-full h-screen flex items-center justify-center">
             <Skeleton className="w-full h-full" />
         </div>
-      ) : children }
+    );
+  }
+  
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
     </AuthContext.Provider>
   );
 };
