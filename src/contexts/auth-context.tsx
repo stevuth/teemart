@@ -53,22 +53,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser ?? null);
 
         if (currentUser) {
+            // Check if user is banned before setting profile
             if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
                 await supabase.auth.signOut();
                 toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
-                return;
+                setUser(null);
+                setSession(null);
+                setProfile(null);
+            } else {
+                const { data: profileData, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (error) console.error("Error fetching profile:", error);
+                else setProfile(profileData);
             }
-            
-            const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
-            
-            if (error) console.error("Error fetching profile:", error);
-            else setProfile(profileData);
         }
-
         setLoading(false);
     }
     
@@ -81,21 +83,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser ?? null);
         
         if (currentUser) {
+            // Re-check for ban on auth state change
              if (currentUser.banned_until && new Date(currentUser.banned_until) > new Date()) {
                 await supabase.auth.signOut();
                 toast({ title: "Access Denied", description: "This account has been banned.", variant: "destructive" });
                 setProfile(null);
-                setLoading(false);
-                return;
-            }
-            const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
-            
-            if (error) console.error("Error refetching profile:", error);
-            else setProfile(profileData);
+             } else {
+                const { data: profileData, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (error) console.error("Error refetching profile:", error);
+                else setProfile(profileData);
+             }
         } else {
             setProfile(null);
         }
