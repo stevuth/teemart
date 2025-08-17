@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from '@/utils/supabase/client';
 import type { Profile } from '@/lib/types';
@@ -31,70 +31,71 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchProfile = useCallback(async (user: User | null) => {
+    if (user) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setProfile(null);
+      } else {
+        setProfile(data);
+      }
+    } else {
+      setProfile(null);
+    }
+  }, [supabase]);
+
   useEffect(() => {
-    const getSessionAndProfile = async () => {
+    const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        setProfile(profileData);
-      } else {
-        setProfile(null);
-      }
+      setUser(session?.user ?? null);
+      await fetchProfile(session?.user ?? null);
       setLoading(false);
     };
 
-    getSessionAndProfile();
+    getInitialSession();
 
-    const {
-      data: { subscription: authListener },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        setProfile(profileData);
-      } else {
-        setProfile(null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        await fetchProfile(currentUser);
+        // Ensure loading is false after auth state changes as well
+        if (loading) {
+          setLoading(false);
+        }
       }
-      // No need to set loading here, as initial load is handled
-    });
+    );
 
     return () => {
-      authListener.unsubscribe();
+      subscription.unsubscribe();
     };
-  }, [supabase]);
-  
+  }, [supabase, fetchProfile, loading]);
+
   const value = { user, session, loading, profile, setProfile, supabase };
-  
+
   return (
     <AuthContext.Provider value={value}>
       {loading ? (
         <div className="w-full h-screen flex items-center justify-center bg-secondary">
-            <img 
-                src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" 
-                alt="TeeMart Logo"
-                width={80}
-                height={80}
-                className="animate-pulse"
-            />
+          <img
+            src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png"
+            alt="TeeMart Logo"
+            width={80}
+            height={80}
+            className="animate-pulse"
+          />
         </div>
       ) : (
         children
       )}
     </AuthContext.Provider>
   );
-}
+};
