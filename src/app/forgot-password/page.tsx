@@ -97,10 +97,8 @@ export default function ForgotPasswordPage() {
                 </Form>
             )}
             <div className="mt-4 text-center text-sm">
-                <Link href="/" passHref legacyBehavior>
-                    <a className="underline">
-                        Back to Home
-                    </a>
+                <Link href="/" className="underline">
+                    Back to Home
                 </Link>
             </div>
         </CardContent>

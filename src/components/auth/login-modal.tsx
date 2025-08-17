@@ -99,10 +99,8 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                 <FormItem>
                     <div className="flex items-center">
                         <FormLabel>Password</FormLabel>
-                         <Link href="/forgot-password" passHref legacyBehavior>
-                            <a onClick={handleForgotPasswordClick} className="ml-auto inline-block text-sm underline">
-                                Forgot password?
-                            </a>
+                         <Link href="/forgot-password" onClick={handleForgotPasswordClick} className="ml-auto inline-block text-sm underline">
+                             Forgot password?
                         </Link>
                     </div>
                   <FormControl>
