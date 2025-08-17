@@ -16,20 +16,16 @@ interface AuthContextType {
   supabase: SupabaseClient;
 }
 
-// Create a placeholder client to avoid errors on the server
-const placeholderClient = {} as SupabaseClient;
-
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
   profile: null,
   setProfile: () => {},
-  supabase: placeholderClient,
+  supabase: {} as SupabaseClient,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Initialize the Supabase client in useState to ensure it only runs on the client-side
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -38,27 +34,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const getSessionAndProfile = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        const currentUser = session?.user;
-        setUser(currentUser ?? null);
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      const currentUser = session?.user;
+      setUser(currentUser ?? null);
 
-        if (currentUser) {
-            const { data: profileData, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
-            
-            if (error) console.error("Error fetching profile:", error);
-            else setProfile(profileData);
-        }
-      } catch (error: any) {
-        console.error("Error in initial session/profile fetch:", error.message)
-      } finally {
-        setLoading(false);
+      if (currentUser) {
+          const { data: profileData, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', currentUser.id)
+              .single();
+          
+          if (error) console.error("Error fetching profile:", error);
+          else setProfile(profileData);
       }
+      setLoading(false);
     }
     
     getSessionAndProfile();
@@ -76,8 +67,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .eq('id', currentUser.id)
                 .single();
             
-            if (error) console.error("Error refetching profile on auth change:", error);
-            else setProfile(profileData);
+            if (error) {
+              console.error("Error refetching profile on auth change:", error);
+              setProfile(null);
+            } else {
+              setProfile(profileData);
+            }
         } else {
             setProfile(null);
         }
@@ -92,18 +87,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [supabase]);
   
   const value = { user, session, loading, profile, setProfile, supabase };
-
-  if (loading) {
-    return (
-        <div className="w-full h-screen flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-    );
-  }
   
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {loading ? (
+        <div className="w-full h-screen flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }
