@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setProfile(null);
         }
-        // No need to setLoading(false) here, as the initial load is handled by fetchSessionAndProfile
+        setLoading(false);
       }
     );
 
