@@ -49,7 +49,7 @@ export async function createOrderAction(orderData: OrderInput) {
     const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-            user_id: user.id,
+            buyer_id: user.id,
             customer_name,
             customer_phone,
             delivery_address,
