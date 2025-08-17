@@ -27,7 +27,7 @@ export function Footer() {
             { name: 'About Us', href: '/about' },
             { name: 'Careers', href: '#' },
             { name: 'Press', href: '#' },
-            { name: 'Contact Us', href: '/help' },
+            { name: 'Contact Us', href: '/contact' },
         ],
       },
       {
