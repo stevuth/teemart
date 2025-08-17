@@ -31,53 +31,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (user: User | null) => {
-    if (user) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile:', error);
-        setProfile(null);
-      } else {
-        setProfile(data);
-      }
-    } else {
-      setProfile(null);
-    }
-  }, [supabase]);
-
   useEffect(() => {
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      await fetchProfile(session?.user ?? null);
-      setLoading(false);
-    };
-
-    getInitialSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        await fetchProfile(currentUser);
-        // Ensure loading is false after auth state changes as well
-        if (loading) {
-          setLoading(false);
-        }
+    // This function handles the initial session load and sets up the listener.
+    const initializeSession = async () => {
+      // Get the initial session
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      
+      if (initialSession) {
+        setSession(initialSession);
+        setUser(initialSession.user);
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', initialSession.user.id)
+          .single();
+        setProfile(profileData);
       }
-    );
+      // CRITICAL: Set loading to false after the initial check is complete.
+      setLoading(false);
 
-    return () => {
-      subscription.unsubscribe();
+      // Set up the auth state change listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (_event, newSession) => {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          
+          if (newSession?.user) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', newSession.user.id)
+              .single();
+            setProfile(profileData);
+          } else {
+            setProfile(null);
+          }
+        }
+      );
+
+      return () => {
+        subscription?.unsubscribe();
+      };
     };
-  }, [supabase, fetchProfile, loading]);
+
+    initializeSession();
+  }, [supabase]);
 
   const value = { user, session, loading, profile, setProfile, supabase };
 
