@@ -40,7 +40,7 @@ export default function AboutPage() {
                 <div className="space-y-4">
                     <h2 className="text-3xl font-bold">Our Story</h2>
                     <p className="text-muted-foreground leading-relaxed">
-                        Founded in Lagos, TeeMart was born from a simple idea: what if buying and selling used goods online could be as safe and easy as shopping from a trusted friend? We saw the need for a platform where Nigerians could trade with confidence, free from the worries of scams and uncertainty.
+                        Founded in Imo State, TeeMart was born from a simple idea: what if buying and selling used goods online could be as safe and easy as shopping from a trusted friend? We saw the need for a platform where Nigerians could trade with confidence, free from the worries of scams and uncertainty.
                     </p>
                     <p className="text-muted-foreground leading-relaxed">
                         We built TeeMart from the ground up with an escrow system at its core, ensuring that every transaction is secure. Our journey is one of empowering individuals and small businesses, fostering a circular economy, and building a community based on trust.
