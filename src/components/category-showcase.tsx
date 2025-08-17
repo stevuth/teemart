@@ -13,7 +13,7 @@ type CategoryShowcaseProps = {
 };
 
 const categoryDetails: Record<Category, { icon: React.ElementType, image: string, hint: string }> = {
-  Cars: { icon: Car, image: 'https://placehold.co/400x400.png', hint: 'modern car' },
+  Cars: { icon: Car, image: 'https://i.postimg.cc/Y94XqfjW/Whisk-021a7d035d.jpg', hint: 'modern car' },
   Electronics: { icon: Laptop, image: 'https://placehold.co/400x400.png', hint: 'laptop workspace' },
   'Real Estate': { icon: HomeIcon, image: 'https://placehold.co/400x400.png', hint: 'modern house' },
   Furniture: { icon: Lamp, image: 'https://placehold.co/400x400.png', hint: 'stylish furniture' },
