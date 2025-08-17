@@ -92,13 +92,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider value={value}>
       {loading ? (
         <div className="w-full h-screen flex items-center justify-center bg-secondary">
-            <Image 
+            <img 
                 src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" 
                 alt="TeeMart Logo"
                 width={80}
                 height={80}
                 className="animate-pulse"
-                priority
             />
         </div>
       ) : (
