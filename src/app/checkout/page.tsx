@@ -8,6 +8,7 @@ import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
+import { BackButton } from '@/components/back-button';
 
 export default function CheckoutPage() {
   const { cartItems } = useCart();
@@ -38,6 +39,7 @@ export default function CheckoutPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <BackButton />
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Secure Checkout</h1>

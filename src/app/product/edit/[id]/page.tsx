@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import type { Product } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { BackButton } from '@/components/back-button';
 
 export default function EditProductPage() {
     const { user, loading: authLoading, supabase } = useAuth();
@@ -91,12 +92,15 @@ export default function EditProductPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {product ? (
-            <SellForm existingProduct={product} />
-        ) : (
-            // This should ideally not be reached if loading and error states are handled
-            <div className="flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
-        )}
+        <BackButton />
+        <div className="mt-8">
+            {product ? (
+                <SellForm existingProduct={product} />
+            ) : (
+                // This should ideally not be reached if loading and error states are handled
+                <div className="flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
+            )}
+        </div>
       </main>
       <Footer />
     </div>

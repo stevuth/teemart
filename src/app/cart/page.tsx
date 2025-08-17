@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { BackButton } from '@/components/back-button';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -31,7 +32,8 @@ export default function CartPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center gap-4 mb-8">
+        <BackButton />
+        <div className="flex items-center gap-4 my-8">
             <ShoppingCart className="h-8 w-8" />
             <h1 className="text-3xl font-bold tracking-tight">Your Shopping Cart</h1>
         </div>

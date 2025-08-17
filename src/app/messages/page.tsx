@@ -12,6 +12,7 @@ import { ChatInterface } from '@/components/chat-interface';
 import { cn } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { BackButton } from '@/components/back-button';
 
 type Conversation = {
     id: string;
@@ -94,7 +95,10 @@ function MessagingPage() {
     return (
         <div className="flex flex-col h-screen">
             <Header />
-            <main className="flex-grow flex border-t overflow-hidden relative">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+                <BackButton />
+            </div>
+            <main className="flex-grow flex border-t overflow-hidden relative container mx-auto px-4 sm:px-6 lg:px-8 pb-4">
                 {/* Conversation List */}
                 <div className={cn(
                     "flex-shrink-0 w-full md:w-80 lg:w-96 border-r flex flex-col transition-transform duration-300 ease-in-out",

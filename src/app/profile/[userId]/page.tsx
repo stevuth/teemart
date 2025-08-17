@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { BackButton } from '@/components/back-button';
 
 type Seller = {
     id: string;
@@ -214,7 +215,8 @@ export default function SellerProfilePage() {
         <div className="flex flex-col min-h-screen bg-background">
             <Header />
             <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-                <div className="flex flex-col md:flex-row items-start gap-8">
+                <BackButton />
+                <div className="flex flex-col md:flex-row items-start gap-8 mt-8">
                     <div className="flex-shrink-0 flex flex-col items-center md:items-start">
                         <Avatar className="h-32 w-32 mb-4 border-4 border-background ring-2 ring-primary">
                             <AvatarImage src={seller.avatar_url || ''} alt={seller.full_name || ''} />

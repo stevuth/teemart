@@ -2,13 +2,15 @@
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BackButton } from '@/components/back-button';
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Card className="max-w-4xl mx-auto">
+        <BackButton />
+        <Card className="max-w-4xl mx-auto mt-8">
           <CardHeader>
             <CardTitle className="text-3xl">Privacy Policy</CardTitle>
           </CardHeader>

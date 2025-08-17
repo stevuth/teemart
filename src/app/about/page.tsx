@@ -4,6 +4,7 @@ import { Footer } from '@/components/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { Users, Target, Eye, ShieldCheck } from 'lucide-react';
+import { BackButton } from '@/components/back-button';
 
 export default function AboutPage() {
   const teamMembers = [
@@ -35,6 +36,7 @@ export default function AboutPage() {
         </section>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 space-y-20">
+            <BackButton />
             {/* Our Story */}
             <section className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="space-y-4">
