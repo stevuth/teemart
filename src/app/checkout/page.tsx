@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { BackButton } from '@/components/back-button';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function CheckoutPage() {
   const { cartItems } = useCart();
+  const { profile } = useAuth();
   
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shippingFee = cartItems.reduce((acc, item) => acc + (item.deliveryFee || 0) * item.quantity, 0);
@@ -41,12 +43,20 @@ export default function CheckoutPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <BackButton className="-ml-4" />
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center my-8">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Secure Checkout</h1>
-            <p className="mt-2 text-lg text-muted-foreground">Complete your purchase with TeeMart Escrow Protection.</p>
+        <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 mt-8">
+          <div>
+            <div className="text-left mb-8">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Secure Checkout</h1>
+              <p className="mt-2 text-lg text-muted-foreground">Complete your purchase with TeeMart Escrow Protection.</p>
+            </div>
+            <CheckoutForm 
+              subtotal={subtotal} 
+              shippingFee={shippingFee}
+              cartItems={cartItems}
+              userProfile={profile}
+            />
           </div>
-          <CheckoutForm subtotal={subtotal} shippingFee={shippingFee} />
+          {/* You can add an order summary display here if you want */}
         </div>
       </main>
       <Footer />

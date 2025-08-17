@@ -65,8 +65,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     if (itemAlreadyInCart) {
         toast({
-            title: "Item already in cart",
-            description: "You can update the quantity in your cart.",
+            title: "Quantity Updated",
+            description: "Item was already in your cart. We've increased the quantity.",
         });
     } else if (itemAdded) {
         toast({
@@ -104,6 +104,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   
   const clearCart = () => {
     setCartItems([]);
+    try {
+        localStorage.removeItem('cart');
+    } catch(error) {
+        console.error("Failed to clear cart from localStorage", error);
+    }
   }
   
   const cartCount = useMemo(() => {

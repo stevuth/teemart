@@ -57,15 +57,29 @@ export type Condition = (typeof conditions)[number];
 export const datePostedOptions = ['any', 'today', 'last7days', 'last30days'] as const;
 export type DatePostedOption = typeof datePostedOptions[number];
 
-export const orderStatuses = ['Processing', 'Completed', 'Canceled'] as const;
+export const orderStatuses = ['Processing', 'Shipped', 'Completed', 'Canceled', 'Disputed'] as const;
 export type OrderStatus = (typeof orderStatuses)[number];
 
 export type Order = {
   id: string;
-  productId: string;
-  buyerName: string;
-  orderDate: string; // ISO 8601 date string
+  created_at: string;
+  user_id: string;
+  customer_name: string;
+  customer_phone: string;
+  delivery_address: string;
+  subtotal: number;
+  shipping_fee: number;
+  escrow_fee: number;
+  total_amount: number;
   status: OrderStatus;
+};
+
+export type OrderItem = {
+    id: string;
+    order_id: string;
+    product_id: string;
+    quantity: number;
+    price: number; // Price at the time of purchase
 };
 
 export type Review = {
