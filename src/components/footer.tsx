@@ -32,7 +32,7 @@ export function Footer() {
         title: 'Support',
         links: [
             { name: 'Help/FAQ', href: '/help' },
-            { name: 'Safety Tips', href: '#' },
+            { name: 'Safety Tips', href: '/safety-tips' },
             { name: 'Terms of Service', href: '/terms' },
             { name: 'Privacy Policy', href: '/privacy' },
         ],
