@@ -15,7 +15,7 @@ const safetyTips = {
     {
       icon: MapPin,
       title: "Meet in Safe, Public Places",
-      description: "If you need to meet a seller in person to inspect or pick up an item, always choose a well-lit, public location like a coffee shop, shopping mall, or police station lobby. Avoid secluded areas."
+      description: "If you need to meet a seller in person to inspect or pick up an item, always choose a well-lit, public location. Avoid secluded areas."
     },
     {
       icon: Users,
