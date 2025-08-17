@@ -1,6 +1,7 @@
 
 import Link from 'next/link';
-import { Store, Twitter, Facebook, Instagram } from 'lucide-react';
+import Image from 'next/image';
+import { Twitter, Facebook, Instagram } from 'lucide-react';
 
 export function Footer() {
   const socialLinks = [
@@ -47,7 +48,7 @@ export function Footer() {
             
             <div className="lg:col-span-4">
                 <Link href="/" className="flex items-center gap-2 mb-4">
-                <Store className="h-8 w-8 text-primary" />
+                <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={32} height={32} className="h-8 w-8" />
                 <span className="text-2xl font-bold">TeeMart</span>
                 </Link>
                 <p className="text-muted-foreground text-base max-w-sm">
