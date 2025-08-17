@@ -30,6 +30,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clientSide, setClientSide] = useState(false);
+
+   useEffect(() => {
+    setClientSide(true);
+  }, []);
 
   const fetchSessionAndProfile = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -85,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? (
+      {loading || !clientSide ? (
         <div className="w-full h-screen flex items-center justify-center bg-secondary">
           <img 
             src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" 
