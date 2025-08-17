@@ -31,47 +31,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchSessionAndProfile = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    setUser(session?.user ?? null);
+    
+    if (session?.user) {
+        const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+        if (profileError) {
+          console.error("Error fetching profile on auth change: ", profileError);
+        }
+        setProfile(profileData);
+    } else {
+        setProfile(null);
+    }
+    setLoading(false);
+  }, [supabase]);
+
   useEffect(() => {
+    fetchSessionAndProfile();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
+          if (profileError) {
+            console.error("Error fetching profile on auth change: ", profileError);
+          }
           setProfile(profileData);
         } else {
           setProfile(null);
         }
-        setLoading(false);
+        // No need to setLoading(false) here, as the initial load is handled by fetchSessionAndProfile
       }
     );
-
-    // Also check initial session
-    const getInitialSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-            setProfile(profileData);
-        }
-        setLoading(false);
-    }
-    getInitialSession();
-
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, fetchSessionAndProfile]);
 
   const value = { user, session, loading, profile, setProfile, supabase };
 
@@ -79,8 +87,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider value={value}>
       {loading ? (
         <div className="w-full h-screen flex items-center justify-center bg-secondary">
-          {/* Reverted to a simple div or spinner to avoid potential issues */}
-          <div className="animate-pulse text-lg">Loading...</div>
+          <img 
+            src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" 
+            alt="TeeMart Logo" 
+            className="h-20 w-20 animate-pulse" 
+          />
         </div>
       ) : (
         children
