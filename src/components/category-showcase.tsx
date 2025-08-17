@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from 'next/image';
@@ -16,7 +17,7 @@ const categoryDetails: Record<Category, { icon: React.ElementType, image: string
   Electronics: { icon: Laptop, image: 'https://i.postimg.cc/tJ44xJQW/Whisk-ab1ae9d2c9.jpg', hint: 'laptop workspace' },
   'Real Estate': { icon: HomeIcon, image: 'https://i.postimg.cc/Bbtzrff2/Whisk-de675f5563.jpg', hint: 'modern house' },
   Furniture: { icon: Lamp, image: 'https://i.postimg.cc/Gt5LpYGk/Gemini-Generated-Image-oenrlfoenrlfoenr.png', hint: 'stylish furniture' },
-  Phones: { icon: Phone, image: 'https://placehold.co/400x400.png', hint: 'smartphone screen' },
+  Phones: { icon: Phone, image: 'https://i.postimg.cc/T39RyZVd/Whisk-f500c680e1.jpg', hint: 'smartphone screen' },
 };
 
 export function CategoryShowcase({ selectedCategory, onCategorySelect }: CategoryShowcaseProps) {
