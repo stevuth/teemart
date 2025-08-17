@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from "@/hooks/use-auth";
 import Image from "next/image";
+import Link from 'next/link';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -58,6 +59,11 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
       onClose();
     }
   };
+  
+  const handleForgotPasswordClick = () => {
+    onClose(); // Close the login modal
+    // The link will then navigate to the page
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -91,7 +97,14 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                    <div className="flex items-center">
+                        <FormLabel>Password</FormLabel>
+                         <Link href="/forgot-password" passHref legacyBehavior>
+                            <a onClick={handleForgotPasswordClick} className="ml-auto inline-block text-sm underline">
+                                Forgot password?
+                            </a>
+                        </Link>
+                    </div>
                   <FormControl>
                     <div className="relative">
                       <Input type={showPassword ? "text" : "password"} placeholder="••••••••" {...field} className="pr-10" />
