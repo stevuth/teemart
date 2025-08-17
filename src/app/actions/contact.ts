@@ -12,8 +12,6 @@ import { createSupabaseServerClient } from '@/utils/supabase/server';
  */
 export async function sendReplyAction(messageId: string, replyContent: string) {
     const supabase = createSupabaseServerClient();
-    // In a real app, you'd use a service like Resend or Nodemailer to send an email.
-    // For this prototype, we will just update the database and log to console.
     
     const { data: message, error: fetchError } = await supabase
         .from('contact_messages')
@@ -26,11 +24,36 @@ export async function sendReplyAction(messageId: string, replyContent: string) {
         return { error: 'Failed to fetch original message.' };
     }
 
-    console.log("--- SIMULATING EMAIL ---");
-    console.log(`To: ${message.email}`);
-    console.log(`Subject: Re: Your inquiry to TeeMart`);
-    console.log(`Hi ${message.name},\n\nThank you for contacting us. Here is our response to your message:\n\n---\n\n${replyContent}\n\n---\n\nOriginal message:\n"${message.message}"\n\nRegards,\nThe TeeMart Team`);
-    console.log("--- END SIMULATION ---");
+    // In a real app, you'd use a service like Resend or Nodemailer to send an email.
+    // The following is a placeholder for that functionality.
+    try {
+        // Example with a hypothetical email service:
+        // await emailService.send({
+        //   from: 'support@teemart.com',
+        //   to: message.email,
+        //   subject: `Re: Your inquiry to TeeMart`,
+        //   html: `<p>Hi ${message.name},</p>
+        //          <p>Thank you for contacting us. Here is our response to your message:</p>
+        //          <br/>
+        //          <p>${replyContent}</p>
+        //          <br/>
+        //          <p>--- Original message ---</p>
+        //          <p><i>"${message.message}"</i></p>
+        //          <br/>
+        //          <p>Regards,</p>
+        //          <p>The TeeMart Team</p>`
+        // });
+        console.log("--- SIMULATING EMAIL ---");
+        console.log(`To: ${message.email}`);
+        console.log(`Subject: Re: Your inquiry to TeeMart`);
+        console.log(`Hi ${message.name},\n\nThank you for contacting us. Here is our response to your message:\n\n---\n\n${replyContent}\n\n---\n\nOriginal message:\n"${message.message}"\n\nRegards,\nThe TeeMart Team`);
+        console.log("--- END SIMULATION ---");
+
+    } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+        return { error: 'The reply was saved, but failed to send the email.' };
+    }
+
 
     const { error: updateError } = await supabase
         .from('contact_messages')
