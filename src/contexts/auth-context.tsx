@@ -32,49 +32,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // This function handles the initial session load and sets up the listener.
-    const initializeSession = async () => {
-      // Get the initial session
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      
-      if (initialSession) {
-        setSession(initialSession);
-        setUser(initialSession.user);
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', initialSession.user.id)
-          .single();
-        setProfile(profileData);
-      }
-      // CRITICAL: Set loading to false after the initial check is complete.
-      setLoading(false);
-
-      // Set up the auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (_event, newSession) => {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          
-          if (newSession?.user) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', newSession.user.id)
-              .single();
-            setProfile(profileData);
-          } else {
-            setProfile(null);
-          }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          setProfile(profileData);
+        } else {
+          setProfile(null);
         }
-      );
+        setLoading(false);
+      }
+    );
 
-      return () => {
-        subscription?.unsubscribe();
-      };
+    // Also check initial session
+    const getInitialSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+            setProfile(profileData);
+        }
+        setLoading(false);
+    }
+    getInitialSession();
+
+
+    return () => {
+      subscription.unsubscribe();
     };
-
-    initializeSession();
   }, [supabase]);
 
   const value = { user, session, loading, profile, setProfile, supabase };
@@ -83,13 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider value={value}>
       {loading ? (
         <div className="w-full h-screen flex items-center justify-center bg-secondary">
-          <img
-            src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png"
-            alt="TeeMart Logo"
-            width={80}
-            height={80}
-            className="animate-pulse"
-          />
+          {/* Reverted to a simple div or spinner to avoid potential issues */}
+          <div className="animate-pulse text-lg">Loading...</div>
         </div>
       ) : (
         children
