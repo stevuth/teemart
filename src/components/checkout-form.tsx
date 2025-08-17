@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 
 const formSchema = z.object({
@@ -104,6 +105,14 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <Alert className="bg-primary/5 border-primary/20">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    <AlertTitle className="text-primary font-bold">Your Payment is Protected</AlertTitle>
+                    <AlertDescription className="text-foreground/80">
+                        Your payment is held securely by TeeMart until you confirm you have received your order. You can request a full refund if the product isn't delivered.
+                    </AlertDescription>
+                </Alert>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Delivery Information</CardTitle>
