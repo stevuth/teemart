@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -236,6 +236,9 @@ export default function ProfilePage() {
                       </div>
                   </div>
                   <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                      <Button asChild variant="outline" className="w-full sm:w-auto">
+                          <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help & Support</Link>
+                      </Button>
                       <Button variant="destructive" onClick={() => supabase?.auth.signOut()} className="w-full sm:w-auto">
                         Sign Out
                       </Button>
