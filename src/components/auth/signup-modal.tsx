@@ -88,7 +88,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Adewunmi James" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -80,7 +80,7 @@ export function ContactForm() {
                     <FormItem>
                     <FormLabel>Your Name</FormLabel>
                     <FormControl>
-                        <Input placeholder="John Doe" {...field} />
+                        <Input placeholder="Adewunmi James" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
