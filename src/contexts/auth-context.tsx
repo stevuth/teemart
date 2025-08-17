@@ -5,7 +5,6 @@ import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from '@/utils/supabase/client';
 import type { Profile } from '@/lib/types';
-import Image from 'next/image';
 
 interface AuthContextType {
   user: User | null;
@@ -33,26 +32,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSessionAndProfile = async () => {
+    // This function runs once to get the initial session.
+    const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-      const currentUser = session?.user;
-      setUser(currentUser ?? null);
+      setUser(session?.user ?? null);
 
-      if (currentUser) {
-          const { data: profileData, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', currentUser.id)
-              .single();
-          
-          if (error) console.error("Error fetching profile:", error);
-          else setProfile(profileData);
+      if (session?.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        setProfile(profileData);
       }
       setLoading(false);
-    }
-    
-    getSessionAndProfile();
+    };
+
+    getInitialSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -61,22 +58,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(currentUser ?? null);
         
         if (currentUser) {
-             const { data: profileData, error } = await supabase
+             const { data: profileData } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', currentUser.id)
                 .single();
-            
-            if (error) {
-              console.error("Error refetching profile on auth change:", error);
-              setProfile(null);
-            } else {
-              setProfile(profileData);
-            }
+            setProfile(profileData);
         } else {
             setProfile(null);
         }
 
+        // When auth state changes, loading is effectively done.
         setLoading(false);
       }
     );
