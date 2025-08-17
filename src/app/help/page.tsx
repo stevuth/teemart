@@ -40,8 +40,8 @@ export default function HelpPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <BackButton />
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BackButton className="-ml-4" />
         <Card className="max-w-4xl mx-auto mt-8">
           <CardHeader>
             <CardTitle className="text-3xl">Help & Frequently Asked Questions</CardTitle>

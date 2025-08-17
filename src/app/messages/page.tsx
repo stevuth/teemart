@@ -95,10 +95,8 @@ function MessagingPage() {
     return (
         <div className="flex flex-col h-screen">
             <Header />
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-                <BackButton />
-            </div>
-            <main className="flex-grow flex border-t overflow-hidden relative container mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+            <main className="flex-grow flex border-t overflow-hidden relative container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                 <BackButton className="-ml-4 mt-2" />
                 {/* Conversation List */}
                 <div className={cn(
                     "flex-shrink-0 w-full md:w-80 lg:w-96 border-r flex flex-col transition-transform duration-300 ease-in-out",

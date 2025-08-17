@@ -31,8 +31,8 @@ export default function CartPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <BackButton />
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BackButton className="-ml-4" />
         <div className="flex items-center gap-4 my-8">
             <ShoppingCart className="h-8 w-8" />
             <h1 className="text-3xl font-bold tracking-tight">Your Shopping Cart</h1>

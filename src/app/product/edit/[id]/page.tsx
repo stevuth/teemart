@@ -62,8 +62,9 @@ export default function EditProductPage() {
         return (
             <div className="flex flex-col min-h-screen">
               <Header />
-              <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                  <div className="max-w-3xl mx-auto space-y-6">
+              <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  <BackButton className="-ml-4" />
+                  <div className="max-w-3xl mx-auto space-y-6 mt-8">
                       <Skeleton className="h-10 w-1/3" />
                       <Skeleton className="h-20 w-full" />
                       <Skeleton className="h-10 w-full" />
@@ -80,8 +81,9 @@ export default function EditProductPage() {
          return (
              <div className="flex flex-col min-h-screen">
                 <Header />
-                <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-                    <h1 className="text-2xl font-bold text-destructive">{error}</h1>
+                <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
+                    <BackButton className="-ml-4" />
+                    <h1 className="text-2xl font-bold text-destructive mt-8">{error}</h1>
                 </main>
                 <Footer />
             </div>
@@ -91,8 +93,8 @@ export default function EditProductPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <BackButton />
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BackButton className="-ml-4" />
         <div className="mt-8">
             {product ? (
                 <SellForm existingProduct={product} />

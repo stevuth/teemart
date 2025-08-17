@@ -10,8 +10,8 @@ export default function ContactPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <BackButton />
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BackButton className="-ml-4" />
         <div className="max-w-4xl mx-auto mt-8">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold tracking-tight">Contact Us</h1>

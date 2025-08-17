@@ -162,8 +162,9 @@ export default function SellerProfilePage() {
         return (
             <div className="flex flex-col min-h-screen">
                 <Header />
-                <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-                    <div className="flex flex-col md:flex-row items-start gap-8">
+                <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                     <BackButton className="-ml-4" />
+                    <div className="flex flex-col md:flex-row items-start gap-8 mt-8">
                         <div className="flex-shrink-0 flex flex-col items-center md:items-start">
                             <Skeleton className="h-32 w-32 rounded-full mb-4" />
                             <Skeleton className="h-8 w-48" />
@@ -214,8 +215,8 @@ export default function SellerProfilePage() {
     return (
         <div className="flex flex-col min-h-screen bg-background">
             <Header />
-            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-                <BackButton />
+            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <BackButton className="-ml-4" />
                 <div className="flex flex-col md:flex-row items-start gap-8 mt-8">
                     <div className="flex-shrink-0 flex flex-col items-center md:items-start">
                         <Avatar className="h-32 w-32 mb-4 border-4 border-background ring-2 ring-primary">
