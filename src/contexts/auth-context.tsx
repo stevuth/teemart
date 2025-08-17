@@ -16,9 +16,20 @@ interface AuthContextType {
   supabase: SupabaseClient;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create a placeholder client to avoid errors on the server
+const placeholderClient = {} as SupabaseClient;
+
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  loading: true,
+  profile: null,
+  setProfile: () => {},
+  supabase: placeholderClient,
+});
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // Initialize the Supabase client in useState to ensure it only runs on the client-side
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
