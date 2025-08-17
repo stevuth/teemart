@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from "@/hooks/use-auth";
+import Image from "next/image";
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -74,6 +75,9 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
+          <div className="flex justify-center mb-4">
+             <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={40} height={40} />
+          </div>
           <DialogTitle>Create an Account</DialogTitle>
           <DialogDescription>
             Fill in the details below to create your TeeMart account.

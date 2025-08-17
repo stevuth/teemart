@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from "@/hooks/use-auth";
+import Image from "next/image";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -60,6 +61,9 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
+          <div className="flex justify-center mb-4">
+             <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={40} height={40} />
+          </div>
           <DialogTitle>Login to TeeMart</DialogTitle>
            <DialogDescription>
             Enter your credentials to access your account.
