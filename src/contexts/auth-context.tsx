@@ -4,7 +4,6 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from '@/utils/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import type { Profile } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
@@ -25,7 +24,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     const getSessionAndProfile = async () => {
@@ -80,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [toast, supabase]);
+  }, [supabase]);
   
   const value = { user, session, loading, profile, setProfile, supabase };
 
