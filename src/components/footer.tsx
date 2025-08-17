@@ -25,8 +25,6 @@ export function Footer() {
         title: 'About TeeMart',
         links: [
             { name: 'About Us', href: '/about' },
-            { name: 'Careers', href: '#' },
-            { name: 'Press', href: '#' },
             { name: 'Contact Us', href: '/contact' },
         ],
       },
