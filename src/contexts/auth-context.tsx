@@ -32,6 +32,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const getSessionAndProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        setProfile(profileData);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    };
+
+    getSessionAndProfile();
+
     const {
       data: { subscription: authListener },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -49,11 +70,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setProfile(null);
       }
-      // Set loading to false once we have the session and profile info.
-      setLoading(false);
+      // No need to set loading here, as initial load is handled
     });
 
-    // Cleanup subscription on unmount
     return () => {
       authListener.unsubscribe();
     };
