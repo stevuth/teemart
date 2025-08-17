@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const fetchSessionAndProfile = useCallback(async () => {
-    setLoading(true);
+    // setLoading(true); // This can cause a flicker, let's manage it carefully
     const { data: { session } } = await supabase.auth.getSession();
     setSession(session);
     setUser(session?.user ?? null);
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = { user, session, loading, profile, setProfile, supabase };
 
-  if (loading || !clientSide) {
+  if (loading && clientSide) {
       return (
         <div className="w-full h-screen flex items-center justify-center bg-secondary">
           <h1 className="text-4xl font-bold text-primary animate-pulse">
