@@ -33,10 +33,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [clientSide, setClientSide] = useState(false);
 
    useEffect(() => {
+    // This ensures that the loading UI is only shown on the client after initial mount, preventing hydration errors.
     setClientSide(true);
   }, []);
 
   const fetchSessionAndProfile = useCallback(async () => {
+    setLoading(true);
     const { data: { session } } = await supabase.auth.getSession();
     setSession(session);
     setUser(session?.user ?? null);
@@ -88,19 +90,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = { user, session, loading, profile, setProfile, supabase };
 
+  if (loading || !clientSide) {
+      return (
+        <div className="w-full h-screen flex items-center justify-center bg-secondary">
+          <h1 className="text-4xl font-bold text-primary animate-pulse">
+            TeeMart
+          </h1>
+        </div>
+      );
+  }
+
   return (
     <AuthContext.Provider value={value}>
-      {loading || !clientSide ? (
-        <div className="w-full h-screen flex items-center justify-center bg-secondary">
-          <img 
-            src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" 
-            alt="TeeMart Logo" 
-            className="h-20 w-20 animate-pulse" 
-          />
-        </div>
-      ) : (
-        children
-      )}
+        {children}
     </AuthContext.Provider>
   );
 };
