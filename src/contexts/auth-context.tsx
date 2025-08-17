@@ -5,7 +5,7 @@ import { createContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from '@/utils/supabase/client';
 import type { Profile } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface AuthContextType {
   user: User | null;
@@ -91,8 +91,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={value}>
       {loading ? (
-        <div className="w-full h-screen flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="w-full h-screen flex items-center justify-center bg-secondary">
+            <Image 
+                src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" 
+                alt="TeeMart Logo"
+                width={80}
+                height={80}
+                className="animate-pulse"
+                priority
+            />
         </div>
       ) : (
         children
