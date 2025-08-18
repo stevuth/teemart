@@ -4,12 +4,6 @@ import Image from 'next/image';
 import { Twitter, Facebook, Instagram } from 'lucide-react';
 
 export function Footer() {
-  const socialLinks = [
-    { name: 'Twitter', icon: Twitter, href: '#' },
-    { name: 'Facebook', icon: Facebook, href: '#' },
-    { name: 'Instagram', icon: Instagram, href: '#' },
-  ];
-
   const footerLinks = [
       {
         title: 'Buy & Sell',
@@ -52,18 +46,6 @@ export function Footer() {
                 <p className="text-muted-foreground text-base max-w-sm">
                 Nigeria's most trusted marketplace for buying and selling high-quality used goods safely and easily.
                 </p>
-                <div className="flex items-center gap-3 mt-6">
-                    {socialLinks.map((social) => (
-                    <Link
-                        key={social.name}
-                        href={social.href}
-                        className="h-9 w-9 flex items-center justify-center rounded-full bg-background text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                        <social.icon className="h-4 w-4" />
-                        <span className="sr-only">{social.name}</span>
-                    </Link>
-                    ))}
-                </div>
             </div>
 
             <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
