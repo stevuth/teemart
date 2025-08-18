@@ -58,7 +58,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-secondary">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={48} height={48} className="mx-auto mb-4" />
+            <Link href="/" className="flex justify-center mb-4">
+               <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={48} height={48} />
+            </Link>
           <CardTitle className="text-2xl">Admin Login</CardTitle>
           <CardDescription>Enter your credentials to access the admin portal.</CardDescription>
         </CardHeader>
