@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -215,8 +215,9 @@ export default function ProfilePage() {
     <Alert variant="destructive" className="max-w-2xl mx-auto my-6">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Could Not Load Profile Details</AlertTitle>
-        <AlertDescription>
-            This is likely due to a database permission error. Please run the SQL script found in the <strong>README.md</strong> file in your Supabase SQL Editor to fix it.
+        <AlertDescription className="space-y-3">
+            <p>This is likely due to a database permission error. Please run the SQL script found in the <strong>README.md</strong> file in your Supabase SQL Editor to fix it.</p>
+            <Button size="sm" onClick={refetchProfile}><RotateCw className="mr-2 h-4 w-4" />Retry</Button>
         </AlertDescription>
     </Alert>
   );

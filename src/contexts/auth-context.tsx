@@ -65,10 +65,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .single();
 
             if (error) {
-                // It's common for this to error if the profile isn't created yet for a new user.
-                // We'll ignore the "0 rows" error.
+                // Ignore "0 rows" error, but log everything else for debugging.
                 if (error.code !== 'PGRST116') {
-                    console.error("Error fetching profile: ", error.message);
+                    console.error("Error fetching profile on auth change: ", error);
                 }
                  setProfile(null);
             } else {
@@ -92,24 +91,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setLoading(true);
-        setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
+        setSession(session);
         await fetchProfile(currentUser);
         setLoading(false);
       }
     );
-
-    // Initial load
-    const initialFetch = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        await fetchProfile(currentUser);
-        setLoading(false);
-    }
-    initialFetch();
 
     return () => {
       subscription.unsubscribe();
