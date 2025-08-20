@@ -358,7 +358,7 @@ export default function ProfilePage() {
                   </TabsContent>
 
                    <TabsContent value="verification" className="mt-6">
-                      {authLoading ? (
+                       {authLoading ? (
                           <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
                       ) : profile ? (
                           <VerificationForm />
@@ -385,3 +385,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
