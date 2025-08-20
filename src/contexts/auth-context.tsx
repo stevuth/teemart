@@ -15,6 +15,7 @@ interface AuthContextType {
   profile: Profile | null;
   setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
   supabase: SupabaseClient;
+  refetchProfile: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -24,6 +25,7 @@ export const AuthContext = createContext<AuthContextType>({
   profile: null,
   setProfile: () => {},
   supabase: {} as SupabaseClient,
+  refetchProfile: async () => {},
 });
 
 interface AuthModalContextType {
@@ -53,57 +55,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSignupModalOpen(true);
   }, []);
 
-  const fetchSessionAndProfile = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
-    setUser(session?.user ?? null);
-    
-    if (session?.user) {
+  const fetchProfile = useCallback(async (user: User | null) => {
+    if (user) {
         const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .single();
+
         if (profileError && profileError.code !== 'PGRST116') {
-          console.error("Error fetching profile on auth change: ", profileError.message);
+          console.error("Error fetching profile: ", profileError.message);
         }
         setProfile(profileData);
     } else {
         setProfile(null);
     }
-    setLoading(false);
   }, [supabase]);
 
-  useEffect(() => {
-    fetchSessionAndProfile();
+  const refetchProfile = useCallback(async () => {
+    await fetchProfile(user);
+  }, [user, fetchProfile]);
 
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        setLoading(true);
         setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (profileError && profileError.code !== 'PGRST116') {
-            console.error("Error fetching profile on auth change: ", profileError.message);
-          }
-          setProfile(profileData);
-        } else {
-          setProfile(null);
-        }
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        await fetchProfile(currentUser);
         setLoading(false);
       }
     );
 
+    // Initial load
+    const initialFetch = async () => {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        await fetchProfile(currentUser);
+        setLoading(false);
+    }
+    initialFetch();
+
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, fetchSessionAndProfile]);
+  }, [supabase, fetchProfile]);
 
-  const authValue = { user, session, loading, profile, setProfile, supabase };
+  const authValue = { user, session, loading, profile, setProfile, supabase, refetchProfile };
   const modalValue = { openLoginModal, openSignupModal };
 
   return (
@@ -124,5 +126,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
-    

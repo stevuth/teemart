@@ -28,7 +28,7 @@ type PaymentDetailsFormProps = {
 
 export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
   const { toast } = useToast();
-  const { user, supabase, setProfile } = useAuth();
+  const { user, supabase, refetchProfile } = useAuth();
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(formSchema),
@@ -59,8 +59,8 @@ export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
         if (!updatedProfile) {
           throw new Error("Failed to update profile. Please check database permissions (RLS).");
         }
-
-        setProfile(updatedProfile);
+        
+        await refetchProfile();
         toast({ title: "Success", description: "Your payment details have been saved." });
 
     } catch (error: any) {

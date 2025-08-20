@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,17 @@ import { SelfieCapture } from './selfie-capture';
 type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
 export function VerificationForm() {
-    const { user, profile, setProfile, supabase } = useAuth();
+    const { user, profile, refetchProfile, supabase } = useAuth();
     const { toast } = useToast();
     
-    const [status, setStatus] = useState<VerificationStatus>(() => {
-        if (profile?.is_verified) return 'verified';
-        if (profile?.nin_image_url && profile?.selfie_image_url) return 'submitted';
-        if (profile?.verification_payment_status === 'paid') return 'paid';
-        return 'unverified';
-    });
+    const [status, setStatus] = useState<VerificationStatus>('unverified');
+
+    useEffect(() => {
+        if (profile?.is_verified) setStatus('verified');
+        else if (profile?.nin_image_url && profile?.selfie_image_url) setStatus('submitted');
+        else if (profile?.verification_payment_status === 'paid') setStatus('paid');
+        else setStatus('unverified');
+    }, [profile]);
 
     const [ninImageFile, setNinImageFile] = useState<File | null>(null);
     const [ninImagePreview, setNinImagePreview] = useState<string | null>(null);
@@ -69,9 +71,8 @@ export function VerificationForm() {
 
             if (error) throw error;
             
+            await refetchProfile(); // Refetch profile to get the new payment status
             toast({ title: "Payment Successful!", description: "You can now proceed with verification." });
-            setProfile(prev => prev ? { ...prev, verification_payment_status: 'paid' } : null);
-            setStatus('paid');
 
         } catch (error: any) {
             toast({ title: "Payment Failed", description: error.message, variant: "destructive"});
@@ -113,8 +114,7 @@ export function VerificationForm() {
             
             if (profileUpdateError) throw profileUpdateError;
 
-            setProfile(prev => prev ? { ...prev, nin_image_url: ninPublicUrl, selfie_image_url: selfiePublicUrl } : null);
-            setStatus('submitted');
+            await refetchProfile(); // Refetch to get new image URLs and status
             toast({ title: "Submission Successful", description: "Your documents are under review. This may take up to 24 hours." });
 
         } catch (error: any) {
