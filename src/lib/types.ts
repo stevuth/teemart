@@ -11,6 +11,9 @@ export type Profile = {
     selfie_image_url?: string;
     verification_payment_status?: 'unpaid' | 'paid';
     role?: string; // Add role to profile type
+    bank_name?: string;
+    account_name?: string;
+    account_number?: string;
 };
 
 export type Product = {

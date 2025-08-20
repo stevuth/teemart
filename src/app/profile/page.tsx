@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,7 @@ import { DeleteProductDialog } from '@/components/delete-product-dialog';
 import { ReviewList } from '@/components/review-list';
 import { VerificationForm } from '@/components/verification-form';
 import { BackButton } from '@/components/back-button';
+import { PaymentDetailsForm } from '@/components/payment-details-form';
 
 export default function ProfilePage() {
   const { user, loading: authLoading, profile, supabase } = useAuth();
@@ -140,7 +141,7 @@ export default function ProfilePage() {
     fetchUserData();
   }
 
-  if (authLoading || loading || !user) {
+  if (authLoading || loading || !user || !profile) {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
@@ -250,12 +251,13 @@ export default function ProfilePage() {
 
           <div>
               <Tabs defaultValue="active-listings">
-                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
+                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto">
                       <TabsTrigger value="active-listings">Active Listings ({activeListings.length})</TabsTrigger>
                       <TabsTrigger value="my-orders">My Orders</TabsTrigger>
                       <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
                       <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
-                       <TabsTrigger value="verification">Verification</TabsTrigger>
+                      <TabsTrigger value="verification">Verification</TabsTrigger>
+                      <TabsTrigger value="payment-details">Payment Details</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="active-listings" className="mt-6">
@@ -334,6 +336,10 @@ export default function ProfilePage() {
 
                    <TabsContent value="verification" className="mt-6">
                         <VerificationForm />
+                  </TabsContent>
+
+                  <TabsContent value="payment-details" className="mt-6">
+                        <PaymentDetailsForm profile={profile} />
                   </TabsContent>
               </Tabs>
           </div>
