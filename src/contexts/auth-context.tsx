@@ -57,24 +57,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfile = useCallback(async (user: User | null) => {
     if (user) {
-        const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
 
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error("Error fetching profile: ", profileError.message);
+            if (error) {
+                // It's common for this to error if the profile isn't created yet for a new user.
+                // We'll ignore the "0 rows" error.
+                if (error.code !== 'PGRST116') {
+                    console.error("Error fetching profile: ", error.message);
+                }
+                 setProfile(null);
+            } else {
+                setProfile(data);
+            }
+        } catch(e) {
+            console.error("Catastrophic error fetching profile", e);
+            setProfile(null);
         }
-        setProfile(profileData);
     } else {
         setProfile(null);
     }
   }, [supabase]);
 
   const refetchProfile = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
     await fetchProfile(user);
-  }, [user, fetchProfile]);
+  }, [supabase, fetchProfile]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -90,7 +102,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Initial load
     const initialFetch = async () => {
-        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         const currentUser = session?.user ?? null;

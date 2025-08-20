@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const [activeListings, setActiveListings] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [purchaseHistory, setPurchaseHistory] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   
   const enrichedOrders = useMemo(() => {
@@ -47,7 +47,7 @@ export default function ProfilePage() {
   
   const fetchUserData = useCallback(async () => {
     if (!user || !supabase) return;
-    setLoading(true);
+    setLoadingData(true);
     
     try {
       // Fetch listings
@@ -82,11 +82,10 @@ export default function ProfilePage() {
           .select('*, user:profiles(full_name, avatar_url)')
           .in('product_id', productIds);
 
-        if (reviewsError && Object.keys(reviewsError).length > 0) {
+        if (reviewsError && Object.keys(reviewsError).length > 0 && reviewsError.code !== 'PGRST116') {
           console.error("Error fetching reviews:", reviewsError);
-          setReviews([]);
         } else {
-            setReviews(reviewsData as ReviewWithUser[]);
+            setReviews(reviewsData as ReviewWithUser[] || []);
         }
       } else {
         setReviews([]);
@@ -96,7 +95,7 @@ export default function ProfilePage() {
         console.error("Error fetching profile data: ", error);
         toast({ title: "Error", description: "Could not fetch your data.", variant: "destructive" });
     } finally {
-        setLoading(false);
+        setLoadingData(false);
     }
   }, [user, toast, supabase]);
 
@@ -274,7 +273,7 @@ export default function ProfilePage() {
                   </TabsList>
                   
                   <TabsContent value="active-listings" className="mt-6">
-                      {loading ? (
+                      {loadingData ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                           {[...Array(4)].map((_, i) => (
                             <div key={i} className="flex flex-col space-y-3">
@@ -338,7 +337,7 @@ export default function ProfilePage() {
                   </TabsContent>
                   
                   <TabsContent value="reviews" className="mt-6">
-                      {loading ? (
+                      {loadingData ? (
                           <div className="flex justify-center items-center py-16">
                               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                           </div>
@@ -348,16 +347,14 @@ export default function ProfilePage() {
                   </TabsContent>
 
                    <TabsContent value="verification" className="mt-6">
-                        {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : <VerificationForm />}
+                        <VerificationForm />
                   </TabsContent>
 
                   <TabsContent value="payment-details" className="mt-6">
-                    {authLoading && !profile ? (
-                        <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                    ) : profile ? (
+                    {profile ? (
                         <PaymentDetailsForm profile={profile} />
                     ) : (
-                        <div className="flex justify-center p-8 text-muted-foreground">Could not load payment details.</div>
+                        <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
                     )}
                   </TabsContent>
               </Tabs>
