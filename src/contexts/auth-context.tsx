@@ -58,20 +58,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = useCallback(async (user: User | null) => {
     if (user) {
         try {
-            const { data, error } = await supabase
+            const { data, error, status } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
                 .single();
 
-            if (error) {
-                // Ignore "0 rows" error, but log everything else for debugging.
-                if (error.code !== 'PGRST116') {
-                    console.error("Error fetching profile on auth change: ", error);
-                }
-                 setProfile(null);
-            } else {
+            if (error && status !== 406) { // 406 is "Not Acceptable", returned for 0 rows
+                console.error("Error fetching profile: ", error);
+                setProfile(null);
+            } else if (data) {
                 setProfile(data);
+            } else {
+                 setProfile(null);
             }
         } catch(e) {
             console.error("Catastrophic error fetching profile", e);
@@ -83,8 +82,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [supabase]);
 
   const refetchProfile = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    await fetchProfile(user);
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if(currentUser) {
+        await fetchProfile(currentUser);
+    }
   }, [supabase, fetchProfile]);
 
   useEffect(() => {
@@ -98,6 +99,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     );
+
+    // Initial load
+    const initialize = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        setSession(session);
+        await fetchProfile(currentUser);
+        setLoading(false);
+    }
+    initialize();
 
     return () => {
       subscription.unsubscribe();
