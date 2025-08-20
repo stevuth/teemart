@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -211,6 +211,16 @@ export default function ProfilePage() {
   const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
   const creationTime = user.created_at;
 
+  const renderProfileError = () => (
+    <Alert variant="destructive" className="max-w-2xl mx-auto my-6">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Could Not Load Profile Details</AlertTitle>
+        <AlertDescription>
+            This is likely due to a database permission error. Please run the SQL script found in the <strong>README.md</strong> file in your Supabase SQL Editor to fix it.
+        </AlertDescription>
+    </Alert>
+  );
+
   return (
     <>
       <DeleteProductDialog 
@@ -347,13 +357,13 @@ export default function ProfilePage() {
                   </TabsContent>
 
                    <TabsContent value="verification" className="mt-6">
-                        {authLoading ? (
-                            <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                        ) : profile ? (
-                            <VerificationForm />
-                        ) : (
-                             <p>Could not load verification details.</p>
-                        )}
+                      {authLoading ? (
+                          <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                      ) : profile ? (
+                          <VerificationForm />
+                      ) : (
+                          renderProfileError()
+                      )}
                   </TabsContent>
 
                   <TabsContent value="payment-details" className="mt-6">
@@ -362,7 +372,7 @@ export default function ProfilePage() {
                     ) : profile ? (
                         <PaymentDetailsForm profile={profile} />
                     ) : (
-                        <p>Could not load payment details. This may be due to a network issue or missing database permissions.</p>
+                        renderProfileError()
                     )}
                   </TabsContent>
               </Tabs>
@@ -374,5 +384,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    
