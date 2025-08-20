@@ -22,7 +22,7 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
   const { addToCart } = useCart();
   const router = useRouter();
 
-  const handleBuyClick = (e: React.MouseEvent) => {
+  const handleAddToCartClick = (e: React.MouseEvent) => {
     e.preventDefault(); 
     e.stopPropagation(); 
     addToCart(product);
@@ -114,9 +114,9 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                 actions
             ) : (
                 <>
-                <Button size="sm" variant="default" onClick={handleBuyClick} className="w-full">
+                <Button size="sm" variant="default" onClick={handleAddToCartClick} className="w-full">
                     <ShoppingCart className="mr-2 h-4 w-4" />
-                    Buy
+                    Add to Cart
                 </Button>
                  <Button size="sm" variant="default" className="w-full" onClick={handleContactClick}>
                     <MessageCircle className="mr-2 h-4 w-4"/>

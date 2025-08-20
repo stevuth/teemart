@@ -122,7 +122,7 @@ export default function SellerProfilePage() {
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
     
-    const handleBuyClick = (e: React.MouseEvent, product: Product) => {
+    const handleAddToCartClick = (e: React.MouseEvent, product: Product) => {
         e.preventDefault(); 
         e.stopPropagation(); 
         addToCart(product);
@@ -275,9 +275,9 @@ export default function SellerProfilePage() {
                                         key={product.id} 
                                         product={product} 
                                         actions={
-                                            <Button size="sm" variant="default" onClick={(e) => handleBuyClick(e, product)} className="w-full">
+                                            <Button size="sm" variant="default" onClick={(e) => handleAddToCartClick(e, product)} className="w-full">
                                                 <ShoppingCart className="mr-2 h-4 w-4" />
-                                                Buy
+                                                Add to Cart
                                             </Button>
                                         }
                                       />
