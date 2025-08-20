@@ -17,9 +17,9 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- 2. Drop all potentially conflicting old policies to start fresh.
 -- Using "IF EXISTS" prevents errors if the policies don't exist.
-DROP POLICY IF EXISTS "Users can update their own profile." ON public.profiles;
-DROP POLICY IF EXISTS "Users can view their own profile." ON public.profiles;
-DROP POLICY IF EXISTS "Users can insert their own profile." ON public.profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles; -- A common default one.
 
 -- 3. Create a policy to allow users to VIEW (select) their own profile.
