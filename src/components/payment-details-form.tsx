@@ -56,6 +56,9 @@ export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
             .single();
         
         if (error) throw error;
+        if (!updatedProfile) {
+          throw new Error("Failed to update profile. Please check database permissions (RLS).");
+        }
 
         setProfile(updatedProfile);
         toast({ title: "Success", description: "Your payment details have been saved." });
@@ -64,7 +67,7 @@ export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
         console.error("Failed to save payment details:", error);
         toast({ 
             title: "Error Saving Details", 
-            description: error.message || "An unexpected error occurred. Please check your permissions or try again.",
+            description: error.message || "An unexpected error occurred. Please try again.",
             variant: "destructive" 
         });
     }
