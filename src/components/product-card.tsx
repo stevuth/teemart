@@ -6,7 +6,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, MessageCircle, ShoppingCart, Truck, ShieldCheck, ShieldAlert, Tag } from 'lucide-react';
+import { MapPin, ShoppingCart, Truck, ShieldCheck, ShieldAlert, Store } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import Link from 'next/link';
@@ -119,8 +119,8 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                     Add to Cart
                 </Button>
                  <Button size="sm" variant="default" className="w-full" onClick={handleContactClick}>
-                    <MessageCircle className="mr-2 h-4 w-4"/>
-                    Contact Seller
+                    <Store className="mr-2 h-4 w-4"/>
+                    Visit Store
                 </Button>
                 </>
             )}
