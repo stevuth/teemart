@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .select('*')
             .eq('id', session.user.id)
             .single();
-        if (profileError) {
+        if (profileError && profileError.code !== 'PGRST116') {
           console.error("Error fetching profile on auth change: ", profileError);
         }
         setProfile(profileData);
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .select('*')
             .eq('id', session.user.id)
             .single();
-          if (profileError) {
+          if (profileError && profileError.code !== 'PGRST116') {
             console.error("Error fetching profile on auth change: ", profileError);
           }
           setProfile(profileData);
