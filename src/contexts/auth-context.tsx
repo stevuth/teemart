@@ -39,10 +39,11 @@ const pollForProfile = (
   supabase: SupabaseClient, 
   user: User, 
   retries = 5, 
-  delay = 500
+  delay = 1000
 ): Promise<Profile | null> => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve) => {
     for (let i = 0; i < retries; i++) {
+      console.log(`Polling for profile, attempt ${i + 1}...`);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -50,21 +51,22 @@ const pollForProfile = (
         .single();
       
       if (data) {
+        console.log("Profile found!");
         return resolve(data);
       }
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "exact one row not found"
-        // If it's a real error (like RLS), reject immediately.
-        return reject(error);
+        console.error("Error polling for profile, stopping.", error);
+        return resolve(null); // Stop on real errors
       }
       
-      // Wait for the next retry
-      await new Promise(res => setTimeout(res, delay));
+      await new Promise(res => setTimeout(res, delay * (i + 1))); // Incremental backoff
     }
-    // After all retries, resolve with null
+    console.log("Polling finished, profile not found.");
     resolve(null);
   });
 };
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [supabase] = useState(() => createSupabaseBrowserClient());
@@ -89,32 +91,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = useCallback(async (user: User | null, isNewSignIn = false) => {
     if (!user) {
         setProfile(null);
-        return null;
+        return;
     }
 
     try {
-        let profileData: Profile | null = null;
-        if (isNewSignIn) {
-            // For new sign-ins, poll the database to give the trigger time to create the profile.
-            profileData = await pollForProfile(supabase, user);
-        } else {
-            // For existing sessions, just fetch it directly.
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-            if (error && error.code !== 'PGRST116') throw error; // Ignore "row not found" error
-            profileData = data;
-        }
-        
-        setProfile(profileData);
-        return profileData;
+        let { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
 
+        if (error && error.code !== 'PGRST116') {
+             console.error("Error fetching profile:", error);
+             setProfile(null);
+             return;
+        }
+
+        if (data) {
+            setProfile(data);
+        } else if (isNewSignIn) {
+            // For new sign-ins where the profile might not exist yet due to trigger delay
+            const polledProfile = await pollForProfile(supabase, user);
+            setProfile(polledProfile);
+        } else {
+             setProfile(null);
+        }
     } catch (error) {
-        console.error("Error fetching profile: ", error);
+        console.error("An unexpected error occurred in fetchProfile: ", error);
         setProfile(null);
-        return null;
     }
   }, [supabase]);
 
@@ -132,19 +136,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         setSession(session);
-        // The `_event` tells us if it was a new sign-in
         await fetchProfile(currentUser, _event === 'SIGNED_IN');
         setLoading(false);
       }
     );
 
-    // Initial load for existing session
     const initialize = async () => {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        const currentUser = initialSession?.user ?? null;
-        setUser(currentUser);
-        setSession(initialSession);
-        await fetchProfile(currentUser);
+        if (initialSession) {
+            setUser(initialSession.user);
+            setSession(initialSession);
+            await fetchProfile(initialSession.user);
+        }
         setLoading(false);
     }
     initialize();

@@ -39,12 +39,6 @@ export default function ProfilePage() {
   const [loadingData, setLoadingData] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   
-  const enrichedOrders = useMemo(() => {
-    return staticOrders.map(order => {
-        return { ...order, product: { name: 'Product Name', image: 'https://placehold.co/80x80.png' } };
-    });
-  }, []);
-  
   const fetchUserData = useCallback(async () => {
     if (!user || !supabase) return;
     setLoadingData(true);
@@ -140,6 +134,19 @@ export default function ProfilePage() {
     fetchUserData();
   }
 
+  const renderProfileError = (tabName: string) => (
+    <div className="flex justify-center p-8">
+      <Alert variant="destructive" className="max-w-md">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Could Not Load {tabName} Details</AlertTitle>
+          <AlertDescription className="space-y-3">
+              <p>We couldn't fetch your profile information. This can sometimes happen due to a temporary connection issue or incorrect database permissions.</p>
+              <Button size="sm" onClick={refetchProfile}><RotateCw className="mr-2 h-4 w-4" />Retry</Button>
+          </AlertDescription>
+      </Alert>
+    </div>
+  );
+
   if (authLoading) {
     return (
         <div className="flex flex-col min-h-screen">
@@ -151,7 +158,6 @@ export default function ProfilePage() {
   }
   
    if (!user) {
-    // This will be handled by the useEffect redirect, but as a fallback:
     return (
       <div className="flex flex-col min-h-screen">
         <Header />
@@ -194,33 +200,9 @@ export default function ProfilePage() {
     )
   }
 
-  const getStatusBadgeClass = (status: OrderStatus) => {
-    switch (status) {
-      case 'Processing':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'Completed':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'Canceled':
-        return 'bg-red-100 text-red-800 border-red-300';
-      default:
-        return 'bg-secondary text-secondary-foreground';
-    }
-  };
-
   const displayName = profile?.full_name || user.user_metadata?.full_name;
   const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
   const creationTime = user.created_at;
-
-  const renderProfileError = () => (
-    <Alert variant="destructive" className="max-w-2xl mx-auto my-6">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Could Not Load Profile Details</AlertTitle>
-        <AlertDescription className="space-y-3">
-            <p>This is likely due to a database permission error. Please run the SQL script found in the <strong>README.md</strong> file in your Supabase SQL Editor to fix it.</p>
-            <Button size="sm" onClick={refetchProfile}><RotateCw className="mr-2 h-4 w-4" />Retry</Button>
-        </AlertDescription>
-    </Alert>
-  );
 
   return (
     <>
@@ -363,7 +345,7 @@ export default function ProfilePage() {
                       ) : profile ? (
                           <VerificationForm />
                       ) : (
-                          renderProfileError()
+                          renderProfileError("Verification")
                       )}
                   </TabsContent>
 
@@ -373,7 +355,7 @@ export default function ProfilePage() {
                     ) : profile ? (
                         <PaymentDetailsForm profile={profile} />
                     ) : (
-                        renderProfileError()
+                        renderProfileError("Payment Details")
                     )}
                   </TabsContent>
               </Tabs>
