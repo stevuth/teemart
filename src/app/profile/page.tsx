@@ -352,7 +352,13 @@ export default function ProfilePage() {
                   </TabsContent>
 
                   <TabsContent value="payment-details" className="mt-6">
-                        {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm profile={profile} /> : <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}
+                    {authLoading && !profile ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                    ) : profile ? (
+                        <PaymentDetailsForm profile={profile} />
+                    ) : (
+                        <div className="flex justify-center p-8 text-muted-foreground">Could not load payment details.</div>
+                    )}
                   </TabsContent>
               </Tabs>
           </div>
