@@ -62,7 +62,11 @@ export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
 
     } catch (error: any) {
         console.error("Failed to save payment details:", error);
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+        toast({ 
+            title: "Error Saving Details", 
+            description: error.message || "An unexpected error occurred. Please check your permissions or try again.",
+            variant: "destructive" 
+        });
     }
   };
 
