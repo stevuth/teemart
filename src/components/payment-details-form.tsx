@@ -13,6 +13,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import type { Profile } from "@/lib/types";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   account_name: z.string().min(2, "Account name is required."),
@@ -33,32 +34,37 @@ export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      account_name: profile.account_name || "",
-      account_number: profile.account_number || "",
-      bank_name: profile.bank_name || "",
+      account_name: "",
+      account_number: "",
+      bank_name: "",
     },
   });
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        account_name: profile.account_name || "",
+        account_number: profile.account_number || "",
+        bank_name: profile.bank_name || "",
+      });
+    }
+  }, [profile, form]);
 
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: PaymentFormValues) => {
     if (!user) return;
     try {
-        const { data: updatedProfile, error } = await supabase
+        const { error } = await supabase
             .from('profiles')
             .update({
                 account_name: data.account_name,
                 account_number: data.account_number,
                 bank_name: data.bank_name,
             })
-            .eq('id', user.id)
-            .select()
-            .single();
+            .eq('id', user.id);
         
         if (error) throw error;
-        if (!updatedProfile) {
-          throw new Error("Failed to update profile. Please check database permissions (RLS).");
-        }
         
         await refetchProfile();
         toast({ title: "Success", description: "Your payment details have been saved." });
@@ -67,8 +73,9 @@ export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
         console.error("Failed to save payment details:", error);
         toast({ 
             title: "Error Saving Details", 
-            description: error.message || "An unexpected error occurred. Please try again.",
-            variant: "destructive" 
+            description: "Could not save your details. This might be due to a database permissions issue. Please ensure the RLS policies from the README are applied in your Supabase project.",
+            variant: "destructive",
+            duration: 9000,
         });
     }
   };
@@ -141,3 +148,5 @@ export function PaymentDetailsForm({ profile }: PaymentDetailsFormProps) {
     </Card>
   );
 }
+
+    

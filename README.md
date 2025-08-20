@@ -1,3 +1,4 @@
+
 # Firebase Studio
 
 This is a NextJS starter in Firebase Studio.
@@ -20,7 +21,7 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
-DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles; -- A common default one.
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles;
 
 -- 3. Create a policy to allow users to VIEW (select) their own profile.
 CREATE POLICY "Users can view their own profile"
@@ -38,3 +39,5 @@ CREATE POLICY "Users can insert their own profile"
 ON public.profiles FOR INSERT
 WITH CHECK (auth.uid() = id);
 ```
+
+    

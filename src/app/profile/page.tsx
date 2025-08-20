@@ -140,7 +140,7 @@ export default function ProfilePage() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Could Not Load {tabName} Details</AlertTitle>
           <AlertDescription className="space-y-3">
-              <p>We couldn't fetch your profile information. This can sometimes happen due to a temporary connection issue or incorrect database permissions.</p>
+              <p>This is likely due to a database permission error. Please run the SQL script found in the README.md file in your Supabase SQL Editor to fix it.</p>
               <Button size="sm" onClick={refetchProfile}><RotateCw className="mr-2 h-4 w-4" />Retry</Button>
           </AlertDescription>
       </Alert>
@@ -367,3 +367,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
