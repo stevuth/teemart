@@ -5,6 +5,8 @@ import { createContext, useState, useEffect, ReactNode, useCallback } from 'reac
 import { User, Session, SupabaseClient } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from '@/utils/supabase/client';
 import type { Profile } from '@/lib/types';
+import { LoginModal } from '@/components/auth/login-modal';
+import { SignupModal } from '@/components/auth/signup-modal';
 
 interface AuthContextType {
   user: User | null;
@@ -24,6 +26,13 @@ export const AuthContext = createContext<AuthContextType>({
   supabase: {} as SupabaseClient,
 });
 
+interface AuthModalContextType {
+  openLoginModal: () => void;
+  openSignupModal: () => void;
+}
+
+export const AuthModalContext = createContext<AuthModalContextType | undefined>(undefined);
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [user, setUser] = useState<User | null>(null);
@@ -32,13 +41,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [clientSide, setClientSide] = useState(false);
 
-   useEffect(() => {
-    // This ensures that the loading UI is only shown on the client after initial mount, preventing hydration errors.
+  const [isLoginModalOpen, setLoginModalOpen] = useState(false);
+  const [isSignupModalOpen, setSignupModalOpen] = useState(false);
+
+  useEffect(() => {
     setClientSide(true);
   }, []);
 
+  const openLoginModal = useCallback(() => {
+    setSignupModalOpen(false);
+    setLoginModalOpen(true);
+  }, []);
+
+  const openSignupModal = useCallback(() => {
+    setLoginModalOpen(false);
+    setSignupModalOpen(true);
+  }, []);
+
   const fetchSessionAndProfile = useCallback(async () => {
-    // setLoading(true); // This can cause a flicker, let's manage it carefully
     const { data: { session } } = await supabase.auth.getSession();
     setSession(session);
     setUser(session?.user ?? null);
@@ -88,7 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [supabase, fetchSessionAndProfile]);
 
-  const value = { user, session, loading, profile, setProfile, supabase };
+  const authValue = { user, session, loading, profile, setProfile, supabase };
+  const modalValue = { openLoginModal, openSignupModal };
 
   if (loading && clientSide) {
       return (
@@ -101,8 +122,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={authValue}>
+      <AuthModalContext.Provider value={modalValue}>
         {children}
+        <LoginModal 
+          isOpen={isLoginModalOpen}
+          onClose={() => setLoginModalOpen(false)}
+          onSwitchToSignup={openSignupModal}
+        />
+        <SignupModal 
+          isOpen={isSignupModalOpen}
+          onClose={() => setSignupModalOpen(false)}
+          onSwitchToLogin={openLoginModal}
+        />
+      </AuthModalContext.Provider>
     </AuthContext.Provider>
   );
 };
