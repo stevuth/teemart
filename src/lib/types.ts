@@ -27,7 +27,16 @@ export type Product = {
   'data-ai-hint'?: string;
   deliveryFee?: number;
   user_id: string;
-  seller?: Profile;
+  seller?: {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+    is_verified: boolean;
+  };
+  // Fields from the view
+  seller_name?: string;
+  seller_avatar_url?: string;
+  seller_is_verified?: boolean;
 };
 
 export type ProductWithSeller = Product & {
@@ -63,7 +72,7 @@ export type OrderStatus = (typeof orderStatuses)[number];
 export type Order = {
   id: string;
   created_at: string;
-  user_id: string;
+  buyer_id: string;
   customer_name: string;
   customer_phone: string;
   delivery_address: string;

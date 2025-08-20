@@ -6,7 +6,7 @@ import type { Product } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, ShoppingCart, Truck, ShieldCheck, ShieldAlert, Store } from 'lucide-react';
+import { MapPin, ShoppingCart, Truck, ShieldCheck, ShieldAlert, Store, User } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import Link from 'next/link';
@@ -88,9 +88,15 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                     </Badge>
                 )}
             </div>
-            <CardTitle className="text-base sm:text-lg font-bold leading-tight group-hover:underline mb-2">
+            <CardTitle className="text-base sm:text-lg font-bold leading-tight group-hover:underline mb-1">
                 {product.name}
             </CardTitle>
+            {product.seller?.full_name && (
+              <div className="flex items-center text-xs text-muted-foreground mb-2">
+                <User className="h-3 w-3 mr-1.5" />
+                <span>{product.seller.full_name}</span>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground line-clamp-2">
               {product.description}
             </p>

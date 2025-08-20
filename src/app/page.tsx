@@ -37,9 +37,10 @@ export default function Home() {
 
     const fetchProducts = async () => {
       setLoading(true);
+      // Use the new products_with_sellers view
       const { data, error } = await supabase
-        .from('products')
-        .select('*, seller:profiles(id, full_name, avatar_url, is_verified)')
+        .from('products_with_sellers')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -63,7 +64,13 @@ export default function Home() {
           condition: item.condition || 'Used',
           description: item.description || '',
           user_id: item.user_id,
-          seller: item.seller,
+          // The seller info is now directly on the object from the view
+          seller: {
+            id: item.user_id,
+            full_name: item.seller_name,
+            avatar_url: item.seller_avatar_url,
+            is_verified: item.seller_is_verified
+          }
         })) as Product[];
         setProducts(transformedData);
       }
