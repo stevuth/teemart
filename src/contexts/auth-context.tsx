@@ -39,14 +39,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [clientSide, setClientSide] = useState(false);
 
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setSignupModalOpen] = useState(false);
-
-  useEffect(() => {
-    setClientSide(true);
-  }, []);
 
   const openLoginModal = useCallback(() => {
     setSignupModalOpen(false);
@@ -70,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .eq('id', session.user.id)
             .single();
         if (profileError && profileError.code !== 'PGRST116') {
-          console.error("Error fetching profile on auth change: ", profileError);
+          console.error("Error fetching profile on auth change: ", profileError.message);
         }
         setProfile(profileData);
     } else {
@@ -93,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .eq('id', session.user.id)
             .single();
           if (profileError && profileError.code !== 'PGRST116') {
-            console.error("Error fetching profile on auth change: ", profileError);
+            console.error("Error fetching profile on auth change: ", profileError.message);
           }
           setProfile(profileData);
         } else {
@@ -110,16 +105,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const authValue = { user, session, loading, profile, setProfile, supabase };
   const modalValue = { openLoginModal, openSignupModal };
-
-  if (loading && clientSide) {
-      return (
-        <div className="w-full h-screen flex items-center justify-center bg-secondary">
-          <h1 className="text-4xl font-bold text-primary animate-pulse">
-            TeeMart
-          </h1>
-        </div>
-      );
-  }
 
   return (
     <AuthContext.Provider value={authValue}>
@@ -139,3 +124,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+    

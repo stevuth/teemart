@@ -82,7 +82,7 @@ export default function ProfilePage() {
           .select('*, user:profiles(full_name, avatar_url)')
           .in('product_id', productIds);
 
-        if (reviewsError) {
+        if (reviewsError && Object.keys(reviewsError).length > 0) {
           console.error("Error fetching reviews:", reviewsError);
           setReviews([]);
         } else {
@@ -141,13 +141,26 @@ export default function ProfilePage() {
     fetchUserData();
   }
 
-  if (authLoading || loading || !user || !profile) {
+  if (authLoading) {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
             <div className="flex-grow flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
             <Footer />
         </div>
+    );
+  }
+  
+   if (!user) {
+    // This will be handled by the useEffect redirect, but as a fallback:
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow container mx-auto p-4 text-center">
+          <p>Redirecting to homepage...</p>
+        </main>
+        <Footer />
+      </div>
     );
   }
   
@@ -195,8 +208,8 @@ export default function ProfilePage() {
     }
   };
 
-  const displayName = user.user_metadata?.full_name;
-  const userAvatar = user.user_metadata?.avatar_url;
+  const displayName = profile?.full_name || user.user_metadata?.full_name;
+  const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
   const creationTime = user.created_at;
 
   return (
@@ -335,11 +348,11 @@ export default function ProfilePage() {
                   </TabsContent>
 
                    <TabsContent value="verification" className="mt-6">
-                        <VerificationForm />
+                        {profile && <VerificationForm />}
                   </TabsContent>
 
                   <TabsContent value="payment-details" className="mt-6">
-                        <PaymentDetailsForm profile={profile} />
+                        {profile && <PaymentDetailsForm profile={profile} />}
                   </TabsContent>
               </Tabs>
           </div>
@@ -350,3 +363,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
