@@ -8,7 +8,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Product, ProductWithSeller } from '@/lib/types';
-import { ShoppingCart, MessageCircle, MapPin, Truck, ShieldCheck, Star } from 'lucide-react';
+import { ShoppingCart, MessageCircle, MapPin, Truck, ShieldCheck, Star, Store } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -166,7 +166,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                                 </div>
                                  <Button asChild className="w-full mt-4">
                                     <Link href={`/profile/${product.seller.id}`}>
-                                        <MessageCircle className="mr-2 h-4 w-4"/> View Profile & Chat
+                                        <Store className="mr-2 h-4 w-4"/> Visit Store
                                     </Link>
                                 </Button>
                             </div>
