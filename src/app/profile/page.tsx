@@ -76,8 +76,10 @@ export default function ProfilePage() {
           .select('*, user:profiles(full_name, avatar_url)')
           .in('product_id', productIds);
           
-        if (reviewsError && Object.keys(reviewsError).length > 0 && reviewsError.code !== 'PGRST116') { // Ignore "range not satisfiable" error for empty results
+        if (reviewsError) { 
             console.error("Error fetching reviews:", reviewsError);
+            // Don't throw, just show an empty list for reviews
+            setReviews([]);
         } else {
             setReviews(reviewsData as ReviewWithUser[] || []);
         }
@@ -367,5 +369,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    

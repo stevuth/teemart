@@ -43,6 +43,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                 src={image}
                 alt={category}
                 fill
+                sizes="(max-width: 768px) 40vw, 20vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 data-ai-hint={hint}
               />
