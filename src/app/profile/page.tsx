@@ -30,7 +30,7 @@ import { BackButton } from '@/components/back-button';
 import { PaymentDetailsForm } from '@/components/payment-details-form';
 
 export default function ProfilePage() {
-  const { user, loading: authLoading, profile, supabase } = useAuth();
+  const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState<Product[]>([]);
@@ -81,9 +81,9 @@ export default function ProfilePage() {
           .from('reviews')
           .select('*, user:profiles(full_name, avatar_url)')
           .in('product_id', productIds);
-
-        if (reviewsError && Object.keys(reviewsError).length > 0 && reviewsError.code !== 'PGRST116') {
-          console.error("Error fetching reviews:", reviewsError);
+          
+        if (reviewsError && Object.keys(reviewsError).length > 0 && reviewsError.code !== 'PGRST116') { // Ignore "range not satisfiable" error for empty results
+            console.error("Error fetching reviews:", reviewsError);
         } else {
             setReviews(reviewsData as ReviewWithUser[] || []);
         }
@@ -347,14 +347,22 @@ export default function ProfilePage() {
                   </TabsContent>
 
                    <TabsContent value="verification" className="mt-6">
-                        <VerificationForm />
+                        {authLoading ? (
+                            <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                        ) : profile ? (
+                            <VerificationForm />
+                        ) : (
+                             <p>Could not load verification details.</p>
+                        )}
                   </TabsContent>
 
                   <TabsContent value="payment-details" className="mt-6">
-                    {profile ? (
+                    {authLoading ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                    ) : profile ? (
                         <PaymentDetailsForm profile={profile} />
                     ) : (
-                        <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                        <p>Could not load payment details. This may be due to a network issue or missing database permissions.</p>
                     )}
                   </TabsContent>
               </Tabs>
@@ -366,3 +374,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
