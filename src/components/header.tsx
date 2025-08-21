@@ -58,16 +58,14 @@ export function Header() {
     <>
       <header className="bg-card shadow-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
-                <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={32} height={32} />
-                <span className="text-xl font-bold tracking-tight">TeeMart</span>
-              </Link>
-            </div>
+          <div className="flex h-16 items-center justify-between">
+            {/* Left side: Logo */}
+            <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
+              <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={32} height={32} />
+              <span className="text-xl font-bold tracking-tight">TeeMart</span>
+            </Link>
             
-            <div className="flex-1" />
-
+            {/* Right side: Actions */}
             <div className="flex items-center gap-2">
               <Button onClick={handleSellClick}>
                 Sell
@@ -132,11 +130,9 @@ export function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="flex items-center gap-2">
-                   <Button onClick={openLoginModal} size="icon" variant="ghost" aria-label="Profile">
-                        <User className="h-5 w-5" />
-                   </Button>
-                </div>
+                <Button onClick={openLoginModal} size="icon" variant="ghost" aria-label="Profile">
+                    <User className="h-5 w-5" />
+                </Button>
               )}
             </div>
           </div>
