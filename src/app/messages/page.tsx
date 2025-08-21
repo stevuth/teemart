@@ -28,7 +28,7 @@ type Conversation = {
 function MessagingPage() {
     const { user, loading: authLoading, supabase } = useAuth();
     const searchParams = useSearchParams();
-    const router = useRouter();
+    router = useRouter();
     const pathname = usePathname();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -74,19 +74,23 @@ function MessagingPage() {
     }
     
     const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+    
+    if (selectedConversationId && selectedConversation) {
+        return (
+             <ChatInterface
+                conversationId={selectedConversation.id}
+                recipient={selectedConversation.other_participant}
+                onBack={handleBackToList}
+            />
+        )
+    }
 
     return (
-        <div className="flex flex-col h-screen">
-             <div className={cn(selectedConversationId ? 'hidden md:block' : 'block')}>
-                <Header />
-            </div>
-            
-            <main className="flex-grow flex border-t overflow-hidden">
+        <div className="flex flex-col h-screen bg-background">
+            <Header />
+            <main className="flex-grow flex flex-col border-t overflow-hidden">
                 {/* Conversation List */}
-                <div className={cn(
-                    "w-full md:w-80 lg:w-96 border-r flex-col h-full",
-                    selectedConversationId ? "hidden md:flex" : "flex"
-                )}>
+                <div className="flex flex-col h-full">
                     <div className="p-4 border-b">
                         <h1 className="text-xl font-bold">Messages</h1>
                     </div>
@@ -108,10 +112,7 @@ function MessagingPage() {
                                 <div
                                     key={convo.id}
                                     onClick={() => handleSelectConversation(convo.id)}
-                                    className={cn(
-                                        "flex items-center gap-3 p-4 cursor-pointer hover:bg-accent",
-                                        selectedConversationId === convo.id && 'bg-accent'
-                                    )}
+                                    className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent"
                                 >
                                     <Avatar className="h-12 w-12">
                                         <AvatarImage src={convo.other_participant.avatar_url || ''} />
@@ -144,36 +145,8 @@ function MessagingPage() {
                         )}
                     </div>
                 </div>
-
-                {/* Chat Interface */}
-                <div className={cn(
-                    "flex-grow flex-col",
-                    selectedConversationId ? "flex" : "hidden md:flex"
-                )}>
-                    {selectedConversation ? (
-                        <ChatInterface
-                            conversationId={selectedConversation.id}
-                            recipient={selectedConversation.other_participant}
-                            onBack={handleBackToList}
-                        />
-                    ) : (
-                        <div className="hidden md:flex flex-grow flex-col items-center justify-center text-muted-foreground">
-                             {loading ? (
-                                <Skeleton className="h-24 w-24 rounded-full" />
-                             ) : (
-                                <>
-                                    <MessageSquare className="h-24 w-24 mb-4" />
-                                    <h2 className="text-xl font-bold">Select a conversation</h2>
-                                    <p>Choose a conversation from the left to start chatting.</p>
-                                </>
-                             )}
-                        </div>
-                    )}
-                </div>
             </main>
-             <div className={cn(selectedConversationId ? 'hidden' : 'block')}>
-                <Footer />
-            </div>
+            <Footer />
         </div>
     );
 }

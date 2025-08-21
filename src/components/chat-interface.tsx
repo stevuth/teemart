@@ -202,8 +202,8 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 )}
             </DialogContent>
         </Dialog>
-        <div className="flex flex-col h-full bg-secondary">
-            <div className="p-3 bg-card flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+        <div className="flex flex-col h-screen bg-secondary">
+            <div className="p-3 bg-card flex items-center gap-3 sticky top-0 z-10 shadow-sm border-b">
                  <Button onClick={onBack} variant="ghost" size="icon" className="md:hidden mr-2">
                     <ArrowLeft className="h-5 w-5" />
                  </Button>
