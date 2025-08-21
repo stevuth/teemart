@@ -75,7 +75,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="border-t-4 border-secondary">
+      <DialogContent>
         <DialogHeader>
           <div className="flex justify-center mb-4">
              <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={40} height={40} />
