@@ -84,7 +84,7 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            // Step 3: Fetch reviews for those listings
+            // Step 3: Fetch reviews for those listings, only if there are listings
             const productIds = transformedListings.map(p => p.id);
             if (productIds.length > 0) {
                  const { data: reviewsData, error: reviewsError } = await supabase
@@ -100,7 +100,7 @@ export default function SellerProfilePage() {
                     setReviews(reviewsData as ReviewWithUser[]);
                 }
             } else {
-                setReviews([]);
+                setReviews([]); // Explicitly set reviews to empty if no products
             }
 
         } catch (error: any) {
@@ -312,3 +312,4 @@ export default function SellerProfilePage() {
     );
 }
 
+    
