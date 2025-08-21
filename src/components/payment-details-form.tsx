@@ -10,12 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, AlertCircle, Banknote, BadgeCheck, Search, ShieldCheck } from "lucide-react";
+import { Loader2, BadgeCheck, Search, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
-import type { Profile } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { resolveBankAccount } from "@/app/actions/paystack";
+import { updatePaymentDetailsAction } from "@/app/actions/profile";
 import axios from 'axios';
 
 type Bank = {
@@ -39,7 +39,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { user, profile, supabase, refetchProfile } = useAuth();
+    const { profile, refetchProfile } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -108,34 +108,31 @@ export function PaymentDetailsForm() {
 
 
     const onSubmit = async () => {
-        if (!user || !resolvedAccount) return;
-        setIsSubmitting(true);
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    bank_name: resolvedAccount.bank_name,
-                    bank_code: watchBankCode,
-                    account_number: watchAccountNumber,
-                    account_name: resolvedAccount.account_name,
-                })
-                .eq('id', user.id);
-            
-            if (error) throw error;
-            
-            await refetchProfile();
-            toast({ title: "Success", description: "Your payment details have been saved." });
+        if (!resolvedAccount) {
+             toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
+             return;
+        };
 
-        } catch (error: any) {
-            console.error("Failed to save payment details:", error);
-            toast({ 
-                title: "Error Saving Details", 
-                description: "Could not save your details. This might be due to a database permissions issue.",
+        setIsSubmitting(true);
+        const result = await updatePaymentDetailsAction({
+            bank_name: resolvedAccount.bank_name,
+            bank_code: watchBankCode,
+            account_number: watchAccountNumber,
+            account_name: resolvedAccount.account_name,
+        });
+
+        if (result.error) {
+            console.error("Failed to save payment details:", result.error);
+            toast({
+                title: "Error Saving Details",
+                description: result.error,
                 variant: "destructive",
             });
-        } finally {
-            setIsSubmitting(false);
+        } else {
+            await refetchProfile();
+            toast({ title: "Success", description: "Your payment details have been saved." });
         }
+        setIsSubmitting(false);
     };
     
     const isVerified = !!(profile?.account_name && profile?.bank_name);
@@ -235,5 +232,3 @@ export function PaymentDetailsForm() {
         </Card>
     );
 }
-
-    
