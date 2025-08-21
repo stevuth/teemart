@@ -5,10 +5,8 @@ import axios from 'axios';
 
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
-/**
- * Fetches the list of banks from Paystack.
- * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
- */
+// This function is no longer used by the form but is kept for other server-side purposes
+// if needed in the future. The primary bank list fetching is now done via the API route.
 export async function getBankList() {
     const paystackSecretKey = process.env.PAYSTACK_LIVE_SECRET_KEY;
     
@@ -23,7 +21,6 @@ export async function getBankList() {
             }
         });
         if (response.data.status) {
-            // De-duplicate the bank list based on the unique 'code' property.
             const uniqueBanks = Array.from(new Map(response.data.data.map((bank: any) => [bank.code, bank])).values());
             return { success: true, data: uniqueBanks as any[] };
         }

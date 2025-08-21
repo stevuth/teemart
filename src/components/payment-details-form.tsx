@@ -15,7 +15,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import type { Profile } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { getBankList, resolveBankAccount } from "@/app/actions/paystack";
+import { resolveBankAccount } from "@/app/actions/paystack";
+import axios from 'axios';
 
 type Bank = {
     id: number;
@@ -68,13 +69,18 @@ export function PaymentDetailsForm() {
     useEffect(() => {
         async function fetchBanks() {
             setLoadingBanks(true);
-            const result = await getBankList();
-            if (result.success && result.data) {
-                setBanks(result.data);
-            } else {
-                toast({ title: "Error", description: "Could not fetch list of banks.", variant: "destructive" });
+            try {
+                const response = await axios.get('/api/paystack/banks');
+                if (response.data.success && response.data.data) {
+                    setBanks(response.data.data);
+                } else {
+                     toast({ title: "Error", description: response.data.error || "Could not fetch list of banks.", variant: "destructive" });
+                }
+            } catch (error) {
+                 toast({ title: "Error", description: "Could not fetch list of banks.", variant: "destructive" });
+            } finally {
+                setLoadingBanks(false);
             }
-            setLoadingBanks(false);
         }
         fetchBanks();
     }, [toast]);
