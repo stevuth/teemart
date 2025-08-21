@@ -33,16 +33,7 @@ function MessagingPage() {
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-
-    useEffect(() => {
-        const conversationId = searchParams.get('conversationId');
-        if (conversationId) {
-            setSelectedConversationId(conversationId);
-        } else {
-            setSelectedConversationId(null);
-        }
-    }, [searchParams]);
+    const selectedConversationId = searchParams.get('conversationId');
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -56,12 +47,6 @@ function MessagingPage() {
                 console.error('Error fetching conversations', error);
             } else {
                 setConversations(data || []);
-                const conversationIdFromUrl = searchParams.get('conversationId');
-                if (!conversationIdFromUrl && data && data.length > 0) {
-                     if (window.innerWidth >= 768) { 
-                        handleSelectConversation(data[0].id)
-                    }
-                }
             }
             setLoading(false);
         };
@@ -69,7 +54,7 @@ function MessagingPage() {
         if (!authLoading && user) {
             fetchConversations();
         }
-    }, [user, authLoading, searchParams, supabase]);
+    }, [user, authLoading, supabase]);
 
     const handleSelectConversation = (conversationId: string) => {
         const newParams = new URLSearchParams(searchParams.toString());
@@ -92,18 +77,14 @@ function MessagingPage() {
 
     return (
         <div className="flex flex-col h-screen">
-             {/* Header is only shown when no chat is selected on mobile */}
-            <div className={cn(selectedConversationId && 'md:hidden', 'hidden')}>
-                 <Header />
-            </div>
-             <div className={cn(selectedConversationId ? 'hidden md:block' : '')}>
+             <div className={cn(selectedConversationId ? 'hidden md:block' : 'block')}>
                 <Header />
             </div>
             
             <main className="flex-grow flex border-t overflow-hidden">
                 {/* Conversation List */}
                 <div className={cn(
-                    "w-full md:w-80 lg:w-96 border-r flex flex-col h-full",
+                    "w-full md:w-80 lg:w-96 border-r flex-col h-full",
                     selectedConversationId ? "hidden md:flex" : "flex"
                 )}>
                     <div className="p-4 border-b">
@@ -190,7 +171,7 @@ function MessagingPage() {
                     )}
                 </div>
             </main>
-             <div className={cn(selectedConversationId ? 'hidden' : 'md:block')}>
+             <div className={cn(selectedConversationId ? 'hidden' : 'block')}>
                 <Footer />
             </div>
         </div>
