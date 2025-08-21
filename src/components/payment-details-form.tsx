@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -169,7 +170,7 @@ export function PaymentDetailsForm() {
                                         </FormControl>
                                         <SelectContent>
                                             {banks.map(bank => (
-                                                <SelectItem key={bank.code} value={bank.code}>{bank.name}</SelectItem>
+                                                <SelectItem key={bank.id} value={bank.code}>{bank.name}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
