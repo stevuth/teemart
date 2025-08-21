@@ -92,14 +92,17 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
     useEffect(() => {
         if (!user?.id || !conversationId) return;
         const channel = supabase
-            .channel(`messages:${conversationId}`)
+            .channel(`realtime-messages:${conversationId}`)
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+                { 
+                  event: 'INSERT', 
+                  schema: 'public', 
+                  table: 'messages', 
+                  filter: `conversation_id=eq.${conversationId}` 
+                },
                 (payload) => {
                     const newMessagePayload = payload.new as Message;
-                    // Only add the message if it's not from the current user,
-                    // as the sender's message is added optimistically.
                     if (newMessagePayload.sender_id !== user?.id) {
                          setMessages(currentMessages => {
                             if (currentMessages.some(m => m.id === newMessagePayload.id)) return currentMessages;
@@ -176,14 +179,12 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
 
             if (error) throw error;
             
-            // Replace the optimistic message with the real one from the database
             setMessages(current => current.map(m => m.id === optimisticId ? (data as Message) : m));
 
         } catch (error: any) {
             toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
-            // On error, remove the optimistic message
             setMessages(current => current.filter(m => m.id !== optimisticId));
-            setNewMessage(content); // Restore the input so the user doesn't lose their message
+            setNewMessage(content); 
         } finally {
             setIsSending(false);
         }
