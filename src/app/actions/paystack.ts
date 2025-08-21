@@ -3,11 +3,11 @@
 
 import axios from 'axios';
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_LIVE_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
 if (!PAYSTACK_SECRET_KEY) {
-    console.error("Paystack secret key is not set in environment variables.");
+    console.error("Paystack live secret key is not set in environment variables.");
 }
 
 /**
@@ -19,7 +19,7 @@ export async function getBankList() {
         return { success: false, error: 'Server configuration error: Paystack key not found.' };
     }
     try {
-        const response = await axios.get(`${PAYSTICK_API_URL}/bank`, {
+        const response = await axios.get(`${PAYSTACK_API_URL}/bank`, {
             headers: {
                 Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
             }
