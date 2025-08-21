@@ -61,7 +61,7 @@ export function Header() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
-                <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={32} height={32} />
+                <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={32} height={32} />
                 <span className="text-xl font-bold tracking-tight">TeeMart</span>
               </Link>
             </div>

@@ -40,7 +40,7 @@ export function Footer() {
             
             <div className="lg:col-span-4">
                 <Link href="/" className="flex items-center gap-2 mb-4">
-                <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={32} height={32} />
+                <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={32} height={32} />
                 <span className="text-2xl font-bold">TeeMart</span>
                 </Link>
                 <p className="text-muted-foreground text-base max-w-sm">

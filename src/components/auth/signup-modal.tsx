@@ -78,7 +78,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
       <DialogContent className="bg-background">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-             <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={40} height={40} />
+             <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={40} height={40} />
           </div>
           <DialogTitle>Create an Account</DialogTitle>
           <DialogDescription>
