@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from "@/hooks/use-auth";
-import Image from "next/image";
 
 const formSchema = z.object({
   displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -78,7 +77,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
       <DialogContent>
         <DialogHeader>
           <div className="flex justify-center mb-4">
-             <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={40} height={40} />
+            <span className="text-2xl font-bold">TeeMart</span>
           </div>
           <DialogTitle>Create an Account</DialogTitle>
           <DialogDescription>
