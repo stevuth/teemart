@@ -5,43 +5,20 @@ import axios from 'axios';
 
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
-// This function is no longer used by the form but is kept for other server-side purposes
-// if needed in the future. The primary bank list fetching is now done via the API route.
-export async function getBankList() {
-    const paystackSecretKey = process.env.PAYSTACK_LIVE_SECRET_KEY;
-    
-    if (!paystackSecretKey) {
-        console.error("Paystack live secret key is not set in environment variables.");
-        return { success: false, error: 'Server configuration error: Paystack key not found.' };
-    }
-    try {
-        const response = await axios.get(`${PAYSTACK_API_URL}/bank`, {
-            headers: {
-                Authorization: `Bearer ${paystackSecretKey}`
-            }
-        });
-        if (response.data.status) {
-            const uniqueBanks = Array.from(new Map(response.data.data.map((bank: any) => [bank.code, bank])).values());
-            return { success: true, data: uniqueBanks as any[] };
-        }
-        return { success: false, error: response.data.message };
-    } catch (error: any) {
-        console.error("Error fetching bank list:", error.response?.data || error.message);
-        return { success: false, error: 'Could not retrieve bank list from Paystack.' };
-    }
-}
-
 /**
  * Resolves a bank account number to get the account name.
+ * This is called from the client-side form to verify details before submission.
  * @param {string} accountNumber - The 10-digit account number.
  * @param {string} bankCode - The bank code from Paystack.
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
 export async function resolveBankAccount(accountNumber: string, bankCode: string) {
-    const paystackSecretKey = process.env.PAYSTACK_LIVE_SECRET_KEY;
+    // This key is loaded on the server by Next.js.
+    // The user must have PAYSTACK_SECRET_KEY in their .env.local file.
+    const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
     
     if (!paystackSecretKey) {
-        console.error("Paystack live secret key is not set in environment variables.");
+        console.error("Paystack secret key is not set in environment variables.");
         return { success: false, error: 'Server configuration error: Paystack key not found.' };
     }
      if (!accountNumber || !bankCode || accountNumber.length !== 10) {

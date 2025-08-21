@@ -5,11 +5,14 @@ import axios from 'axios';
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
 export async function GET() {
-  const paystackSecretKey = process.env.PAYSTACK_LIVE_SECRET_KEY;
-  console.log("PAYSTACK_LIVE_SECRET_KEY availability:", !!paystackSecretKey);
+  // Use PAYSTACK_SECRET_KEY, which is loaded on the server by Next.js automatically
+  // The user must ensure this variable is in their .env.local file.
+  const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY;
+  
+  console.log("PAYSTACK_SECRET_KEY availability:", !!paystackSecretKey ? "Found" : "NOT FOUND");
 
   if (!paystackSecretKey) {
-    console.error("Paystack live secret key is not set in environment variables.");
+    console.error("Paystack secret key is not set in environment variables.");
     return NextResponse.json({ success: false, error: 'Server configuration error: Paystack key not found.' }, { status: 500 });
   }
 
@@ -27,7 +30,7 @@ export async function GET() {
         const uniqueBanks = Array.from(new Map(response.data.data.map((bank: any) => [bank.code, bank])).values());
         return NextResponse.json({ success: true, data: uniqueBanks as any[] });
     } else {
-        console.error("Paystack API returned an error:", response.data.message);
+        console.error("Paystack API returned a non-success status:", response.data.message);
         return NextResponse.json({ success: false, error: response.data.message }, { status: 400 });
     }
 
