@@ -101,7 +101,10 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                     // Only add the message if it's not from the current user,
                     // as the sender's message is added optimistically.
                     if (newMessagePayload.sender_id !== user?.id) {
-                         setMessages(currentMessages => [...currentMessages, newMessagePayload]);
+                         setMessages(currentMessages => {
+                            if (currentMessages.some(m => m.id === newMessagePayload.id)) return currentMessages;
+                            return [...currentMessages, newMessagePayload]
+                         });
                          markMessagesAsRead();
                     }
                 }
@@ -173,12 +176,14 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
 
             if (error) throw error;
             
+            // Replace the optimistic message with the real one from the database
             setMessages(current => current.map(m => m.id === optimisticId ? (data as Message) : m));
 
         } catch (error: any) {
             toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
+            // On error, remove the optimistic message
             setMessages(current => current.filter(m => m.id !== optimisticId));
-            setNewMessage(content);
+            setNewMessage(content); // Restore the input so the user doesn't lose their message
         } finally {
             setIsSending(false);
         }
