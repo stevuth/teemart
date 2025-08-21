@@ -2,33 +2,27 @@
 'use server';
 
 import axios from 'axios';
-import { config } from 'dotenv';
 
-config({ path: '.env.local' });
-
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_LIVE_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
-
-if (!PAYSTACK_SECRET_KEY) {
-    console.error("Paystack live secret key is not set in environment variables.");
-}
 
 /**
  * Fetches the list of banks from Paystack.
  * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
  */
 export async function getBankList() {
-    if (!PAYSTACK_SECRET_KEY) {
+    const paystackSecretKey = process.env.PAYSTACK_LIVE_SECRET_KEY;
+    
+    if (!paystackSecretKey) {
+        console.error("Paystack live secret key is not set in environment variables.");
         return { success: false, error: 'Server configuration error: Paystack key not found.' };
     }
     try {
         const response = await axios.get(`${PAYSTACK_API_URL}/bank`, {
             headers: {
-                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+                Authorization: `Bearer ${paystackSecretKey}`
             }
         });
         if (response.data.status) {
-            // Remove duplicates from the bank list based on the 'code' field
             const uniqueBanks = Array.from(new Map(response.data.data.map((bank: any) => [bank.code, bank])).values());
             return { success: true, data: uniqueBanks as any[] };
         }
@@ -46,7 +40,10 @@ export async function getBankList() {
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
 export async function resolveBankAccount(accountNumber: string, bankCode: string) {
-    if (!PAYSTACK_SECRET_KEY) {
+    const paystackSecretKey = process.env.PAYSTACK_LIVE_SECRET_KEY;
+    
+    if (!paystackSecretKey) {
+        console.error("Paystack live secret key is not set in environment variables.");
         return { success: false, error: 'Server configuration error: Paystack key not found.' };
     }
      if (!accountNumber || !bankCode || accountNumber.length !== 10) {
@@ -55,7 +52,7 @@ export async function resolveBankAccount(accountNumber: string, bankCode: string
     try {
         const response = await axios.get(`${PAYSTACK_API_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
              headers: {
-                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+                Authorization: `Bearer ${paystackSecretKey}`
             }
         });
 
