@@ -57,7 +57,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         if (error) {
             console.error("Error marking messages as read:", error);
         } else {
-             decrementCount(0);
+             decrementCount(0); // This tells the provider to refetch the count
         }
     }, [conversationId, user, supabase, decrementCount]);
     
