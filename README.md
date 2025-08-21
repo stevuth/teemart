@@ -23,23 +23,24 @@ DROP POLICY IF EXISTS "Users can insert their own profile." ON public.profiles;
 DROP POLICY IF EXISTS "Users can update their own profile." ON public.profiles;
 DROP POLICY IF EXISTS "Users can view their own profile." ON public.profiles;
 
--- 3. Create a policy to allow public read access to profiles.
--- This is necessary for displaying public seller information.
-CREATE POLICY "Public profiles are viewable by everyone."
-  ON public.profiles FOR SELECT
-  USING (true);
+-- 3. Create a policy to allow users to view THEIR OWN profile.
+-- This is a key policy that allows the user to read the row they want to update.
+CREATE POLICY "Users can view their own profile." ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
 
--- 4. Create a policy to allow users to insert their own profile.
+-- 4. Create a policy to allow public read access to profiles.
+-- This is necessary for displaying public seller information on product pages.
+CREATE POLICY "Public profiles are viewable by everyone." ON public.profiles
+  FOR SELECT USING (true);
+
+-- 5. Create a policy to allow users to insert their own profile.
 -- This is triggered on user sign-up.
-CREATE POLICY "Users can insert their own profile."
-  ON public.profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can insert their own profile." ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
--- 5. Create a policy to allow users to update their own profile.
+-- 6. Create a policy to allow users to update their own profile.
 -- This is required for saving payment details or updating profile info.
-CREATE POLICY "Users can update their own profile."
-  ON public.profiles FOR UPDATE
-  USING (auth.uid() = id)
+CREATE POLICY "Users can update their own profile." ON public.profiles
+  FOR UPDATE USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
-
 ```
