@@ -1,3 +1,4 @@
+
 'use server';
 
 import axios from 'axios';
@@ -18,13 +19,15 @@ export async function getBankList() {
         return { success: false, error: 'Server configuration error: Paystack key not found.' };
     }
     try {
-        const response = await axios.get(`${PAYSTACK_API_URL}/bank`, {
+        const response = await axios.get(`${PAYSTICK_API_URL}/bank`, {
             headers: {
                 Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
             }
         });
         if (response.data.status) {
-            return { success: true, data: response.data.data };
+            // Remove duplicates from the bank list based on the 'code' field
+            const uniqueBanks = Array.from(new Map(response.data.data.map((bank: any) => [bank.code, bank])).values());
+            return { success: true, data: uniqueBanks as any[] };
         }
         return { success: false, error: response.data.message };
     } catch (error: any) {
