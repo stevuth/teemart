@@ -90,6 +90,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
     }, [messages]);
 
     useEffect(() => {
+        if (!user?.id || !conversationId) return;
         const channel = supabase
             .channel(`messages:${conversationId}`)
             .on(
@@ -202,7 +203,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
             </DialogContent>
         </Dialog>
         <div className="flex flex-col h-full bg-secondary">
-            <div className="p-3 bg-secondary flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+            <div className="p-3 bg-card flex items-center gap-3 sticky top-0 z-10 shadow-sm">
                  <Button onClick={onBack} variant="ghost" size="icon" className="md:hidden mr-2">
                     <ArrowLeft className="h-5 w-5" />
                  </Button>
@@ -219,25 +220,26 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         {messages.map(message => (
                             <div
                                 key={message.id}
                                 className={cn(
-                                    "flex flex-col items-end gap-1",
+                                    "flex flex-col items-end gap-1 w-full",
                                     message.sender_id === user?.id ? "items-end" : "items-start"
                                 )}
                             >
-                                <div className={cn("flex items-end gap-2", message.sender_id === user?.id ? "flex-row-reverse" : "flex-row")}>
+                                <div className={cn("flex items-end gap-2 max-w-[80%]", message.sender_id === user?.id ? "flex-row-reverse" : "flex-row")}>
                                      {message.sender_id !== user?.id && (
-                                        <Avatar className="h-8 w-8">
+                                        <Avatar className="h-8 w-8 self-start">
                                             <AvatarImage src={recipient.avatar_url || ''} />
                                             <AvatarFallback>{getInitials(recipient.full_name)}</AvatarFallback>
                                         </Avatar>
-                                    )}
+                                     )}
+                                     {message.sender_id === user?.id && <div className="w-8 flex-shrink-0"></div>}
                                     <div
                                         className={cn(
-                                            "max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-2xl",
+                                            "p-3 rounded-2xl",
                                             message.sender_id === user?.id
                                                 ? "bg-primary text-primary-foreground rounded-br-none"
                                                 : "bg-background rounded-bl-none"
@@ -259,7 +261,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                                         {message.content && <p className="text-sm whitespace-pre-wrap">{message.content}</p>}
                                     </div>
                                 </div>
-                                <p className={cn("text-xs text-muted-foreground px-2", message.sender_id === user?.id ? "pr-2" : "pl-12")}>
+                                <p className={cn("text-xs text-muted-foreground px-2", message.sender_id === user?.id ? "pr-12" : "pl-12")}>
                                     {format(new Date(message.created_at), 'HH:mm')}
                                 </p>
                             </div>

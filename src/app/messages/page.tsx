@@ -91,21 +91,20 @@ function MessagingPage() {
     const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
     return (
-        <div className={cn("flex flex-col h-screen", !selectedConversationId ? "" : "md:h-screen")}>
+        <div className="flex flex-col h-screen">
              {/* Header is only shown when no chat is selected on mobile */}
             <div className={cn(selectedConversationId && 'md:hidden', 'hidden')}>
                  <Header />
             </div>
-             <div className={cn(selectedConversationId ? 'hidden' : 'md:block')}>
+             <div className={cn(selectedConversationId ? 'hidden md:block' : '')}>
                 <Header />
             </div>
             
             <main className="flex-grow flex border-t overflow-hidden">
                 {/* Conversation List */}
                 <div className={cn(
-                    "flex-shrink-0 w-full md:w-80 lg:w-96 border-r flex flex-col transition-transform duration-300 ease-in-out h-full",
-                    "md:translate-x-0",
-                    selectedConversationId ? "fixed -translate-x-full" : "relative translate-x-0"
+                    "w-full md:w-80 lg:w-96 border-r flex flex-col h-full",
+                    selectedConversationId ? "hidden md:flex" : "flex"
                 )}>
                     <div className="p-4 border-b">
                         <h1 className="text-xl font-bold">Messages</h1>
@@ -167,9 +166,8 @@ function MessagingPage() {
 
                 {/* Chat Interface */}
                 <div className={cn(
-                    "flex-grow flex-col absolute inset-0 md:relative transition-transform duration-300 ease-in-out",
-                    "md:translate-x-0 flex",
-                    selectedConversationId ? "translate-x-0" : "translate-x-full"
+                    "flex-grow flex-col",
+                    selectedConversationId ? "flex" : "hidden md:flex"
                 )}>
                     {selectedConversation ? (
                         <ChatInterface
