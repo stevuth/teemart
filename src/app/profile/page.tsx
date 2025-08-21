@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -84,10 +84,9 @@ export default function ProfilePage() {
           
         if (reviewsError) { 
             console.error("Error fetching reviews:", reviewsError);
-            // Don't throw, just show an empty list for reviews
             setReviews([]);
         } else {
-            setReviews(reviewsData as ReviewWithUser[] || []);
+            setReviews((reviewsData as ReviewWithUser[]) || []);
         }
       } else {
         setReviews([]);
@@ -154,6 +153,13 @@ export default function ProfilePage() {
       </Alert>
     </div>
   );
+
+  const handleSignOut = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    toast({ title: 'Logged Out', description: "You have been successfully logged out." });
+    router.push('/');
+  };
 
   if (authLoading) {
     return (
@@ -253,7 +259,8 @@ export default function ProfilePage() {
                       <Button asChild variant="outline" className="w-full sm:w-auto">
                           <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help & Support</Link>
                       </Button>
-                      <Button variant="destructive" onClick={() => supabase?.auth.signOut()} className="w-full sm:w-auto">
+                      <Button variant="destructive" onClick={handleSignOut} className="w-full sm:w-auto">
+                        <LogOut className="mr-2 h-4 w-4" />
                         Sign Out
                       </Button>
                   </div>
