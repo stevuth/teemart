@@ -9,7 +9,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChatInterface } from '@/components/chat-interface';
-import { cn } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Loader2 } from 'lucide-react';
@@ -52,12 +51,8 @@ function MessagingPage() {
     }, [user, supabase]);
 
     useEffect(() => {
-        if (!authLoading) {
-            if (user) {
-                fetchConversations();
-            } else {
-                setLoading(false);
-            }
+        if (!authLoading && user) {
+            fetchConversations();
         }
     }, [user, authLoading, fetchConversations]);
 
@@ -77,7 +72,7 @@ function MessagingPage() {
         if (!name) return '?';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
-    
+
     if (authLoading) {
         return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
@@ -99,83 +94,80 @@ function MessagingPage() {
     }
     
     const selectedConversation = conversations.find(c => c.id === selectedConversationId);
-    
-    const showChatInterface = selectedConversationId && selectedConversation;
 
+    // If a conversation is selected, only render the chat interface.
+    if (selectedConversationId && selectedConversation) {
+        return (
+            <ChatInterface
+                conversationId={selectedConversation.id}
+                recipient={selectedConversation.other_participant}
+                onBack={handleBackToList}
+            />
+        );
+    }
+
+    // Otherwise, render the conversation list.
     return (
         <div className="flex flex-col h-screen bg-background">
-            {/* On mobile, we only show one view at a time */}
-            {/* Chat Interface takes priority if selected */}
-            {showChatInterface ? (
-                <ChatInterface
-                    conversationId={selectedConversation.id}
-                    recipient={selectedConversation.other_participant}
-                    onBack={handleBackToList}
-                />
-            ) : (
-                <>
-                    <Header />
-                    <main className="flex-grow flex flex-col border-t overflow-hidden">
-                        {/* Conversation List */}
-                        <div className="flex flex-col h-full">
-                            <div className="p-4 border-b">
-                                <h1 className="text-xl font-bold">Messages</h1>
-                            </div>
-                            <div className="flex-grow overflow-y-auto">
-                                {loading ? (
-                                    <div className="p-4 space-y-4">
-                                        {[...Array(5)].map((_, i) => (
-                                            <div key={i} className="flex items-center gap-3">
-                                                <Skeleton className="h-12 w-12 rounded-full" />
-                                                <div className="space-y-2">
-                                                    <Skeleton className="h-4 w-32" />
-                                                    <Skeleton className="h-4 w-24" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : conversations.length > 0 ? (
-                                    conversations.map(convo => (
-                                        <div
-                                            key={convo.id}
-                                            onClick={() => handleSelectConversation(convo.id)}
-                                            className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent"
-                                        >
-                                            <Avatar className="h-12 w-12">
-                                                <AvatarImage src={convo.other_participant.avatar_url || ''} />
-                                                <AvatarFallback>{getInitials(convo.other_participant.full_name)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-grow overflow-hidden">
-                                                <p className="font-semibold truncate">{convo.other_participant.full_name}</p>
-                                                <p className="text-sm text-muted-foreground truncate">
-                                                    {convo.last_message_content ? (
-                                                        <>
-                                                            {convo.last_message_sender_id === user?.id && 'You: '}
-                                                            {convo.last_message_content}
-                                                        </>
-                                                    ) : 'No messages yet'}
-                                                </p>
-                                            </div>
-                                            {convo.last_message_at && (
-                                                <p className="text-xs text-muted-foreground self-start flex-shrink-0">
-                                                    {formatDistanceToNow(new Date(convo.last_message_at), { addSuffix: true })}
-                                                </p>
-                                            )}
+            <Header />
+            <main className="flex-grow flex flex-col border-t overflow-hidden">
+                <div className="flex flex-col h-full">
+                    <div className="p-4 border-b">
+                        <h1 className="text-xl font-bold">Messages</h1>
+                    </div>
+                    <div className="flex-grow overflow-y-auto">
+                        {loading ? (
+                            <div className="p-4 space-y-4">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="flex items-center gap-3">
+                                        <Skeleton className="h-12 w-12 rounded-full" />
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-4 w-32" />
+                                            <Skeleton className="h-4 w-24" />
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="p-8 text-center text-muted-foreground">
-                                        <MessageSquare className="h-12 w-12 mx-auto mb-4" />
-                                        <h3 className="font-semibold">No Conversations</h3>
-                                        <p className="text-sm">Start a chat from a seller's profile.</p>
                                     </div>
-                                )}
+                                ))}
                             </div>
-                        </div>
-                    </main>
-                    <Footer />
-                </>
-            )}
+                        ) : conversations.length > 0 ? (
+                            conversations.map(convo => (
+                                <div
+                                    key={convo.id}
+                                    onClick={() => handleSelectConversation(convo.id)}
+                                    className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent"
+                                >
+                                    <Avatar className="h-12 w-12">
+                                        <AvatarImage src={convo.other_participant.avatar_url || ''} />
+                                        <AvatarFallback>{getInitials(convo.other_participant.full_name)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-grow overflow-hidden">
+                                        <p className="font-semibold truncate">{convo.other_participant.full_name}</p>
+                                        <p className="text-sm text-muted-foreground truncate">
+                                            {convo.last_message_content ? (
+                                                <>
+                                                    {convo.last_message_sender_id === user?.id && 'You: '}
+                                                    {convo.last_message_content}
+                                                </>
+                                            ) : 'No messages yet'}
+                                        </p>
+                                    </div>
+                                    {convo.last_message_at && (
+                                        <p className="text-xs text-muted-foreground self-start flex-shrink-0">
+                                            {formatDistanceToNow(new Date(convo.last_message_at), { addSuffix: true })}
+                                        </p>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="p-8 text-center text-muted-foreground">
+                                <MessageSquare className="h-12 w-12 mx-auto mb-4" />
+                                <h3 className="font-semibold">No Conversations</h3>
+                                <p className="text-sm">Start a chat from a seller's profile.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </main>
+            <Footer />
         </div>
     );
 }
