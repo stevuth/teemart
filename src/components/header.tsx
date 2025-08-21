@@ -65,7 +65,7 @@ export function Header() {
               <span className="text-xl font-bold tracking-tight">TeeMart</span>
             </Link>
             
-            <div className="flex items-center">
+            <div className="flex items-center gap-1">
               <Button onClick={handleSellClick} size="sm" className="hidden sm:inline-flex sm:w-auto">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Sell
