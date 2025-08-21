@@ -76,6 +76,7 @@ export default function ProfilePage() {
           .select(`
             *,
             user:profiles (
+              id,
               full_name,
               avatar_url
             )
@@ -157,6 +158,7 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    router.refresh();
     toast({ title: 'Logged Out', description: "You have been successfully logged out." });
     router.push('/');
   };
