@@ -28,7 +28,7 @@ export function SearchSection({ onSearch }: SearchSectionProps) {
                             <Input
                                 type="search"
                                 placeholder="Search for cars, phones, and more..."
-                                className="w-full border-none bg-transparent pl-10 focus-visible:ring-0 focus-visible:ring-offset-0 h-11 text-base"
+                                className="w-full border-none bg-transparent pl-10 focus-visible:ring-0 focus-visible:ring-offset-0 h-10 text-base"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
