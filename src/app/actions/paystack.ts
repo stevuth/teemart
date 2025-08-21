@@ -23,6 +23,7 @@ export async function getBankList() {
             }
         });
         if (response.data.status) {
+            // De-duplicate the bank list based on the unique 'code' property.
             const uniqueBanks = Array.from(new Map(response.data.data.map((bank: any) => [bank.code, bank])).values());
             return { success: true, data: uniqueBanks as any[] };
         }
