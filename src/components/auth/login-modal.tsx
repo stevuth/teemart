@@ -67,7 +67,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-secondary">
+      <DialogContent className="bg-background">
         <DialogHeader>
           <div className="flex justify-center mb-4">
              <Image src="https://i.postimg.cc/QCbMpVpx/Chat-GPT-Image-Aug-16-2025-09-48-41-PM.png" alt="TeeMart Logo" width={40} height={40} />
