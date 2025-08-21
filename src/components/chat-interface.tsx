@@ -130,7 +130,6 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         const content = newMessage;
         let imageUrl: string | null = null;
 
-        // Optimistic UI update
         const optimisticId = `temp-${Date.now()}`;
         const optimisticMessage: Message = {
             id: optimisticId,
@@ -141,7 +140,6 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         };
         setMessages(current => [...current, optimisticMessage]);
 
-        // Clear inputs
         setNewMessage('');
         setImageFile(null);
         setImagePreview(null);
@@ -172,13 +170,12 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
 
             if (error) throw error;
             
-            // Replace optimistic message with real one
             setMessages(current => current.map(m => m.id === optimisticId ? (data as Message) : m));
 
         } catch (error: any) {
             toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
-            setMessages(current => current.filter(m => m.id !== optimisticId)); // Revert optimistic update
-            setNewMessage(content); // Restore message content
+            setMessages(current => current.filter(m => m.id !== optimisticId));
+            setNewMessage(content);
         } finally {
             setIsSending(false);
         }
@@ -204,8 +201,8 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 )}
             </DialogContent>
         </Dialog>
-        <div className="flex flex-col h-full">
-            <div className="p-4 border-b flex items-center gap-3">
+        <div className="flex flex-col h-full bg-secondary">
+            <div className="p-3 bg-secondary flex items-center gap-3 sticky top-0 z-10 shadow-sm">
                  <Button onClick={onBack} variant="ghost" size="icon" className="md:hidden mr-2">
                     <ArrowLeft className="h-5 w-5" />
                  </Button>
@@ -222,12 +219,12 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         {messages.map(message => (
                             <div
                                 key={message.id}
                                 className={cn(
-                                    "flex flex-col items-end gap-2",
+                                    "flex flex-col items-end gap-1",
                                     message.sender_id === user?.id ? "items-end" : "items-start"
                                 )}
                             >
@@ -243,7 +240,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                                             "max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-2xl",
                                             message.sender_id === user?.id
                                                 ? "bg-primary text-primary-foreground rounded-br-none"
-                                                : "bg-background rounded-bl-none border"
+                                                : "bg-background rounded-bl-none"
                                         )}
                                     >
                                         {message.image_url && (
@@ -262,7 +259,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                                         {message.content && <p className="text-sm whitespace-pre-wrap">{message.content}</p>}
                                     </div>
                                 </div>
-                                <p className={cn("text-xs text-muted-foreground px-2", message.sender_id === user?.id ? "text-right" : "text-left ml-10")}>
+                                <p className={cn("text-xs text-muted-foreground px-2", message.sender_id === user?.id ? "pr-2" : "pl-12")}>
                                     {format(new Date(message.created_at), 'HH:mm')}
                                 </p>
                             </div>
@@ -272,9 +269,9 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 )}
             </div>
 
-            <div className="p-4 border-t bg-background">
+            <div className="p-2 border-t bg-background sticky bottom-0">
                 {imagePreview && (
-                    <div className="relative w-24 h-24 mb-2">
+                    <div className="relative w-24 h-24 mb-2 ml-2">
                         <Image src={imagePreview} alt="Image preview" layout="fill" className="rounded-md object-cover" />
                         <Button
                             variant="destructive"

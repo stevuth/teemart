@@ -12,7 +12,6 @@ import { ChatInterface } from '@/components/chat-interface';
 import { cn } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { BackButton } from '@/components/back-button';
 
 type Conversation = {
     id: string;
@@ -58,9 +57,8 @@ function MessagingPage() {
             } else {
                 setConversations(data || []);
                 const conversationIdFromUrl = searchParams.get('conversationId');
-                // Auto-select first conversation on desktop if none is selected
                 if (!conversationIdFromUrl && data && data.length > 0) {
-                     if (window.innerWidth >= 768) { // md breakpoint
+                     if (window.innerWidth >= 768) { 
                         handleSelectConversation(data[0].id)
                     }
                 }
@@ -93,15 +91,21 @@ function MessagingPage() {
     const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
     return (
-        <div className="flex flex-col h-screen">
-            <Header />
-            <main className="flex-grow flex border-t overflow-hidden relative container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                 <BackButton className="-ml-4 mt-2" />
+        <div className={cn("flex flex-col h-screen", !selectedConversationId ? "" : "md:h-screen")}>
+             {/* Header is only shown when no chat is selected on mobile */}
+            <div className={cn(selectedConversationId && 'md:hidden', 'hidden')}>
+                 <Header />
+            </div>
+             <div className={cn(selectedConversationId ? 'hidden' : 'md:block')}>
+                <Header />
+            </div>
+            
+            <main className="flex-grow flex border-t overflow-hidden">
                 {/* Conversation List */}
                 <div className={cn(
-                    "flex-shrink-0 w-full md:w-80 lg:w-96 border-r flex flex-col transition-transform duration-300 ease-in-out",
+                    "flex-shrink-0 w-full md:w-80 lg:w-96 border-r flex flex-col transition-transform duration-300 ease-in-out h-full",
                     "md:translate-x-0",
-                    selectedConversationId ? "-translate-x-full" : "translate-x-0"
+                    selectedConversationId ? "fixed -translate-x-full" : "relative translate-x-0"
                 )}>
                     <div className="p-4 border-b">
                         <h1 className="text-xl font-bold">Messages</h1>
@@ -163,7 +167,7 @@ function MessagingPage() {
 
                 {/* Chat Interface */}
                 <div className={cn(
-                    "flex-grow flex-col bg-secondary/30 absolute inset-0 md:relative transition-transform duration-300 ease-in-out",
+                    "flex-grow flex-col absolute inset-0 md:relative transition-transform duration-300 ease-in-out",
                     "md:translate-x-0 flex",
                     selectedConversationId ? "translate-x-0" : "translate-x-full"
                 )}>
@@ -188,6 +192,9 @@ function MessagingPage() {
                     )}
                 </div>
             </main>
+             <div className={cn(selectedConversationId ? 'hidden' : 'md:block')}>
+                <Footer />
+            </div>
         </div>
     );
 }
@@ -195,7 +202,6 @@ function MessagingPage() {
 
 export default function MessagesPage() {
     return (
-        // Suspense is required for pages that use useSearchParams
         <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
             <MessagingPage />
         </Suspense>
