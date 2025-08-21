@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ShoppingCart, User, LogOut, LayoutDashboard, MessageSquare, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-auth-modal';
@@ -22,7 +22,6 @@ import { Badge } from './ui/badge';
 import { useNotifications } from '@/hooks/use-notifications';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { buttonVariants } from './ui/button';
 
 
 export function Header() {
@@ -89,17 +88,15 @@ export function Header() {
               </Button>
 
                {user && (
-                 <Link href="/messages" passHref>
-                    <a className={cn(buttonVariants({ variant: "ghost", size: "icon" }))} aria-label="Messages">
-                      <div className="relative">
+                 <Link href="/messages" className={cn(buttonVariants({ variant: "ghost", size: "icon" }))} aria-label="Messages">
+                    <div className="relative">
                         <MessageSquare className="h-5 w-5" />
                         {notificationCount > 0 && (
-                          <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                        <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
                             {notificationCount}
-                          </Badge>
+                        </Badge>
                         )}
-                      </div>
-                    </a>
+                    </div>
                  </Link>
                )}
 
