@@ -170,7 +170,7 @@ export function PaymentDetailsForm() {
                                         </FormControl>
                                         <SelectContent>
                                             {banks.map(bank => (
-                                                <SelectItem key={`${bank.code}-${bank.name}`} value={bank.code}>{bank.name}</SelectItem>
+                                                <SelectItem key={`${bank.code}-${bank.id}`} value={bank.code}>{bank.name}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
