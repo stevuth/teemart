@@ -98,6 +98,8 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
                 (payload) => {
                     const newMessagePayload = payload.new as Message;
+                    // Only add the message if it's not from the current user,
+                    // as the sender's message is added optimistically.
                     if (newMessagePayload.sender_id !== user?.id) {
                          setMessages(currentMessages => [...currentMessages, newMessagePayload]);
                          markMessagesAsRead();

@@ -41,7 +41,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
 
     const channel = supabase
-      .channel('public:messages')
+      .channel('public:messages:new')
       .on(
         'postgres_changes',
         { 
