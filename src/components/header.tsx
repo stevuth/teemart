@@ -88,15 +88,13 @@ export function Header() {
               </Button>
 
                {user && (
-                 <Link href="/messages" className={cn(buttonVariants({ variant: "ghost", size: "icon" }))} aria-label="Messages">
-                    <div className="relative">
-                        <MessageSquare className="h-5 w-5" />
-                        {notificationCount > 0 && (
-                        <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
-                            {notificationCount}
-                        </Badge>
-                        )}
-                    </div>
+                 <Link href="/messages" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "relative")} aria-label="Messages">
+                    <MessageSquare className="h-5 w-5" />
+                    {notificationCount > 0 && (
+                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                        {notificationCount}
+                    </Badge>
+                    )}
                  </Link>
                )}
 
