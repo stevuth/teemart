@@ -2,6 +2,9 @@
 'use server';
 
 import axios from 'axios';
+import { config } from 'dotenv';
+
+config({ path: '.env.local' });
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_LIVE_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
