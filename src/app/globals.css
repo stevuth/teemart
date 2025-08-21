@@ -5,18 +5,18 @@
 @layer base {
   :root {
     --background: 0 0% 100%; /* Pure White */
-    --foreground: 0 0% 0%; /* Pure Black */
+    --foreground: 0 0% 20%; /* Dark Grey */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-    --primary: 0 0% 0%; /* Black */
+    --popover-foreground: 0 0% 20%;
+    --primary: 0 0% 20%; /* Dark Grey */
     --primary-foreground: 0 0% 100%;
     --secondary: 45 90% 75%; /* High Contrast Cream */
-    --secondary-foreground: 0 0% 0%;
+    --secondary-foreground: 0 0% 20%;
     --muted: 54 90% 92%;
     --muted-foreground: 34 10% 40%;
-    --accent: 0 0% 85%; /* Gray */
+    --accent: 0 0% 85%; /* Light Gray */
     --accent-foreground: 34 10% 20%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
