@@ -27,7 +27,7 @@ export default function ContactPage() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">For general inquiries, support, or feedback, send us an email. We aim to respond within 24 hours.</p>
-                            <a href="mailto:support@teemart.com" className="text-primary font-semibold mt-2 block">support@teemart.com</a>
+                            <a href="mailto:support@teemart.ng" className="text-primary font-semibold mt-2 block">support@teemart.ng</a>
                         </CardContent>
                     </Card>
                     <Card>

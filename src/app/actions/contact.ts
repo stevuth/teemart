@@ -29,7 +29,7 @@ export async function sendReplyAction(messageId: string, replyContent: string) {
     try {
         // Example with a hypothetical email service:
         // await emailService.send({
-        //   from: 'support@teemart.com',
+        //   from: 'support@teemart.ng',
         //   to: message.email,
         //   subject: `Re: Your inquiry to TeeMart`,
         //   html: `<p>Hi ${message.name},</p>
