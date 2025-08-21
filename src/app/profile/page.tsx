@@ -355,7 +355,7 @@ export default function ProfilePage() {
                     {authLoading ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
                     ) : profile ? (
-                        <PaymentDetailsForm profile={profile} />
+                        <PaymentDetailsForm />
                     ) : (
                         renderProfileError("Payment Details")
                     )}
