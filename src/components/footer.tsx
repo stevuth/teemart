@@ -35,41 +35,41 @@ export function Footer() {
 
   return (
     <footer className="bg-background text-card-foreground border-t border-x-4 border-secondary">
-        <div className="container mx-auto">
-            <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 px-4 sm:px-6 lg:px-8">
-            
-            <div className="lg:col-span-4">
-                <Link href="/" className="flex items-center gap-2 mb-4">
-                <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={32} height={32} />
-                <span className="text-2xl font-bold">TeeMart</span>
-                </Link>
-                <p className="text-muted-foreground text-base max-w-sm">
-                Nigeria's most trusted marketplace for buying and selling high-quality used goods safely and easily.
-                </p>
-            </div>
-
-            <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
-                {footerLinks.map((section) => (
-                <div key={section.title}>
-                    <h3 className="font-semibold text-md mb-4">{section.title}</h3>
-                    <ul className="space-y-3">
-                    {section.links.map((link) => (
-                        <li key={link.name}>
-                        <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                            {link.name}
-                        </Link>
-                        </li>
-                    ))}
-                    </ul>
-                </div>
-                ))}
-            </div>
-            
-            </div>
-            <div className="py-6 border-t border-secondary">
-              <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
-            </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        
+        <div className="lg:col-span-4">
+            <Link href="/" className="flex items-center gap-2 mb-4">
+            <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={32} height={32} />
+            <span className="text-2xl font-bold">TeeMart</span>
+            </Link>
+            <p className="text-muted-foreground text-base max-w-sm">
+            Nigeria's most trusted marketplace for buying and selling high-quality used goods safely and easily.
+            </p>
         </div>
+
+        <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
+            {footerLinks.map((section) => (
+            <div key={section.title}>
+                <h3 className="font-semibold text-md mb-4">{section.title}</h3>
+                <ul className="space-y-3">
+                {section.links.map((link) => (
+                    <li key={link.name}>
+                    <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                        {link.name}
+                    </Link>
+                    </li>
+                ))}
+                </ul>
+            </div>
+            ))}
+        </div>
+        
+        </div>
+        <div className="py-6 border-t border-border">
+          <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
+        </div>
+      </div>
     </footer>
   );
 }
