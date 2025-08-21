@@ -169,8 +169,8 @@ export function PaymentDetailsForm() {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {banks.map(bank => (
-                                                <SelectItem key={`${bank.code}-${bank.id}`} value={bank.code}>{bank.name}</SelectItem>
+                                            {banks.map((bank, index) => (
+                                                <SelectItem key={`${bank.code}-${index}`} value={bank.code}>{bank.name}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
