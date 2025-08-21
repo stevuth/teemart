@@ -14,6 +14,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/hooks/use-cart';
 import { BackButton } from './back-button';
+import { ProductCard } from './product-card';
+import { Skeleton } from './ui/skeleton';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { recommendProducts, RecommendProductsInput, RecommendProductsOutput } from '@/ai/flows/product-recommendations';
+import { Product } from '@/lib/types';
 
 type ProductDetailClientProps = {
   product: ProductWithSeller;
@@ -21,6 +27,69 @@ type ProductDetailClientProps = {
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
     const { addToCart } = useCart();
+    const { supabase } = useAuth();
+    
+    const [recommended, setRecommended] = useState<Product[]>([]);
+    const [recommending, setRecommending] = useState(true);
+
+    useEffect(() => {
+        if(product && supabase) {
+            const fetchRecommendations = async () => {
+                setRecommending(true);
+                try {
+                    const input: RecommendProductsInput = {
+                        productName: product.name,
+                        productDescription: product.description,
+                        productCategory: product.category,
+                    };
+                    const result: RecommendProductsOutput = await recommendProducts(input);
+                    const recommendedProducts = result.recommendedProducts;
+
+                    if (recommendedProducts.length === 0) {
+                      setRecommended([]);
+                      return;
+                    }
+
+                    const { data: realProducts, error } = await supabase
+                        .from('products_with_sellers')
+                        .select('*')
+                        .in('name', recommendedProducts.map(p => p.name))
+                        .neq('id', product.id)
+                        .limit(3);
+
+                    if (error) throw error;
+                    
+                    const transformed = (realProducts as any[]).map(item => ({
+                        ...item,
+                        image: item.image_url || [],
+                        postedDate: item.created_at,
+                        deliveryFee: item.delivery_fee,
+                        price: item.price || 0,
+                        category: item.category || '',
+                        location: item.location || '',
+                        city: item.city || '',
+                        condition: item.condition || 'Used',
+                        description: item.description || '',
+                        user_id: item.user_id,
+                        seller: {
+                            id: item.user_id,
+                            full_name: item.seller_name,
+                            avatar_url: item.seller_avatar_url,
+                            is_verified: item.seller_is_verified
+                        }
+                    })) as Product[];
+                    setRecommended(transformed);
+
+                } catch(e) {
+                    console.error("Failed to get recommendations", e);
+                    setRecommended([]);
+                } finally {
+                    setRecommending(false);
+                }
+            }
+            fetchRecommendations();
+        }
+    }, [product, supabase]);
     
     const getInitials = (name?: string | null) => {
         if (!name) return 'S';
@@ -131,8 +200,38 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         </div>
                     </div>
                 </div>
+                 {/* Recommended Products */}
+                <div className="mt-16 sm:mt-24">
+                    <Separator />
+                    <div className="py-12">
+                        <h2 className="text-2xl font-bold tracking-tight text-center mb-10">You Might Also Like</h2>
+                        {recommending ? (
+                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="flex flex-col space-y-3">
+                                    <Skeleton className="h-[125px] w-full rounded-xl" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-3/4" />
+                                    </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : recommended.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {recommended.map(recProduct => (
+                                    <ProductCard key={recProduct.id} product={recProduct} />
+                                ))}
+                            </div>
+                        ) : (
+                           <p className="text-center text-muted-foreground">No recommendations available right now.</p>
+                        )}
+                    </div>
+                </div>
             </main>
             <Footer />
         </div>
     );
 }
+
+    
