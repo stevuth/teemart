@@ -59,18 +59,20 @@ export function Header() {
       <header className="bg-card shadow-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            {/* Left side: Logo */}
-            <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
+            <Link href="/" className="flex items-center gap-2">
               <Image src="https://i.postimg.cc/fRdfzjJ2/cropped-circle-image-1.png" alt="TeeMart Logo" width={32} height={32} />
               <span className="text-xl font-bold tracking-tight">TeeMart</span>
             </Link>
             
-            {/* Right side: Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
-              <Button onClick={handleSellClick} size="sm" className="sm:w-auto">
-                <PlusCircle className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Sell</span>
+            <div className="flex items-center">
+              <Button onClick={handleSellClick} size="sm" className="hidden sm:inline-flex sm:w-auto">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Sell
               </Button>
+              <Button onClick={handleSellClick} size="icon" variant="ghost" className="sm:hidden">
+                 <PlusCircle className="h-5 w-5" />
+              </Button>
+
               <Button asChild size="icon" variant="ghost" aria-label="Cart">
                 <Link href="/cart">
                   <div className="relative">
@@ -83,6 +85,7 @@ export function Header() {
                   </div>
                 </Link>
               </Button>
+
                {user && (
                  <Button asChild size="icon" variant="ghost" aria-label="Messages">
                     <Link href="/messages">
