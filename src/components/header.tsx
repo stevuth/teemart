@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, LogOut, LayoutDashboard, MessageSquare } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, MessageSquare, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthModal } from '@/hooks/use-auth-modal';
 import {
@@ -66,9 +66,10 @@ export function Header() {
             </Link>
             
             {/* Right side: Actions */}
-            <div className="flex items-center gap-2">
-              <Button onClick={handleSellClick}>
-                Sell
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button onClick={handleSellClick} size="sm" className="sm:w-auto">
+                <PlusCircle className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sell</span>
               </Button>
               <Button asChild size="icon" variant="ghost" aria-label="Cart">
                 <Link href="/cart">
