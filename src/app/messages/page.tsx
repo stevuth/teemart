@@ -12,6 +12,7 @@ import { ChatInterface } from '@/components/chat-interface';
 import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Loader2 } from 'lucide-react';
+import { useScrollToTop } from '@/hooks/use-scroll-to-top';
 
 type Conversation = {
     id: string;
@@ -26,6 +27,7 @@ type Conversation = {
 }
 
 function MessagingPage() {
+    useScrollToTop();
     const { user, loading: authLoading, supabase } = useAuth();
     const searchParams = useSearchParams();
     const router = useRouter();
