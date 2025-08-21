@@ -87,8 +87,8 @@ export function Header() {
               </Button>
 
                {user && (
-                 <Link href="/messages" passHref>
-                    <Button size="icon" variant="ghost" aria-label="Messages">
+                 <Button asChild size="icon" variant="ghost" aria-label="Messages">
+                    <Link href="/messages">
                        <div className="relative">
                           <MessageSquare className="h-5 w-5" />
                           {notificationCount > 0 && (
@@ -97,8 +97,8 @@ export function Header() {
                             </Badge>
                           )}
                         </div>
-                    </Button>
-                </Link>
+                    </Link>
+                </Button>
                )}
 
               {user ? (
