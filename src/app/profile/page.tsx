@@ -73,7 +73,13 @@ export default function ProfilePage() {
       if (productIds.length > 0) {
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select('*, user:profiles(full_name, avatar_url)')
+          .select(`
+            *,
+            user:profiles (
+              full_name,
+              avatar_url
+            )
+          `)
           .in('product_id', productIds);
           
         if (reviewsError) { 
