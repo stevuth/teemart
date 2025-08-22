@@ -12,12 +12,18 @@ const PaymentDetailsSchema = z.object({
 
 export async function POST(request: NextRequest) {
   const supabase = createSupabaseServerClient();
+  const token = request.headers.get('authorization')?.split(' ')[1];
 
-  // 1. Get the currently authenticated user
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!token) {
     return NextResponse.json({ error: 'You must be logged in to update your profile.' }, { status: 401 });
+  }
+
+  // 1. Verify the token to get the user
+  const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    console.error('Auth error in API route:', userError);
+    return NextResponse.json({ error: 'Authentication failed. Please log in again.' }, { status: 401 });
   }
   
   const details = await request.json();
