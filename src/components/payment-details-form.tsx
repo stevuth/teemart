@@ -39,7 +39,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, supabase } = useAuth();
+    const { profile, refetchProfile } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -114,7 +114,7 @@ export function PaymentDetailsForm() {
         };
 
         setIsSubmitting(true);
-        const result = await updatePaymentDetailsAction(supabase, {
+        const result = await updatePaymentDetailsAction({
             bank_name: resolvedAccount.bank_name,
             bank_code: watchBankCode,
             account_number: watchAccountNumber,

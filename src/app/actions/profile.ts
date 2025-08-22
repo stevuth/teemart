@@ -3,7 +3,6 @@
 
 import { createSupabaseServerClient } from '@/utils/supabase/server';
 import { z } from 'zod';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 const PaymentDetailsSchema = z.object({
   bank_name: z.string().min(1, "Bank name is required."),
@@ -14,14 +13,13 @@ const PaymentDetailsSchema = z.object({
 
 /**
  * Updates the payment details for the currently authenticated user.
- * @param supabase - An authenticated Supabase client instance.
  * @param details - The payment details to save.
  * @returns An object with either a success flag or an error message.
  */
 export async function updatePaymentDetailsAction(
-    supabase: SupabaseClient,
     details: z.infer<typeof PaymentDetailsSchema>
 ) {
+    const supabase = createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
