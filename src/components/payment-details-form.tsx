@@ -127,13 +127,13 @@ export function PaymentDetailsForm() {
                 account_name: resolvedAccount.account_name,
             };
 
-            const { error: updateError } = await supabase
+            const { error } = await supabase
                 .from('profiles')
                 .update(detailsToSave)
                 .eq('id', user.id);
 
-            if (updateError) {
-                throw updateError;
+            if (error) {
+                throw error;
             }
             
             toast({ title: "Success", description: "Your payment details have been saved." });
