@@ -15,7 +15,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { resolveBankAccount } from "@/app/actions/paystack";
-import { updatePaymentDetailsAction } from "@/app/actions/profile";
 import axios from 'axios';
 
 type Bank = {
@@ -39,7 +38,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile } = useAuth();
+    const { profile, refetchProfile, supabase } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -114,25 +113,38 @@ export function PaymentDetailsForm() {
         };
 
         setIsSubmitting(true);
-        const result = await updatePaymentDetailsAction({
-            bank_name: resolvedAccount.bank_name,
-            bank_code: watchBankCode,
-            account_number: watchAccountNumber,
-            account_name: resolvedAccount.account_name,
-        });
+        
+        try {
+            const response = await fetch("/api/user/save-payment-details", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    bank_name: resolvedAccount.bank_name,
+                    bank_code: watchBankCode,
+                    account_number: watchAccountNumber,
+                    account_name: resolvedAccount.account_name,
+                }),
+            });
 
-        if (result.error) {
-            console.error("Failed to save payment details:", result.error);
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "An unknown error occurred.");
+            }
+            
+            toast({ title: "Success", description: "Your payment details have been saved." });
+            await refetchProfile();
+
+        } catch (error: any) {
+            console.error("Failed to save payment details:", error);
             toast({
                 title: "Error Saving Details",
-                description: result.error,
+                description: error.message,
                 variant: "destructive",
             });
-        } else {
-            await refetchProfile();
-            toast({ title: "Success", description: "Your payment details have been saved." });
+        } finally {
+            setIsSubmitting(false);
         }
-        setIsSubmitting(false);
     };
     
     const isVerified = !!(profile?.account_name && profile?.bank_name);
