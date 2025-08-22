@@ -130,7 +130,9 @@ export function PaymentDetailsForm() {
             const { error } = await supabase
                 .from('profiles')
                 .update(detailsToSave)
-                .eq('id', user.id);
+                .eq('id', user.id)
+                .select()
+                .single();
 
             if (error) {
                 throw error;
