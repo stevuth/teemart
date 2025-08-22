@@ -1,7 +1,15 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { createSupabaseServerClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+
+// IMPORTANT: Use the SERVICE_ROLE_KEY for server-side operations that need to bypass RLS.
+// For this specific operation, we are verifying the user with their access token
+// and then performing an update on their behalf, so we need service-level privileges.
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const PaymentDetailsSchema = z.object({
   bank_name: z.string().min(1, "Bank name is required."),
@@ -11,10 +19,15 @@ const PaymentDetailsSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  // 1. Extract the user's access token from the Authorization header.
+  const token = request.headers.get('authorization')?.split(' ')[1];
 
-  // 1. Verify the user session from the cookie
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (!token) {
+    return NextResponse.json({ error: 'You must be logged in to update your profile.' }, { status: 401 });
+  }
+  
+  // 2. Verify the token to get the authenticated user.
+  const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
 
   if (userError || !user) {
     console.error('Auth error in API route:', userError);
@@ -23,28 +36,25 @@ export async function POST(request: NextRequest) {
   
   const details = await request.json();
 
-  // 2. Validate the incoming data
+  // 3. Validate the incoming data against the schema.
   const validation = PaymentDetailsSchema.safeParse(details);
   if (!validation.success) {
     const errorMessages = validation.error.errors.map(e => e.message).join(', ');
     return NextResponse.json({ error: errorMessages }, { status: 400 });
   }
   
-  // 3. Update the user's profile in the database
-  const { error: updateError } = await supabase
+  // 4. Update the user's profile in the database.
+  // We use the authenticated user's ID to ensure they can only update their own profile.
+  const { error: updateError } = await supabaseAdmin
     .from('profiles')
     .update(validation.data)
     .eq('id', user.id);
 
   if (updateError) {
     console.error('Error updating payment details:', updateError);
-    // Provide a more specific error message if it's a permission issue
-    if (updateError.code === '42501') { 
-        return NextResponse.json({ error: 'Database permission denied. Please ensure the RLS policies in README.md are applied.' }, { status: 500 });
-    }
     return NextResponse.json({ error: 'Failed to save payment details.' }, { status: 500 });
   }
   
-  // 4. Return a success response
+  // 5. Return a success response.
   return NextResponse.json({ success: true, message: "Payment details saved successfully." });
 }
