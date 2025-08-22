@@ -38,7 +38,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, supabase } = useAuth();
+    const { profile, refetchProfile } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -115,16 +115,10 @@ export function PaymentDetailsForm() {
         setIsSubmitting(true);
         
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                throw new Error("You must be logged in to update your profile.");
-            }
-
             const response = await fetch("/api/user/save-payment-details", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${session.access_token}`
                 },
                 body: JSON.stringify({
                     bank_name: resolvedAccount.bank_name,
