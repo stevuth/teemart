@@ -16,7 +16,6 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { resolveBankAccount } from "@/app/actions/paystack";
 import axios from 'axios';
-import { updatePaymentDetailsAction } from "@/app/actions/profile";
 
 type Bank = {
     id: number;
@@ -116,15 +115,23 @@ export function PaymentDetailsForm() {
         setIsSubmitting(true);
         
         try {
-            const result = await updatePaymentDetailsAction({
+            const detailsToSave = {
                 bank_name: resolvedAccount.bank_name,
                 bank_code: watchBankCode,
                 account_number: watchAccountNumber,
                 account_name: resolvedAccount.account_name,
+            };
+
+            const response = await fetch('/api/user/save-payment-details', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(detailsToSave),
             });
 
-            if (result.error) {
-                throw new Error(result.error);
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'An unknown error occurred.');
             }
             
             toast({ title: "Success", description: "Your payment details have been saved." });

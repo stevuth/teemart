@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
   if (updateError) {
     console.error('Error updating payment details:', updateError);
     // Provide a more specific error message if it's a permission issue
-    if (updateError.code === '42501') { // "new row violates row-level security policy"
-        return NextResponse.json({ error: 'Database permission denied. Please check RLS policies.' }, { status: 500 });
+    if (updateError.code === '42501') { 
+        return NextResponse.json({ error: 'Database permission denied. Please ensure the RLS policies in README.md are applied.' }, { status: 500 });
     }
     return NextResponse.json({ error: 'Failed to save payment details.' }, { status: 500 });
   }
