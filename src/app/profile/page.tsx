@@ -4,6 +4,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,19 +16,24 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { orders as staticOrders } from '@/lib/data';
 import { ProductCard } from '@/components/product-card';
-import type { Order, OrderStatus, Product, Review, ReviewWithUser } from '@/lib/types';
-import Image from 'next/image';
+import type { Product, ReviewWithUser } from '@/lib/types';
 import Link from 'next/link';
-import { format, parseISO } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteProductDialog } from '@/components/delete-product-dialog';
 import { ReviewList } from '@/components/review-list';
-import { VerificationForm } from '@/components/verification-form';
 import { BackButton } from '@/components/back-button';
-import { PaymentDetailsForm } from '@/components/payment-details-form';
+
+const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    ssr: false,
+});
+
+const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form').then(mod => mod.PaymentDetailsForm), {
+    loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    ssr: false,
+});
 
 export default function ProfilePage() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
@@ -35,7 +41,6 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
-  const [purchaseHistory, setPurchaseHistory] = useState<Product[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   
@@ -384,3 +389,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
