@@ -119,21 +119,16 @@ export function PaymentDetailsForm() {
         }
 
         setIsSubmitting(true);
-        console.log("Submitting with values:", {
-            bank_name: resolvedAccount.bank_name,
-            account_name: resolvedAccount.account_name,
-            account_number: watchAccountNumber,
-            bank_code: watchBankCode
-        });
+        
+        const params = {
+            bank_name_val: resolvedAccount.bank_name,
+            account_name_val: resolvedAccount.account_name,
+            account_number_val: watchAccountNumber,
+            bank_code_val: watchBankCode,
+        };
         
         try {
-            const { error } = await supabase
-                .rpc('update_user_profile', { 
-                    bank_name_val: resolvedAccount.bank_name,
-                    account_name_val: resolvedAccount.account_name,
-                    account_number_val: watchAccountNumber,
-                    bank_code_val: watchBankCode,
-                 });
+            const { error } = await supabase.rpc('update_user_profile', params);
 
             if (error) {
                 console.error("Supabase RPC error:", error);
