@@ -6,7 +6,11 @@ To get started, take a look at src/app/page.tsx.
 
 ## Supabase Setup
 
-To ensure the application functions correctly, you must run the following SQL script in your Supabase project's SQL Editor. This script sets up the necessary Row-Level Security (RLS) policies for the `profiles` table, which is crucial for features like updating payment details.
+To ensure the application functions correctly, you must run the following SQL script in your Supabase project's SQL Editor. This script sets up the necessary Row-Level Security (RLS) policies and database functions for features like updating payment details.
+
+### 1. Main RLS and Schema Script
+
+This script adds the necessary columns to the `profiles` table and configures the security policies. It is safe to run this multiple times.
 
 ```sql
 -- This script adds the necessary payment detail columns to your profiles table
@@ -53,4 +57,37 @@ FOR UPDATE
 TO authenticated
 USING (auth.uid() = id)
 WITH CHECK (auth.uid() = id);
+```
+
+### 2. Profile Update Function
+
+This script creates a secure PostgreSQL function to handle profile updates. This is a more robust method for saving data from the client side.
+
+```sql
+-- This script creates a secure function to handle profile updates.
+
+-- 1. Drop the function if it exists to ensure a clean setup.
+DROP FUNCTION IF EXISTS public.update_user_profile;
+
+-- 2. Create the function that allows a user to update their own profile.
+CREATE OR REPLACE FUNCTION public.update_user_profile(
+    bank_name_val VARCHAR,
+    account_name_val VARCHAR,
+    account_number_val VARCHAR,
+    bank_code_val VARCHAR
+)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.profiles
+  SET 
+    bank_name = bank_name_val,
+    account_name = account_name_val,
+    account_number = account_number_val,
+    bank_code = bank_code_val
+  WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION public.update_user_profile(VARCHAR, VARCHAR, VARCHAR, VARCHAR) TO authenticated;
 ```

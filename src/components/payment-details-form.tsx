@@ -120,19 +120,13 @@ export function PaymentDetailsForm() {
         setIsSubmitting(true);
         
         try {
-            const detailsToSave = {
-                bank_name: resolvedAccount.bank_name,
-                bank_code: watchBankCode,
-                account_number: watchAccountNumber,
-                account_name: resolvedAccount.account_name,
-            };
-
             const { error } = await supabase
-                .from('profiles')
-                .update(detailsToSave)
-                .eq('id', user.id)
-                .select()
-                .single();
+                .rpc('update_user_profile', { 
+                    bank_name_val: resolvedAccount.bank_name,
+                    account_name_val: resolvedAccount.account_name,
+                    account_number_val: watchAccountNumber,
+                    bank_code_val: watchBankCode,
+                 });
 
             if (error) {
                 throw error;
