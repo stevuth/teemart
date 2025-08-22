@@ -22,24 +22,24 @@ DROP POLICY IF EXISTS "Users can update their own profile." ON public.profiles;
 
 -- 3. Allow users to view their own profile.
 -- This is crucial for allowing updates, as the user must be able to read the row they intend to modify.
-CREATE POLICY "Users can view their own profile" ON public.profiles
+CREATE POLICY "Users can view their own profile." ON public.profiles
 FOR SELECT 
 TO authenticated
 USING (auth.uid() = id);
 
 -- 4. Allow public read access for general profile viewing (e.g., seller pages).
-CREATE POLICY "Public profiles are viewable by everyone" ON public.profiles
+CREATE POLICY "Public profiles are viewable by everyone." ON public.profiles
 FOR SELECT 
 USING (true);
 
 -- 5. Allow new authenticated users to insert their own profile.
-CREATE POLICY "Users can insert their own profile" ON public.profiles
+CREATE POLICY "Users can insert their own profile." ON public.profiles
 FOR INSERT 
 TO authenticated
 WITH CHECK (auth.uid() = id);
 
 -- 6. Allow authenticated users to update their own profile.
-CREATE POLICY "Users can update their own profile" ON public.profiles
+CREATE POLICY "Users can update their own profile." ON public.profiles
 FOR UPDATE 
 TO authenticated
 USING (auth.uid() = id)
