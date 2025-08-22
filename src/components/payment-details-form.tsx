@@ -98,6 +98,7 @@ export function PaymentDetailsForm() {
                     account_name: result.data.account_name,
                     bank_name: selectedBank?.name || ''
                 });
+                toast({ title: "Account Verified", description: `Account Name: ${result.data.account_name}`});
             } else {
                  toast({ title: "Verification Failed", description: result.error || "Could not verify account details.", variant: "destructive" });
             }
@@ -118,6 +119,12 @@ export function PaymentDetailsForm() {
         }
 
         setIsSubmitting(true);
+        console.log("Submitting with values:", {
+            bank_name: resolvedAccount.bank_name,
+            account_name: resolvedAccount.account_name,
+            account_number: watchAccountNumber,
+            bank_code: watchBankCode
+        });
         
         try {
             const { error } = await supabase
@@ -129,6 +136,7 @@ export function PaymentDetailsForm() {
                  });
 
             if (error) {
+                console.error("Supabase RPC error:", error);
                 throw error;
             }
             
@@ -139,7 +147,7 @@ export function PaymentDetailsForm() {
             console.error("Failed to save payment details:", error);
             toast({
                 title: "Error Saving Details",
-                description: error.message || "An unexpected error occurred. Please check database permissions.",
+                description: error.message || "An unexpected error occurred. Please check database permissions and try again.",
                 variant: "destructive",
             });
         } finally {
@@ -222,9 +230,9 @@ export function PaymentDetailsForm() {
                         {resolvedAccount && hasChanged && (
                             <Alert variant="default" className="bg-blue-100 border-blue-200 text-blue-800">
                                 <ShieldCheck className="h-4 w-4 !text-blue-800" />
-                                <AlertTitle>Account Verified</AlertTitle>
+                                <AlertTitle>Account Ready to Save</AlertTitle>
                                 <AlertDescription>
-                                    Account Name: <strong>{resolvedAccount.account_name}</strong>
+                                    Verified Account Name: <strong>{resolvedAccount.account_name}</strong>
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -236,7 +244,7 @@ export function PaymentDetailsForm() {
                             className="w-full"
                         >
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isVerified ? 'Update Account Details' : 'Save Account Details'}
+                            {isVerified && !hasChanged ? 'Account Saved' : 'Save Account Details'}
                         </Button>
                     </form>
                 </Form>
