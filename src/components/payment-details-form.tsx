@@ -38,7 +38,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, supabase } = useAuth();
+    const { profile, refetchProfile, supabase, user } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -112,15 +112,14 @@ export function PaymentDetailsForm() {
              return;
         };
 
+        if (!user) {
+            toast({ title: "Authentication Error", description: "You must be logged in to update your profile.", variant: "destructive" });
+            return;
+        }
+
         setIsSubmitting(true);
         
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session) {
-                throw new Error("You must be logged in to update your profile.");
-            }
-
             const detailsToSave = {
                 bank_name: resolvedAccount.bank_name,
                 bank_code: watchBankCode,
@@ -128,29 +127,23 @@ export function PaymentDetailsForm() {
                 account_name: resolvedAccount.account_name,
             };
 
-            const response = await fetch('/api/user/save-payment-details', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify(detailsToSave),
-            });
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update(detailsToSave)
+                .eq('id', user.id);
 
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || 'An unknown error occurred.');
+            if (updateError) {
+                throw updateError;
             }
             
             toast({ title: "Success", description: "Your payment details have been saved." });
             await refetchProfile();
 
         } catch (error: any) {
-            console.error("Failed to save payment details:", error.message);
+            console.error("Failed to save payment details:", error);
             toast({
                 title: "Error Saving Details",
-                description: error.message,
+                description: error.message || "An unexpected error occurred. Please check database permissions.",
                 variant: "destructive",
             });
         } finally {
