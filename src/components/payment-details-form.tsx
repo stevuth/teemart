@@ -16,6 +16,7 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { resolveBankAccount } from "@/app/actions/paystack";
 import axios from 'axios';
+import { updatePaymentDetailsAction } from "@/app/actions/profile";
 
 type Bank = {
     id: number;
@@ -115,30 +116,22 @@ export function PaymentDetailsForm() {
         setIsSubmitting(true);
         
         try {
-            const response = await fetch("/api/user/save-payment-details", {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    bank_name: resolvedAccount.bank_name,
-                    bank_code: watchBankCode,
-                    account_number: watchAccountNumber,
-                    account_name: resolvedAccount.account_name,
-                }),
+            const result = await updatePaymentDetailsAction({
+                bank_name: resolvedAccount.bank_name,
+                bank_code: watchBankCode,
+                account_number: watchAccountNumber,
+                account_name: resolvedAccount.account_name,
             });
 
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || "An unknown error occurred.");
+            if (result.error) {
+                throw new Error(result.error);
             }
             
             toast({ title: "Success", description: "Your payment details have been saved." });
             await refetchProfile();
 
         } catch (error: any) {
-            console.error("Failed to save payment details:", error);
+            console.error("Failed to save payment details:", error.message);
             toast({
                 title: "Error Saving Details",
                 description: error.message,
