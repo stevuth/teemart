@@ -1,3 +1,4 @@
+
 # Firebase Studio
 
 This is a NextJS starter in Firebase Studio.
@@ -57,37 +58,4 @@ FOR UPDATE
 TO authenticated
 USING (auth.uid() = id)
 WITH CHECK (auth.uid() = id);
-```
-
-### 2. Profile Update Function
-
-This script creates a secure PostgreSQL function to handle profile updates. This is a more robust method for saving data from the client side.
-
-```sql
--- This script creates a secure function to handle profile updates.
-
--- 1. Drop the function if it exists to ensure a clean setup.
-DROP FUNCTION IF EXISTS public.update_user_profile;
-
--- 2. Create the function that allows a user to update their own profile.
-CREATE OR REPLACE FUNCTION public.update_user_profile(
-    bank_name_val VARCHAR,
-    account_name_val VARCHAR,
-    account_number_val VARCHAR,
-    bank_code_val VARCHAR
-)
-RETURNS VOID AS $$
-BEGIN
-  UPDATE public.profiles
-  SET 
-    bank_name = bank_name_val,
-    account_name = account_name_val,
-    account_number = account_number_val,
-    bank_code = bank_code_val
-  WHERE id = auth.uid();
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION public.update_user_profile(VARCHAR, VARCHAR, VARCHAR, VARCHAR) TO authenticated;
 ```

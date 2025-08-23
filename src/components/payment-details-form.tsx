@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { resolveBankAccount } from "@/app/actions/paystack";
+import { updatePaymentDetailsAction } from "@/app/actions/profile";
 import axios from 'axios';
 
 type Bank = {
@@ -38,7 +39,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, supabase, user } = useAuth();
+    const { profile, refetchProfile, user } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -120,19 +121,16 @@ export function PaymentDetailsForm() {
 
         setIsSubmitting(true);
         
-        const params = {
-            bank_name_val: resolvedAccount.bank_name,
-            account_name_val: resolvedAccount.account_name,
-            account_number_val: watchAccountNumber,
-            bank_code_val: watchBankCode,
-        };
-        
         try {
-            const { error } = await supabase.rpc('update_user_profile', params);
+            const result = await updatePaymentDetailsAction({
+                bank_name: resolvedAccount.bank_name,
+                account_name: resolvedAccount.account_name,
+                account_number: watchAccountNumber,
+                bank_code: watchBankCode,
+            });
 
-            if (error) {
-                console.error("Supabase RPC error:", error);
-                throw error;
+            if (result.error) {
+                throw new Error(result.error);
             }
             
             toast({ title: "Success", description: "Your payment details have been saved." });
