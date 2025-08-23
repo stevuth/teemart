@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useTransition } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -43,7 +43,7 @@ export function PaymentDetailsForm() {
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
-    const [isPending, startTransition] = useTransition();
+    const [isSaving, setIsSaving] = useState(false);
     const [resolvedAccount, setResolvedAccount] = useState<{ account_name: string, bank_name: string } | null>(null);
 
     const form = useForm<PaymentFormValues>({
@@ -119,25 +119,25 @@ export function PaymentDetailsForm() {
              return;
         };
 
-        startTransition(async () => {
-            const result = await updatePaymentDetailsAction({
-                bank_name: resolvedAccount.bank_name,
-                account_name: resolvedAccount.account_name,
-                account_number: watchAccountNumber,
-                bank_code: watchBankCode,
-            });
-
-            if (result?.error) {
-                toast({
-                    title: "Error Saving Details",
-                    description: result.error,
-                    variant: "destructive",
-                });
-            } else {
-                toast({ title: "Success", description: "Your payment details have been saved." });
-                await refetchProfile();
-            }
+        setIsSaving(true);
+        const result = await updatePaymentDetailsAction({
+            bank_name: resolvedAccount.bank_name,
+            account_name: resolvedAccount.account_name,
+            account_number: watchAccountNumber,
+            bank_code: watchBankCode,
         });
+
+        if (result?.error) {
+            toast({
+                title: "Error Saving Details",
+                description: result.error,
+                variant: "destructive",
+            });
+        } else {
+            toast({ title: "Success", description: "Your payment details have been saved." });
+            await refetchProfile();
+        }
+        setIsSaving(false);
     };
     
     const isVerified = !!(profile?.account_name && profile?.bank_name);
@@ -172,7 +172,7 @@ export function PaymentDetailsForm() {
                                     <FormLabel>Bank</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                         <FormControl>
-                                            <SelectTrigger disabled={loadingBanks || isVerifying || isPending}>
+                                            <SelectTrigger disabled={loadingBanks || isVerifying || isSaving}>
                                                 <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
                                             </SelectTrigger>
                                         </FormControl>
@@ -194,13 +194,13 @@ export function PaymentDetailsForm() {
                                     <FormLabel>Account Number</FormLabel>
                                     <FormControl>
                                         <div className="relative">
-                                             <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} disabled={isPending} />
+                                             <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} disabled={isSaving} />
                                              <Button 
                                                 type="button"
                                                 size="sm"
                                                 className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
                                                 onClick={handleVerification}
-                                                disabled={isVerifying || field.value.length !== 10 || !watchBankCode || isPending}
+                                                disabled={isVerifying || field.value.length !== 10 || !watchBankCode || isSaving}
                                              >
                                                 {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                                                 Verify
@@ -224,10 +224,10 @@ export function PaymentDetailsForm() {
                         
                         <Button 
                             type="submit"
-                            disabled={isPending || !resolvedAccount || !hasChanged}
+                            disabled={isSaving || !resolvedAccount || !hasChanged}
                             className="w-full"
                         >
-                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isVerified && !hasChanged ? 'Account Saved' : 'Save Account Details'}
                         </Button>
                     </form>
