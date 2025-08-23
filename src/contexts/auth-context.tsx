@@ -130,36 +130,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [supabase, fetchProfile]);
 
   useEffect(() => {
+    const syncSession = async (event: string, session: Session | null) => {
+      await fetch('/auth/callback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ event, session }),
+      });
+    };
+
+    // Initial session sync
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        await fetchProfile(session?.user ?? null);
+        setLoading(false);
+        syncSession(session ? 'SIGNED_IN' : 'SIGNED_OUT', session);
+    });
+
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setLoading(true);
-        // Sync session with server-side cookies
-        await fetch('/auth/callback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ event, session }),
-        });
-
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
         setSession(session);
-        await fetchProfile(currentUser, event === 'SIGNED_IN');
-        setLoading(false);
+        setUser(session?.user ?? null);
+        await fetchProfile(session?.user ?? null, event === 'SIGNED_IN');
+        syncSession(event, session);
       }
     );
-
-    const initialize = async () => {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (initialSession) {
-            setUser(initialSession.user);
-            setSession(initialSession);
-            await fetchProfile(initialSession.user);
-        }
-        setLoading(false);
-    }
-    initialize();
 
     return () => {
       subscription.unsubscribe();
