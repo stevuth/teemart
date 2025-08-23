@@ -36,23 +36,13 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     }
   );
 
-  try {
-    const cookieNames = cookieStore.getAll().map(c => c.name).filter(n => n.startsWith('sb-'))
-    console.log('[Action] sb-* cookies:', cookieNames)
-  } catch {}
-
-
   const { data: { user }, error: getUserError } = await supabase.auth.getUser();
-  console.log('[Action] getUser:', { hasUser: !!user, getUserError: getUserError?.message });
 
   if (getUserError || !user) {
-    console.error('[Action Error] User not authenticated.', getUserError);
+    console.error('Action Error: User not authenticated.', getUserError);
     return { error: 'You must be logged in to update payment details.' };
   }
   
-  console.log('[Action Log] User authenticated:', user.id);
-  console.log('[Action Log] Updating profile with details:', details);
-
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -64,13 +54,11 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     .eq('id', user.id);
 
   if (error) {
-    console.error('[Action Error] Supabase update failed:', { code: error.code, message: error.message, details: error.details });
+    console.error('Action Error: Supabase update failed:', { code: error.code, message: error.message, details: error.details });
     return { error: `Database error: ${error.message}` };
   }
 
-  // Revalidate the profile path to ensure the UI updates with the new data.
   revalidatePath('/profile');
   
-  console.log('[Action Success] Profile updated successfully for user:', user.id);
   return { success: true };
 }

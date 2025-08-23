@@ -43,7 +43,6 @@ const pollForProfile = (
 ): Promise<Profile | null> => {
   return new Promise(async (resolve) => {
     for (let i = 0; i < retries; i++) {
-      console.log(`Polling for profile, attempt ${i + 1}...`);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -51,18 +50,15 @@ const pollForProfile = (
         .single();
       
       if (data) {
-        console.log("Profile found!");
         return resolve(data);
       }
 
       if (error && error.code !== 'PGRST116') { // PGRST116 is "exact one row not found"
-        console.error("Error polling for profile, stopping.", error);
         return resolve(null); // Stop on real errors
       }
       
       await new Promise(res => setTimeout(res, delay * (i + 1))); // Incremental backoff
     }
-    console.log("Polling finished, profile not found.");
     resolve(null);
   });
 };
@@ -110,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (data) {
             setProfile(data);
         } else if (isNewSignIn) {
-            // For new sign-ins where the profile might not exist yet due to trigger delay
             const polledProfile = await pollForProfile(supabase, user);
             setProfile(polledProfile);
         } else {
