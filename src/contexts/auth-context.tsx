@@ -131,20 +131,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (_event === 'SIGNED_OUT') {
-          setUser(null);
-          setSession(null);
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
-        
+      async (event, session) => {
         setLoading(true);
+        // Sync session with server-side cookies
+        await fetch('/auth/callback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ event, session }),
+        });
+
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         setSession(session);
-        await fetchProfile(currentUser, _event === 'SIGNED_IN');
+        await fetchProfile(currentUser, event === 'SIGNED_IN');
         setLoading(false);
       }
     );
