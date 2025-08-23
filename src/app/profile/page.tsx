@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -225,6 +225,18 @@ export default function ProfilePage() {
   const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
   const creationTime = user.created_at;
 
+  const activityTabs = [
+    { value: "active-listings", label: "Active Listings", icon: Package, count: activeListings.length },
+    { value: "my-orders", label: "My Sales", icon: ShoppingBag, count: 0 },
+    { value: "purchase-history", label: "My Purchases", icon: History, count: 0 },
+    { value: "reviews", label: "Reviews Received", icon: Star, count: reviews.length },
+  ];
+
+  const settingsTabs = [
+    { value: "verification", label: "Verification", icon: ShieldCheck },
+    { value: "payment-details", label: "Payment Details", icon: Banknote },
+  ];
+
   return (
     <>
       <DeleteProductDialog 
@@ -276,20 +288,34 @@ export default function ProfilePage() {
 
           <Separator className="my-12" />
 
-          <div>
-              <Tabs defaultValue="active-listings">
-                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto">
-                      <TabsTrigger value="active-listings">Active Listings ({activeListings.length})</TabsTrigger>
-                      <TabsTrigger value="my-orders">My Orders</TabsTrigger>
-                      <TabsTrigger value="purchase-history">Purchase History</TabsTrigger>
-                      <TabsTrigger value="reviews">Reviews ({reviews.length})</TabsTrigger>
-                      <TabsTrigger value="verification">Verification</TabsTrigger>
-                      <TabsTrigger value="payment-details">Payment Details</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="active-listings" className="mt-6">
+          <Tabs defaultValue="active-listings" className="w-full">
+            <div className="flex flex-col md:flex-row gap-8">
+                <div className="w-full md:w-64 flex-shrink-0">
+                    <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
+                        {activityTabs.map(tab => (
+                            <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                                <tab.icon className="h-5 w-5" />
+                                <span>{tab.label}</span>
+                                <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
+                            </TabsTrigger>
+                        ))}
+
+                        <Separator className="my-2" />
+
+                        <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">Account Settings</p>
+                        {settingsTabs.map(tab => (
+                            <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                                <tab.icon className="h-5 w-5" />
+                                <span>{tab.label}</span>
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                </div>
+                <div className="flex-1 min-w-0">
+                    <TabsContent value="active-listings" className="mt-0">
                       {loadingData ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {[...Array(4)].map((_, i) => (
                             <div key={i} className="flex flex-col space-y-3">
                                 <Skeleton className="h-[125px] w-full rounded-xl" />
@@ -301,7 +327,7 @@ export default function ProfilePage() {
                           ))}
                         </div>
                       ) : activeListings.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeListings.map(product => 
                             <ProductCard 
                                 key={product.id} 
@@ -330,64 +356,62 @@ export default function ProfilePage() {
                           </Button>
                         </div>
                       )}
-                  </TabsContent>
-                  
-                  <TabsContent value="my-orders" className="mt-6">
-                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                        <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
-                        <h3 className="mt-4 text-xl font-medium">No Orders Yet</h3>
-                        <p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p>
-                    </div>
-                  </TabsContent>
+                    </TabsContent>
+                    
+                    <TabsContent value="my-orders" className="mt-0">
+                        <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                            <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
+                            <h3 className="mt-4 text-xl font-medium">No Sales Yet</h3>
+                            <p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p>
+                        </div>
+                    </TabsContent>
 
-                  <TabsContent value="purchase-history" className="mt-6">
-                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                        <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
-                        <h3 className="mt-4 text-xl font-medium">No Purchase History</h3>
-                        <p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p>
-                        <Button asChild className="mt-6" variant="default">
-                            <Link href="/">Start Shopping</Link>
-                        </Button>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="reviews" className="mt-6">
-                      {loadingData ? (
-                          <div className="flex justify-center items-center py-16">
-                              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                          </div>
-                      ) : (
-                          <ReviewList reviews={reviews} listings={activeListings} />
-                      )}
-                  </TabsContent>
+                    <TabsContent value="purchase-history" className="mt-0">
+                        <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                            <History className="mx-auto h-12 w-12 text-muted-foreground" />
+                            <h3 className="mt-4 text-xl font-medium">No Purchase History</h3>
+                            <p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p>
+                            <Button asChild className="mt-6" variant="default">
+                                <Link href="/">Start Shopping</Link>
+                            </Button>
+                        </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="reviews" className="mt-0">
+                        {loadingData ? (
+                            <div className="flex justify-center items-center py-16">
+                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : (
+                            <ReviewList reviews={reviews} listings={activeListings} />
+                        )}
+                    </TabsContent>
 
-                   <TabsContent value="verification" className="mt-6">
-                      {authLoading ? (
-                          <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                      ) : profile ? (
-                          <VerificationForm />
-                      ) : (
-                          renderProfileError("Verification")
-                      )}
-                  </TabsContent>
+                    <TabsContent value="verification" className="mt-0">
+                        {authLoading ? (
+                            <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                        ) : profile ? (
+                            <VerificationForm />
+                        ) : (
+                            renderProfileError("Verification")
+                        )}
+                    </TabsContent>
 
-                  <TabsContent value="payment-details" className="mt-6">
-                    {authLoading ? (
-                        <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                    ) : profile ? (
-                        <PaymentDetailsForm />
-                    ) : (
-                        renderProfileError("Payment Details")
-                    )}
-                  </TabsContent>
-              </Tabs>
-          </div>
-
+                    <TabsContent value="payment-details" className="mt-0">
+                        {authLoading ? (
+                            <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+                        ) : profile ? (
+                            <PaymentDetailsForm />
+                        ) : (
+                            renderProfileError("Payment Details")
+                        )}
+                    </TabsContent>
+                </div>
+            </div>
+          </Tabs>
         </main>
         <Footer />
       </div>
     </>
   );
 }
-
-    
