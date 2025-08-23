@@ -107,8 +107,7 @@ export function PaymentDetailsForm() {
         }
     }, [watchAccountNumber, watchBankCode, banks, toast]);
 
-
-    const onSubmit = async () => {
+    const onSubmit = async (data: PaymentFormValues) => {
         if (!user) {
             toast({ title: "Authentication Error", description: "You must be logged in to update your profile.", variant: "destructive" });
             return;
@@ -123,8 +122,8 @@ export function PaymentDetailsForm() {
         const result = await updatePaymentDetailsAction({
             bank_name: resolvedAccount.bank_name,
             account_name: resolvedAccount.account_name,
-            account_number: watchAccountNumber,
-            bank_code: watchBankCode,
+            account_number: data.accountNumber,
+            bank_code: data.bankCode,
         });
 
         if (result?.error) {
@@ -163,7 +162,7 @@ export function PaymentDetailsForm() {
                 )}
 
                 <Form {...form}>
-                    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="space-y-6">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
                             control={form.control}
                             name="bankCode"
