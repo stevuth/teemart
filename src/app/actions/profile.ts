@@ -1,7 +1,7 @@
 
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
@@ -40,8 +40,12 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
+    console.error('[Action Error] User not authenticated.');
     return { error: 'You must be logged in to update payment details.' };
   }
+
+  console.log('[Action Log] User authenticated:', user.id);
+  console.log('[Action Log] Updating profile with details:', details);
 
   const { error } = await supabase
     .from('profiles')
@@ -54,12 +58,13 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     .eq('id', user.id);
 
   if (error) {
-    console.error('Server Action Error updating profile:', error);
+    console.error('[Action Error] Supabase update failed:', error);
     return { error: `Database error: ${error.message}` };
   }
 
   // Revalidate the profile path to ensure the UI updates with the new data.
   revalidatePath('/profile');
   
+  console.log('[Action Success] Profile updated successfully for user:', user.id);
   return { success: true };
 }

@@ -121,6 +121,13 @@ export function PaymentDetailsForm() {
         }
 
         setIsSaving(true);
+        console.log('[Form Log] Submitting details:', {
+            bank_name: resolvedAccount.bank_name,
+            account_name: resolvedAccount.account_name,
+            account_number: data.accountNumber,
+            bank_code: data.bankCode,
+        });
+
         try {
             const result = await updatePaymentDetailsAction({
                 bank_name: resolvedAccount.bank_name,
@@ -128,6 +135,8 @@ export function PaymentDetailsForm() {
                 account_number: data.accountNumber,
                 bank_code: data.bankCode,
             });
+
+            console.log('[Form Log] Server action result:', result);
 
             if (result?.error) {
                 toast({
@@ -143,7 +152,7 @@ export function PaymentDetailsForm() {
                 await refetchProfile();
             }
         } catch (error) {
-            console.error('Error saving payment details:', error);
+            console.error('[Form Log] An unexpected error occurred:', error);
             toast({
                 title: "Error Saving Details",
                 description: error instanceof Error ? error.message : "An unexpected error occurred",
