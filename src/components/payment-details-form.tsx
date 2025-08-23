@@ -108,15 +108,15 @@ export function PaymentDetailsForm() {
 
 
     const onSubmit = async () => {
-        if (!resolvedAccount) {
-             toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
-             return;
-        };
-
         if (!user) {
             toast({ title: "Authentication Error", description: "You must be logged in to update your profile.", variant: "destructive" });
             return;
         }
+
+        if (!resolvedAccount) {
+             toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
+             return;
+        };
 
         setIsSubmitting(true);
         
@@ -142,7 +142,7 @@ export function PaymentDetailsForm() {
             console.error("Failed to save payment details:", error);
             toast({
                 title: "Error Saving Details",
-                description: error.message || "An unexpected error occurred. Please check database permissions and try again.",
+                description: error.message || "An unexpected error occurred. Please try again.",
                 variant: "destructive",
             });
         } finally {
