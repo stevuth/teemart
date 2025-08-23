@@ -59,3 +59,10 @@ TO authenticated
 USING (auth.uid() = id)
 WITH CHECK (auth.uid() = id);
 ```
+
+### 2. Delete Old Function (if it exists)
+This command will remove the old, unused database function. It's safe to run even if the function doesn't exist.
+```sql
+DROP FUNCTION IF EXISTS public.update_user_profile(VARCHAR, VARCHAR, VARCHAR, VARCHAR);
+```
+
