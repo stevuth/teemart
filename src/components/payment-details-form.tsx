@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, BadgeCheck, Search, ShieldCheck } from "lucide-react";
+import { Loader2, BadgeCheck, Search, ShieldCheck, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -43,6 +43,7 @@ export function PaymentDetailsForm() {
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [resolvedAccount, setResolvedAccount] = useState<{ account_name: string, bank_name: string } | null>(null);
 
     const form = useForm<PaymentFormValues>({
@@ -53,17 +54,19 @@ export function PaymentDetailsForm() {
         },
     });
     
+    const isVerified = !!(profile?.account_name && profile?.bank_name);
+
     useEffect(() => {
         if (profile) {
             form.reset({
                 bankCode: profile.bank_code || "",
                 accountNumber: profile.account_number || "",
             });
-            if (profile.account_name && profile.bank_name) {
-                 setResolvedAccount({ account_name: profile.account_name, bank_name: profile.bank_name });
+            if (isVerified) {
+                 setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
             }
         }
-    }, [profile, form]);
+    }, [profile, form, isVerified]);
 
     useEffect(() => {
         async function fetchBanks() {
@@ -139,102 +142,117 @@ export function PaymentDetailsForm() {
                 description: "Your payment details have been saved." 
             });
             await refetchProfile();
+            setIsEditing(false);
         }
         setIsSaving(false);
     };
-    
-    const isVerified = !!(profile?.account_name && profile?.bank_name);
-    const hasChanged = profile?.account_number !== watchAccountNumber || profile?.bank_code !== watchBankCode;
 
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>Your Payment Details</CardTitle>
-                <CardDescription>
-                    Verify your bank account with Paystack to receive payments for your sales.
-                </CardDescription>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <CardTitle>Your Payment Details</CardTitle>
+                        <CardDescription>
+                            {isVerified && !isEditing 
+                                ? "Your verified account for receiving payments." 
+                                : "Verify your bank account with Paystack to receive payments for your sales."
+                            }
+                        </CardDescription>
+                    </div>
+                    {isVerified && !isEditing && (
+                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                        </Button>
+                    )}
+                </div>
             </CardHeader>
             <CardContent>
-                {isVerified && !hasChanged && (
-                    <Alert variant="default" className="bg-green-100 border-green-200 text-green-800 mb-6">
+                {isVerified && !isEditing ? (
+                     <Alert variant="default" className="bg-green-100 border-green-200 text-green-800">
                         <BadgeCheck className="h-4 w-4 !text-green-800" />
                         <AlertTitle>Your account is verified!</AlertTitle>
                         <AlertDescription>
-                            Payments will be sent to: <strong>{profile.account_name}</strong> - {profile.bank_name} ({profile.account_number})
+                            Payments will be sent to: <strong>{profile?.account_name}</strong> - {profile?.bank_name} ({profile?.account_number})
                         </AlertDescription>
                     </Alert>
-                )}
-
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        <FormField
-                            control={form.control}
-                            name="bankCode"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Bank</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={authLoading || isSaving || isVerifying}>
+                ) : (
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <FormField
+                                control={form.control}
+                                name="bankCode"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Bank</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={authLoading || isSaving || isVerifying}>
+                                            <FormControl>
+                                                <SelectTrigger disabled={loadingBanks || isVerifying || isSaving}>
+                                                    <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {banks.map((bank, index) => (
+                                                    <SelectItem key={`${bank.code}-${index}`} value={bank.code}>{bank.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="accountNumber"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Account Number</FormLabel>
                                         <FormControl>
-                                            <SelectTrigger disabled={loadingBanks || isVerifying || isSaving}>
-                                                <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
-                                            </SelectTrigger>
+                                            <div className="relative">
+                                                 <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} disabled={authLoading || isSaving} />
+                                                 <Button 
+                                                    type="button"
+                                                    size="sm"
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
+                                                    onClick={handleVerification}
+                                                    disabled={isVerifying || field.value.length !== 10 || !watchBankCode || isSaving}
+                                                 >
+                                                    {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                                                    Verify
+                                                 </Button>
+                                            </div>
                                         </FormControl>
-                                        <SelectContent>
-                                            {banks.map((bank, index) => (
-                                                <SelectItem key={`${bank.code}-${index}`} value={bank.code}>{bank.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            
+                            {resolvedAccount && (
+                                <Alert variant="default" className="bg-blue-100 border-blue-200 text-blue-800">
+                                    <ShieldCheck className="h-4 w-4 !text-blue-800" />
+                                    <AlertTitle>Account Ready to Save</AlertTitle>
+                                    <AlertDescription>
+                                        Verified Account Name: <strong>{resolvedAccount.account_name}</strong>
+                                    </AlertDescription>
+                                </Alert>
                             )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="accountNumber"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Account Number</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
-                                             <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} disabled={authLoading || isSaving} />
-                                             <Button 
-                                                type="button"
-                                                size="sm"
-                                                className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
-                                                onClick={handleVerification}
-                                                disabled={isVerifying || field.value.length !== 10 || !watchBankCode || isSaving}
-                                             >
-                                                {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                                                Verify
-                                             </Button>
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        
-                        {resolvedAccount && hasChanged && (
-                            <Alert variant="default" className="bg-blue-100 border-blue-200 text-blue-800">
-                                <ShieldCheck className="h-4 w-4 !text-blue-800" />
-                                <AlertTitle>Account Ready to Save</AlertTitle>
-                                <AlertDescription>
-                                    Verified Account Name: <strong>{resolvedAccount.account_name}</strong>
-                                </AlertDescription>
-                            </Alert>
-                        )}
-                        
-                        <Button 
-                            type="submit"
-                            disabled={authLoading || isSaving || !resolvedAccount || !hasChanged}
-                            className="w-full"
-                        >
-                            {(isSaving || authLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isVerified && !hasChanged ? 'Account Saved' : 'Save Account Details'}
-                        </Button>
-                    </form>
-                </Form>
+                            
+                            <div className="flex gap-2 justify-end">
+                                {isEditing && (
+                                     <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                                )}
+                                <Button 
+                                    type="submit"
+                                    disabled={authLoading || isSaving || !resolvedAccount}
+                                >
+                                    {(isSaving || authLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Save Details
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
+                )}
             </CardContent>
         </Card>
     );
