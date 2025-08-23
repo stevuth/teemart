@@ -39,7 +39,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, user } = useAuth();
+    const { profile, refetchProfile, user, loading: authLoading } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -109,34 +109,55 @@ export function PaymentDetailsForm() {
 
     const onSubmit = async (data: PaymentFormValues) => {
         if (!user) {
-            toast({ title: "Authentication Error", description: "You must be logged in to update your profile.", variant: "destructive" });
+            toast({ 
+                title: "Authentication Error", 
+                description: "You must be logged in to update your profile.", 
+                variant: "destructive" 
+            });
             return;
         }
 
         if (!resolvedAccount) {
-             toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
-             return;
-        };
+            toast({ 
+                title: "Verification needed", 
+                description: "Please verify account details first.", 
+                variant: "destructive" 
+            });
+            return;
+        }
 
         setIsSaving(true);
-        const result = await updatePaymentDetailsAction({
-            bank_name: resolvedAccount.bank_name,
-            account_name: resolvedAccount.account_name,
-            account_number: data.accountNumber,
-            bank_code: data.bankCode,
-        });
+        try {
+            const result = await updatePaymentDetailsAction({
+                bank_name: resolvedAccount.bank_name,
+                account_name: resolvedAccount.account_name,
+                account_number: data.accountNumber,
+                bank_code: data.bankCode,
+            });
 
-        if (result?.error) {
+            if (result?.error) {
+                toast({
+                    title: "Error Saving Details",
+                    description: result.error,
+                    variant: "destructive",
+                });
+            } else {
+                toast({ 
+                    title: "Success", 
+                    description: "Your payment details have been saved." 
+                });
+                await refetchProfile();
+            }
+        } catch (error) {
+            console.error('Error saving payment details:', error);
             toast({
                 title: "Error Saving Details",
-                description: result.error,
+                description: error instanceof Error ? error.message : "An unexpected error occurred",
                 variant: "destructive",
             });
-        } else {
-            toast({ title: "Success", description: "Your payment details have been saved." });
-            await refetchProfile();
+        } finally {
+            setIsSaving(false);
         }
-        setIsSaving(false);
     };
     
     const isVerified = !!(profile?.account_name && profile?.bank_name);
@@ -169,7 +190,7 @@ export function PaymentDetailsForm() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Bank</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={authLoading || isSaving || isVerifying}>
                                         <FormControl>
                                             <SelectTrigger disabled={loadingBanks || isVerifying || isSaving}>
                                                 <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
@@ -193,7 +214,7 @@ export function PaymentDetailsForm() {
                                     <FormLabel>Account Number</FormLabel>
                                     <FormControl>
                                         <div className="relative">
-                                             <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} disabled={isSaving} />
+                                             <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} disabled={authLoading || isSaving} />
                                              <Button 
                                                 type="button"
                                                 size="sm"
@@ -223,10 +244,10 @@ export function PaymentDetailsForm() {
                         
                         <Button 
                             type="submit"
-                            disabled={isSaving || !resolvedAccount || !hasChanged}
+                            disabled={authLoading || isSaving || !resolvedAccount || !hasChanged}
                             className="w-full"
                         >
-                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {(isSaving || authLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isVerified && !hasChanged ? 'Account Saved' : 'Save Account Details'}
                         </Button>
                     </form>
@@ -235,3 +256,5 @@ export function PaymentDetailsForm() {
         </Card>
     );
 }
+
+    
