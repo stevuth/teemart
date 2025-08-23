@@ -27,23 +27,30 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
-          cookieStore.set(name, value, options)
+        set(name: string, value: string, options: CookieOptions) {
+          cookieStore.set({ name, value, ...options })
         },
-        remove(name: string, options: any) {
-          cookieStore.set(name, '', { ...options, maxAge: 0 })
+        remove(name: string, options: CookieOptions) {
+          cookieStore.set({ name, value: '', ...options })
         },
       },
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  try {
+    const cookieNames = cookieStore.getAll().map(c => c.name).filter(n => n.startsWith('sb-'))
+    console.log('[Action] sb-* cookies:', cookieNames)
+  } catch {}
 
-  if (!user) {
-    console.error('[Action Error] User not authenticated.');
+
+  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+  console.log('[Action] getUser:', { hasUser: !!user, getUserError: getUserError?.message });
+
+  if (getUserError || !user) {
+    console.error('[Action Error] User not authenticated.', getUserError);
     return { error: 'You must be logged in to update payment details.' };
   }
-
+  
   console.log('[Action Log] User authenticated:', user.id);
   console.log('[Action Log] Updating profile with details:', details);
 
@@ -58,7 +65,7 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     .eq('id', user.id);
 
   if (error) {
-    console.error('[Action Error] Supabase update failed:', error);
+    console.error('[Action Error] Supabase update failed:', { code: error.code, message: error.message, details: error.details });
     return { error: `Database error: ${error.message}` };
   }
 

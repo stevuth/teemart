@@ -102,15 +102,6 @@ export function PaymentDetailsForm() {
     }, [watchAccountNumber, watchBankCode, banks, toast]);
 
     const onSubmit = async (data: PaymentFormValues) => {
-        if (!user) {
-            toast({ 
-                title: "Authentication Error", 
-                description: "You must be logged in to update your profile.", 
-                variant: "destructive" 
-            });
-            return;
-        }
-
         if (!resolvedAccount) {
             toast({ 
                 title: "Verification needed", 
@@ -121,46 +112,35 @@ export function PaymentDetailsForm() {
         }
 
         setIsSaving(true);
-        console.log('[Form Log] Submitting details:', {
+        console.log('[Form Log] Submitting details:', JSON.stringify({
+          bank_code: data.bankCode,
+          account_number: data.accountNumber,
+          resolvedAccount,
+        }, null, 2));
+
+        const result = await updatePaymentDetailsAction({
             bank_name: resolvedAccount.bank_name,
             account_name: resolvedAccount.account_name,
             account_number: data.accountNumber,
             bank_code: data.bankCode,
         });
+        
+        console.log('[Form Log] Server action result:', JSON.stringify(result, null, 2));
 
-        try {
-            const result = await updatePaymentDetailsAction({
-                bank_name: resolvedAccount.bank_name,
-                account_name: resolvedAccount.account_name,
-                account_number: data.accountNumber,
-                bank_code: data.bankCode,
-            });
-
-            console.log('[Form Log] Server action result:', result);
-
-            if (result?.error) {
-                toast({
-                    title: "Error Saving Details",
-                    description: result.error,
-                    variant: "destructive",
-                });
-            } else {
-                toast({ 
-                    title: "Success", 
-                    description: "Your payment details have been saved." 
-                });
-                await refetchProfile();
-            }
-        } catch (error) {
-            console.error('[Form Log] An unexpected error occurred:', error);
+        if (result?.error) {
             toast({
                 title: "Error Saving Details",
-                description: error instanceof Error ? error.message : "An unexpected error occurred",
+                description: result.error,
                 variant: "destructive",
             });
-        } finally {
-            setIsSaving(false);
+        } else {
+            toast({ 
+                title: "Success", 
+                description: "Your payment details have been saved." 
+            });
+            await refetchProfile();
         }
+        setIsSaving(false);
     };
     
     const isVerified = !!(profile?.account_name && profile?.bank_name);
