@@ -13,17 +13,17 @@
     --popover-foreground: 216 74% 11%;
     --primary: 216 100% 50%; /* Vibrant Blue from logo */
     --primary-foreground: 0 0% 100%; /* Pure White */
-    --secondary: 45 90% 75%; /* High Contrast Cream */
-    --secondary-foreground: 0 0% 20%;
-    --muted: 54 90% 92%;
-    --muted-foreground: 216 30% 35%;
-    --accent: 0 0% 85%; /* Light Gray */
-    --accent-foreground: 216 50% 25%;
+    --secondary: 220 13% 91%; /* Light Gray (#E5E7EB) */
+    --secondary-foreground: 222 47% 11%; /* Dark text for contrast */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 54 80% 85%;
-    --input: 0 0% 95%;
-    --ring: 240 5% 34%;
+    --border: 220 13% 91%; /* Light Gray (#E5E7EB) */
+    --input: 220 13% 94%;
+    --ring: 216 100% 50%;
     --radius: 0.8rem;
   }
  
@@ -40,7 +40,7 @@
     --secondary-foreground: 60 50% 97%;
     --muted: 34 10% 25%;
     --muted-foreground: 60 50% 80%;
-    --accent: 0 0% 30%; /* Dark Gray */
+    --accent: 34 10% 25%;
     --accent-foreground: 60 50% 97%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
