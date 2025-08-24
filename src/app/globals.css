@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,7 +7,7 @@
   :root {
     --background: 0 0% 100%; /* Pure White */
     --foreground: 0 0% 20%; /* Dark Grey */
-    --card: 0 0% 100%;
+    --card: 0 0% 100%; /* Pure White */
     --card-foreground: 0 0% 20%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
