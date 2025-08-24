@@ -83,17 +83,17 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                 {product.name}
             </CardTitle>
             {product.seller?.full_name && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                <div className="flex items-center gap-1.5 flex-grow min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs text-muted-foreground mb-2">
+                <div className="flex items-center gap-1.5">
                   <User className="h-3 w-3" />
-                  <span className="truncate">{product.seller.full_name}</span>
+                  <span>{product.seller.full_name}</span>
                 </div>
                  {product.seller?.is_verified ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs flex-shrink-0">
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs">
                         <ShieldCheck className="h-3 w-3" /> Verified
                     </Badge>
                 ) : (
-                    <Badge variant="outline" className="gap-1 text-xs text-muted-foreground flex-shrink-0">
+                    <Badge variant="outline" className="gap-1 text-xs text-muted-foreground">
                         <ShieldAlert className="h-3 w-3" /> Not Verified
                     </Badge>
                 )}
