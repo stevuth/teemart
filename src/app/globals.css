@@ -11,8 +11,8 @@
     --card-foreground: 0 0% 20%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
-    --primary: 0 0% 10%; /* Dark Grey */
-    --primary-foreground: 0 0% 100%;
+    --primary: 216 100% 50%; /* Vibrant Blue from logo */
+    --primary-foreground: 0 0% 100%; /* Pure White */
     --secondary: 45 90% 75%; /* High Contrast Cream */
     --secondary-foreground: 0 0% 20%;
     --muted: 54 90% 92%;
@@ -34,8 +34,8 @@
     --card-foreground: 60 50% 97%;
     --popover: 34 10% 20%;
     --popover-foreground: 60 50% 97%;
-    --primary: 0 0% 80%;
-    --primary-foreground: 0 0% 10%;
+    --primary: 216 100% 65%; /* Lighter blue for dark mode */
+    --primary-foreground: 0 0% 10%; /* Dark text for contrast on blue */
     --secondary: 34 10% 25%;
     --secondary-foreground: 60 50% 97%;
     --muted: 34 10% 25%;
@@ -46,7 +46,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 34 10% 30%;
     --input: 34 10% 30%;
-    --ring: 0 0% 80%;
+    --ring: 216 100% 65%;
   }
 }
  
