@@ -6,19 +6,19 @@
 @layer base {
   :root {
     --background: 0 0% 100%; /* Pure White */
-    --foreground: 0 0% 20%; /* Dark Grey */
+    --foreground: 216 74% 11%; /* Dark Navy from Logo */
     --card: 0 0% 100%; /* Pure White */
-    --card-foreground: 0 0% 20%;
+    --card-foreground: 216 74% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
+    --popover-foreground: 216 74% 11%;
     --primary: 216 100% 50%; /* Vibrant Blue from logo */
     --primary-foreground: 0 0% 100%; /* Pure White */
     --secondary: 45 90% 75%; /* High Contrast Cream */
     --secondary-foreground: 0 0% 20%;
     --muted: 54 90% 92%;
-    --muted-foreground: 34 10% 40%;
+    --muted-foreground: 216 30% 35%;
     --accent: 0 0% 85%; /* Light Gray */
-    --accent-foreground: 34 10% 20%;
+    --accent-foreground: 216 50% 25%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 54 80% 85%;
