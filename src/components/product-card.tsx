@@ -73,28 +73,30 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                 />
             </div>
             )}
-             <Badge variant="secondary" className="absolute top-2 left-2 z-10">{product.condition}</Badge>
         </CardHeader>
         <CardContent className="p-3 sm:p-4 flex-grow">
             <div className="flex justify-between items-start gap-2 mb-2">
                 <Badge variant="outline" className="text-xs">{product.category}</Badge>
-                {product.seller?.is_verified ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs">
-                        <ShieldCheck className="h-3 w-3" /> Verified Seller
-                    </Badge>
-                ) : (
-                    <Badge variant="outline" className="gap-1 text-xs text-muted-foreground">
-                        <ShieldAlert className="h-3 w-3" /> Not Verified
-                    </Badge>
-                )}
+                <Badge variant="secondary" className="text-xs">{product.condition}</Badge>
             </div>
             <CardTitle className="text-base sm:text-lg font-bold leading-tight group-hover:underline mb-1">
                 {product.name}
             </CardTitle>
             {product.seller?.full_name && (
               <div className="flex items-center text-xs text-muted-foreground mb-2">
-                <User className="h-3 w-3 mr-1.5" />
-                <span>{product.seller.full_name}</span>
+                <div className="flex items-center gap-1.5 flex-grow">
+                  <User className="h-3 w-3" />
+                  <span className="truncate">{product.seller.full_name}</span>
+                </div>
+                 {product.seller?.is_verified ? (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs flex-shrink-0">
+                        <ShieldCheck className="h-3 w-3" /> Verified
+                    </Badge>
+                ) : (
+                    <Badge variant="outline" className="gap-1 text-xs text-muted-foreground flex-shrink-0">
+                        <ShieldAlert className="h-3 w-3" /> Not Verified
+                    </Badge>
+                )}
               </div>
             )}
             <p className="text-sm text-muted-foreground line-clamp-2">
