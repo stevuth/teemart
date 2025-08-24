@@ -83,8 +83,8 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                 {product.name}
             </CardTitle>
             {product.seller?.full_name && (
-              <div className="flex items-center text-xs text-muted-foreground mb-2">
-                <div className="flex items-center gap-1.5 flex-grow">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                <div className="flex items-center gap-1.5 flex-grow min-w-0">
                   <User className="h-3 w-3" />
                   <span className="truncate">{product.seller.full_name}</span>
                 </div>
