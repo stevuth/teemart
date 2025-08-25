@@ -25,6 +25,21 @@
     --input: 220 13% 94%;
     --ring: 216 74% 11%; /* Dark Navy from Logo */
     --radius: 0.8rem;
+    
+    /* 3D Carousel Variables */
+    --carousel-radius: 300px;
+  }
+
+  @media (max-width: 768px) {
+    :root {
+      --carousel-radius: 250px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    :root {
+      --carousel-radius: 200px;
+    }
   }
  
   .dark {
@@ -68,4 +83,34 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* 3D Transform Utilities */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  @keyframes rotate-carousel {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(360deg);
+    }
+  }
+
+  .animate-carousel-rotate {
+    animation: rotate-carousel 25s linear infinite;
+  }
+
+  .animate-carousel-rotate:hover {
+    animation-play-state: paused;
+  }
+
 }

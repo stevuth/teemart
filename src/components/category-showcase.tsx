@@ -21,42 +21,50 @@ const categoryDetails: Record<Category, { icon: React.ElementType, image: string
 };
 
 export function CategoryShowcase({ selectedCategory, onCategorySelect }: CategoryShowcaseProps) {
+  const numCategories = categories.length;
+  const angle = 360 / numCategories;
+
   return (
     <div className="pb-8 border-b">
-      <h2 className="text-2xl font-bold tracking-tight mb-6 text-center">Browse by Category</h2>
-      <div className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto pb-4 -mb-4 hide-scrollbar">
-        {categories.map((category) => {
-          const { icon: Icon, image, hint } = categoryDetails[category];
-          const isSelected = selectedCategory === category;
+      <h2 className="text-2xl font-bold tracking-tight mb-12 text-center">Browse by Category</h2>
+      <div className="relative w-full h-48 sm:h-56 md:h-64 flex items-center justify-center perspective-1000">
+        <div className="absolute w-full h-full preserve-3d animate-carousel-rotate">
+          {categories.map((category, index) => {
+            const { icon: Icon, image, hint } = categoryDetails[category];
+            const isSelected = selectedCategory === category;
 
-          return (
-            <div
-              key={category}
-              onClick={() => onCategorySelect(isSelected ? '' : category)}
-              className={cn(
-                'group relative flex-shrink-0 w-40 h-28 md:w-full md:h-32 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
-                'shadow-md hover:shadow-xl',
-                isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
-              )}
-            >
-              <Image
-                src={image}
-                alt={category}
-                fill
-                sizes="(max-width: 768px) 40vw, 20vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint={hint}
-              />
-              <div className={cn(
-                  "absolute inset-0 flex flex-col items-center justify-center p-2 text-center text-white bg-black/50 transition-colors duration-300",
-                  isSelected ? "bg-primary/70" : "group-hover:bg-black/60"
-              )}>
-                <Icon className="h-8 w-8 mb-1 drop-shadow-lg" />
-                <span className="text-sm font-semibold whitespace-normal leading-tight drop-shadow-lg">{category}</span>
+            return (
+              <div
+                key={category}
+                onClick={() => onCategorySelect(isSelected ? '' : category)}
+                className={cn(
+                  'group absolute w-48 h-32 sm:w-56 sm:h-36 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
+                  'shadow-md hover:shadow-xl backface-hidden',
+                  isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+                )}
+                style={{
+                  transform: `rotateY(${index * angle}deg) translateZ(var(--carousel-radius))`,
+                }}
+              >
+                <Image
+                  src={image}
+                  alt={category}
+                  fill
+                  sizes="(max-width: 768px) 40vw, 20vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  data-ai-hint={hint}
+                />
+                <div className={cn(
+                    "absolute inset-0 flex flex-col items-center justify-center p-2 text-center text-white bg-black/50 transition-colors duration-300",
+                    isSelected ? "bg-primary/70" : "group-hover:bg-black/60"
+                )}>
+                  <Icon className="h-8 w-8 mb-1 drop-shadow-lg" />
+                  <span className="text-sm font-semibold whitespace-normal leading-tight drop-shadow-lg">{category}</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
