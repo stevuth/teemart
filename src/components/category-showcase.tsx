@@ -8,6 +8,7 @@ import type { Category } from '@/lib/types';
 import { categories } from '@/lib/types';
 import { Car, Home as HomeIcon, Laptop, Lamp, Phone } from 'lucide-react';
 import useEmblaCarousel, { type EmblaCarouselType } from 'embla-carousel-react'
+import Autoplay from 'embla-carousel-autoplay'
 import { PrevButton, NextButton } from './embla-carousel-buttons';
 
 type CategoryShowcaseProps = {
@@ -31,7 +32,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
     align: 'center',
     skipSnaps: false,
     containScroll: 'trimSnaps'
-  });
+  }, [Autoplay({ delay: 3000, stopOnInteraction: false })]);
 
   const [tweenValues, setTweenValues] = useState<number[]>([]);
   const [prevBtnDisabled, setPrevBtnDisabled] = useState(true);
