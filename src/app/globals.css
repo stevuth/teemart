@@ -25,21 +25,6 @@
     --input: 220 13% 94%;
     --ring: 216 74% 11%; /* Dark Navy from Logo */
     --radius: 0.8rem;
-    
-    /* 3D Carousel Variables */
-    --carousel-radius: 250px;
-  }
-
-  @media (max-width: 768px) {
-    :root {
-      --carousel-radius: 200px;
-    }
-  }
-
-  @media (max-width: 640px) {
-    :root {
-      --carousel-radius: 150px;
-    }
   }
  
   .dark {
@@ -94,23 +79,6 @@
   .backface-hidden {
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-  }
-  
-  @keyframes rotate-carousel {
-    from {
-      transform: rotateY(0deg);
-    }
-    to {
-      transform: rotateY(360deg);
-    }
-  }
-
-  .animate-carousel-rotate {
-    animation: rotate-carousel 25s linear infinite;
-  }
-
-  .animate-carousel-rotate:hover {
-    animation-play-state: paused;
   }
 
 }
