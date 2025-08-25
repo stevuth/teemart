@@ -105,7 +105,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
   return (
     <div>
         <div className="flex justify-between items-center mb-6 px-4 sm:px-0">
-            <h1 className="text-2xl font-bold tracking-tight">Used Products For Sale</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Featured Listings</h1>
             <div className="lg:hidden">
               <Sheet open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
                   <SheetTrigger asChild>
