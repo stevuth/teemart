@@ -25,7 +25,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
   
   return (
     <div className="pb-8 border-b">
-      <h2 className="text-2xl font-bold tracking-tight mb-8 text-center">Browse by Category</h2>
+      <h2 className="text-2xl font-bold tracking-tight mb-8 text-center">Explore Our Categories</h2>
       <div className="w-full h-32 flex items-center justify-center perspective-1000">
         <div className="relative w-[var(--carousel-radius)] h-[var(--carousel-radius)] preserve-3d animate-carousel-rotate">
            {categories.map((category, index) => {
