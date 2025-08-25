@@ -77,11 +77,6 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
       <div className="p-6 pb-4 border-b">
         <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold">Filter Results</h2>
-            {onClose && (
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8 lg:hidden">
-                  <X className="h-4 w-4" />
-              </Button>
-            )}
         </div>
       </div>
 
