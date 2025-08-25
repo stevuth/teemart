@@ -25,8 +25,8 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
   
   return (
     <div className="pb-8 border-b">
-      <h2 className="text-2xl font-bold tracking-tight mb-12 text-center">Browse by Category</h2>
-      <div className="w-full h-48 flex items-center justify-center perspective-1000">
+      <h2 className="text-2xl font-bold tracking-tight mb-8 text-center">Browse by Category</h2>
+      <div className="w-full h-32 flex items-center justify-center perspective-1000">
         <div className="relative w-[var(--carousel-radius)] h-[var(--carousel-radius)] preserve-3d animate-carousel-rotate">
            {categories.map((category, index) => {
               const { icon: Icon, image, hint } = categoryDetails[category];
@@ -38,7 +38,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                     key={category}
                     onClick={() => onCategorySelect(isSelected ? '' : category)}
                     className={cn(
-                        'absolute top-0 left-0 w-36 h-36 group cursor-pointer transition-all duration-300 ease-in-out backface-hidden',
+                        'absolute top-0 left-0 w-24 h-24 group cursor-pointer transition-all duration-300 ease-in-out backface-hidden',
                          isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
                     )}
                     style={{
@@ -58,8 +58,8 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                             "absolute inset-0 flex flex-col items-center justify-center p-2 text-center text-white bg-black/50 transition-colors duration-300",
                             isSelected ? "bg-primary/70" : "group-hover:bg-black/60"
                         )}>
-                            <Icon className="h-8 w-8 mb-1 drop-shadow-lg" />
-                            <span className="text-sm font-semibold whitespace-normal leading-tight drop-shadow-lg">{category}</span>
+                            <Icon className="h-6 w-6 mb-1 drop-shadow-lg" />
+                            <span className="text-xs font-semibold whitespace-normal leading-tight drop-shadow-lg">{category}</span>
                         </div>
                     </div>
                  </div>
@@ -70,4 +70,3 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
     </div>
   );
 }
-
