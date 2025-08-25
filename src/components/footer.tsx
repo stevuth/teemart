@@ -1,9 +1,18 @@
 
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { Twitter, Facebook, Instagram } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export function Footer() {
+  const pathname = usePathname();
+
+  // Only show the footer on the homepage
+  if (pathname !== '/') {
+    return null;
+  }
+  
   const footerLinks = [
       {
         title: 'Buy & Sell',
