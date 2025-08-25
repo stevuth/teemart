@@ -103,7 +103,7 @@ export function Marketplace({ products, filters, onFilterChange, onClearFilters,
   }
 
   return (
-    <div className="pt-6">
+    <div>
         <div className="flex justify-between items-center mb-6 px-4 sm:px-0">
             <h1 className="text-2xl font-bold tracking-tight">Used Products For Sale</h1>
             <div className="lg:hidden">
