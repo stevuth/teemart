@@ -2,82 +2,59 @@
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { ArrowUp } from 'lucide-react';
+import { Button } from './ui/button';
+import { Separator } from './ui/separator';
 
 export function Footer() {
   const pathname = usePathname();
 
-  // Only show the footer on the homepage
   if (pathname !== '/') {
     return null;
   }
-  
+
   const footerLinks = [
-      {
-        title: 'Buy & Sell',
-        links: [
-            { name: 'All Categories', href: '/' },
-            { name: 'Cars', href: '/' },
-            { name: 'Electronics', href: '/' },
-            { name: 'Property', href: '/' },
-            { name: 'Mobile Phones', href: '/' },
-        ],
-      },
-      {
-        title: 'About TeeMart',
-        links: [
-            { name: 'About Us', href: '/about' },
-            { name: 'Contact Us', href: '/contact' },
-        ],
-      },
-      {
-        title: 'Support',
-        links: [
-            { name: 'Help/FAQ', href: '/help' },
-            { name: 'Safety Tips', href: '/safety-tips' },
-            { name: 'Terms of Service', href: '/terms' },
-            { name: 'Privacy Policy', href: '/privacy' },
-        ],
-      },
+    { name: 'About Us', href: '/about' },
+    { name: 'Contact Us', href: '/contact' },
+    { name: 'Help/FAQ', href: '/help' },
+    { name: 'Safety Tips', href: '/safety-tips' },
+    { name: 'Terms of Service', href: '/terms' },
+    { name: 'Privacy Policy', href: '/privacy' },
   ];
+  
+  const handleBackToTop = () => {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+  }
 
   return (
-    <footer className="bg-background text-card-foreground border-t border-x-4 border-secondary">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        
-        <div className="lg:col-span-4">
-            <Link href="/" className="inline-block mb-4">
-            <Image src="https://sdmntpritalynorth.oaiusercontent.com/files/00000000-cdc4-6246-b322-b1daba6ab02f/raw?se=2025-08-24T13%3A49%3A20Z&sp=r&sv=2024-08-04&sr=b&scid=29fd0666-e977-515e-8609-ef64501d3c68&skoid=f05d6a75-3c59-41ae-be2c-51a75f29841e&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-08-24T06%3A01%3A08Z&ske=2025-08-25T06%3A01%3A08Z&sks=b&skv=2024-08-04&sig=i6B0RoxK/EQLe30zC4k7X9VxtcUaDIgbPMzxjoh8uFc%3D" alt="TeeMart Logo" width={56} height={56} />
-            </Link>
-            <p className="text-muted-foreground text-base max-w-sm">
-            Nigeria's most trusted marketplace for buying and selling high-quality used goods safely and easily.
-            </p>
+    <footer className="bg-background text-foreground mt-12">
+        <div 
+            onClick={handleBackToTop}
+            className="flex items-center justify-center gap-2 py-3 bg-secondary text-secondary-foreground text-sm font-medium cursor-pointer hover:bg-secondary/80 transition-colors"
+        >
+            <ArrowUp className="h-4 w-4"/>
+            <span>Back to Top</span>
         </div>
-
-        <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-8">
-            {footerLinks.map((section) => (
-            <div key={section.title}>
-                <h3 className="font-semibold text-md mb-4">{section.title}</h3>
-                <ul className="space-y-3">
-                {section.links.map((link) => (
-                    <li key={link.name}>
-                    <Link href={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                        {link.name}
+        <div className="bg-card-foreground text-card py-12">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 text-center text-sm">
+                    {footerLinks.map((link) => (
+                        <Link key={link.name} href={link.href} className="text-sm text-background/80 hover:text-background hover:underline uppercase transition-colors">
+                            {link.name}
+                        </Link>
+                    ))}
+                    <Link href="/sell" className="text-sm text-background/80 hover:text-background hover:underline uppercase transition-colors">
+                        Become a Seller
                     </Link>
-                    </li>
-                ))}
-                </ul>
+                </div>
+                 <Separator className="my-8 bg-border/20" />
+                 <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
             </div>
-            ))}
         </div>
-        
-        </div>
-        <div className="py-6 border-t border-border">
-          <p className="text-center text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TeeMart Inc. All rights reserved.</p>
-        </div>
-      </div>
     </footer>
   );
 }
