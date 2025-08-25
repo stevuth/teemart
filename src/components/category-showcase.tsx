@@ -87,7 +87,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
 
               return (
                 <div 
-                    className="flex-shrink-0 flex-grow-0 basis-1/3 sm:basis-1/4 md:basis-1/5 min-w-0 pl-4" 
+                    className="flex-shrink-0 flex-grow-0 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 min-w-0 pl-4" 
                     key={category}
                     style={{
                          transform: `rotateY(${tweenValues[index]}deg) scale(${1 - Math.abs(tweenValues[index] / 100)})`,
@@ -97,7 +97,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                     <div
                         onClick={() => onCategorySelect(isSelected ? '' : category)}
                         className={cn(
-                            'group w-full h-36 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
+                            'group w-full aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
                             'shadow-md hover:shadow-xl backface-hidden preserve-3d',
                             isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
                         )}
@@ -106,7 +106,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                             src={image}
                             alt={category}
                             fill
-                            sizes="(max-width: 768px) 33vw, 20vw"
+                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
                             data-ai-hint={hint}
                         />
