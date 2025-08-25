@@ -107,12 +107,17 @@ export default {
             "0%": { opacity: "1" },
             "100%": { opacity: "0" },
         },
+        "carousel-rotate": {
+          from: { transform: "rotateY(0deg)" },
+          to: { transform: "rotateY(-360deg)" },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         "fade-in": "fade-in 1s ease-in-out",
         "fade-out": "fade-out 1s ease-in-out",
+        "carousel-rotate": "carousel-rotate 25s linear infinite",
       },
     },
   },

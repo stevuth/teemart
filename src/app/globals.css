@@ -25,6 +25,7 @@
     --input: 220 13% 94%;
     --ring: 216 74% 11%; /* Dark Navy from Logo */
     --radius: 0.8rem;
+    --carousel-radius: 18rem;
   }
  
   .dark {
@@ -47,6 +48,12 @@
     --border: 34 10% 30%;
     --input: 34 10% 30%;
     --ring: 60 50% 97%;
+  }
+
+  @media (max-width: 768px) {
+    :root {
+      --carousel-radius: 12rem;
+    }
   }
 }
  
@@ -81,4 +88,13 @@
     -webkit-backface-visibility: hidden;
   }
 
+  /* Carousel animation */
+  @keyframes carousel-rotate {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(-360deg);
+    }
+  }
 }

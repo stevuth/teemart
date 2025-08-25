@@ -1,15 +1,12 @@
 
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/lib/types';
 import { categories } from '@/lib/types';
 import { Car, Home as HomeIcon, Laptop, Lamp, Phone } from 'lucide-react';
-import useEmblaCarousel, { type EmblaCarouselType } from 'embla-carousel-react'
-import Autoplay from 'embla-carousel-autoplay'
-import { PrevButton, NextButton } from './embla-carousel-buttons';
 
 type CategoryShowcaseProps = {
   selectedCategory: Category | '';
@@ -24,84 +21,31 @@ const categoryDetails: Record<Category, { icon: React.ElementType, image: string
   Phones: { icon: Phone, image: 'https://i.postimg.cc/T39RyZVd/Whisk-f500c680e1.jpg', hint: 'smartphone screen' },
 };
 
-const TWEEN_FACTOR = 1.2;
-
 export function CategoryShowcase({ selectedCategory, onCategorySelect }: CategoryShowcaseProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: true,
-    align: 'center',
-    skipSnaps: false,
-    containScroll: 'trimSnaps'
-  }, [Autoplay({ delay: 3000, stopOnInteraction: false })]);
-
-  const [tweenValues, setTweenValues] = useState<number[]>([]);
-  const [prevBtnDisabled, setPrevBtnDisabled] = useState(true);
-  const [nextBtnDisabled, setNextBtnDisabled] = useState(true);
-
-  const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
-    if (!emblaApi) return
-    setPrevBtnDisabled(!emblaApi.canScrollPrev())
-    setNextBtnDisabled(!emblaApi.canScrollNext())
-  }, [])
   
-  const onScroll = useCallback((emblaApi: EmblaCarouselType) => {
-    if (!emblaApi) return;
-
-    const engine = emblaApi.internalEngine();
-    const scrollProgress = emblaApi.scrollProgress();
-
-    const styles = emblaApi.scrollSnapList().map((scrollSnap, index) => {
-      let diffToTarget = scrollSnap - scrollProgress;
-
-      if (engine.options.loop) {
-        engine.slideLooper.loopPoints.forEach((loopItem) => {
-          const target = loopItem.target();
-          if (index === loopItem.index && target !== 0) {
-            const sign = Math.sign(target);
-            if (sign === -1) diffToTarget = scrollSnap - (1 + scrollProgress);
-            if (sign === 1) diffToTarget = scrollSnap + (1 - scrollProgress);
-          }
-        });
-      }
-      return diffToTarget * (-1 / TWEEN_FACTOR) * 100;
-    });
-    setTweenValues(styles);
-  }, []);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelect(emblaApi);
-    onScroll(emblaApi);
-    emblaApi.on('scroll', onScroll).on('select', onSelect).on('reInit', onScroll);
-  }, [emblaApi, onScroll, onSelect]);
-
   return (
     <div className="pb-8 border-b">
       <h2 className="text-2xl font-bold tracking-tight mb-12 text-center">Browse by Category</h2>
-      <div className="w-full relative">
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex -ml-4" style={{ perspective: '1000px' }}>
-            {categories.map((category, index) => {
+      <div className="w-full h-48 flex items-center justify-center perspective-1000">
+        <div className="relative w-[var(--carousel-radius)] h-[var(--carousel-radius)] preserve-3d animate-carousel-rotate">
+           {categories.map((category, index) => {
               const { icon: Icon, image, hint } = categoryDetails[category];
               const isSelected = selectedCategory === category;
+              const angle = (index / categories.length) * 360;
 
               return (
-                <div 
-                    className="flex-shrink-0 flex-grow-0 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 min-w-0 pl-4" 
+                 <div
                     key={category}
+                    onClick={() => onCategorySelect(isSelected ? '' : category)}
+                    className={cn(
+                        'absolute top-0 left-0 w-36 h-36 group cursor-pointer transition-all duration-300 ease-in-out backface-hidden',
+                         isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+                    )}
                     style={{
-                         transform: `rotateY(${tweenValues[index]}deg) scale(${1 - Math.abs(tweenValues[index] / 100)})`,
-                         transformOrigin: '50% 50%',
+                        transform: `rotateY(${angle}deg) translateZ(var(--carousel-radius))`,
                     }}
                 >
-                    <div
-                        onClick={() => onCategorySelect(isSelected ? '' : category)}
-                        className={cn(
-                            'group w-full aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
-                            'shadow-md hover:shadow-xl backface-hidden preserve-3d',
-                            isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
-                        )}
-                        >
+                    <div className="relative w-full h-full rounded-lg overflow-hidden shadow-lg">
                         <Image
                             src={image}
                             alt={category}
@@ -118,14 +62,12 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                             <span className="text-sm font-semibold whitespace-normal leading-tight drop-shadow-lg">{category}</span>
                         </div>
                     </div>
-                </div>
-              );
-            })}
-          </div>
+                 </div>
+              )
+           })}
         </div>
-        <PrevButton onClick={() => emblaApi?.scrollPrev()} disabled={prevBtnDisabled} />
-        <NextButton onClick={() => emblaApi?.scrollNext()} disabled={nextBtnDisabled} />
       </div>
     </div>
   );
 }
+
