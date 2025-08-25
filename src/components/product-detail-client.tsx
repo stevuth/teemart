@@ -172,16 +172,6 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                                             <p className="font-bold text-lg">{product.seller.full_name}</p>
                                             {product.seller.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
                                         </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <div className="flex items-center gap-0.5">
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-gray-300" />
-                                            </div>
-                                            <span className="text-sm text-muted-foreground">(125)</span>
-                                        </div>
                                     </div>
                                 </div>
                                  <Button asChild className="w-full mt-4">
