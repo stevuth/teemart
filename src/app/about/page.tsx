@@ -36,7 +36,7 @@ export default function AboutPage() {
         </section>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 space-y-20">
-            <BackButton className="-ml-4 mt-2" />
+            <BackButton className="-ml-4" />
             {/* Our Story */}
             <section className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="space-y-4">
