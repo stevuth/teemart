@@ -47,7 +47,7 @@ export function Footer() {
                             {link.name}
                         </Link>
                     ))}
-                    <Link href="/sell" className="text-sm text-background/80 hover:text-background hover:underline uppercase transition-colors">
+                    <Link href="/sell" className="col-span-2 md:col-span-4 text-center text-sm text-background/80 hover:text-background hover:underline uppercase transition-colors">
                         Become a Seller
                     </Link>
                 </div>
