@@ -27,7 +27,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
   return (
     <div className="pb-8 border-b">
       <h2 className="text-2xl font-bold tracking-tight mb-12 text-center">Browse by Category</h2>
-      <div className="relative w-full h-48 sm:h-56 md:h-64 flex items-center justify-center perspective-1000">
+      <div className="relative w-full h-40 sm:h-48 md:h-56 flex items-center justify-center perspective-1000">
         <div className="absolute w-full h-full preserve-3d animate-carousel-rotate">
           {categories.map((category, index) => {
             const { icon: Icon, image, hint } = categoryDetails[category];
@@ -38,7 +38,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                 key={category}
                 onClick={() => onCategorySelect(isSelected ? '' : category)}
                 className={cn(
-                  'group absolute w-48 h-32 sm:w-56 sm:h-36 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
+                  'group absolute w-40 h-28 sm:w-48 sm:h-32 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 ease-in-out',
                   'shadow-md hover:shadow-xl backface-hidden',
                   isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
                 )}

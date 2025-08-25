@@ -27,18 +27,18 @@
     --radius: 0.8rem;
     
     /* 3D Carousel Variables */
-    --carousel-radius: 300px;
+    --carousel-radius: 250px;
   }
 
   @media (max-width: 768px) {
     :root {
-      --carousel-radius: 250px;
+      --carousel-radius: 200px;
     }
   }
 
   @media (max-width: 640px) {
     :root {
-      --carousel-radius: 200px;
+      --carousel-radius: 150px;
     }
   }
  
