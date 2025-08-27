@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { createOrderAction } from '@/app/actions/order';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -20,7 +19,8 @@ import { Textarea } from '@/components/ui/textarea';
 import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-
+import { useAuth } from '@/hooks/use-auth';
+import { initializeTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -39,8 +39,8 @@ type CheckoutFormProps = {
 
 export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: CheckoutFormProps) {
     const { toast } = useToast();
-    const { clearCart } = useCart();
     const router = useRouter();
+    const { user } = useAuth();
 
     const form = useForm<CheckoutFormValues>({
         resolver: zodResolver(formSchema),
@@ -51,7 +51,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         },
     });
     
-    const { isSubmitting } = form.formState;
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const calculations = useMemo(() => {
         const subtotalNum = subtotal || 0;
@@ -68,35 +68,46 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     }, [subtotal, shippingFee]);
     
     const onSubmit = async (data: CheckoutFormValues) => {
-        const orderData = {
+        if (!user || !user.email) {
+            toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
+            return;
+        }
+
+        setIsProcessing(true);
+
+        const metadata = {
+            buyer_id: user.id,
             customer_name: data.name,
             customer_phone: data.phone,
             delivery_address: data.address,
-            cartItems: cartItems,
-            subtotal: calculations.subtotalNum,
-            shippingFee: calculations.shippingFeeNum,
-            escrowFee: calculations.buyerEscrowShare,
-            totalAmount: calculations.totalPayable,
+            cartItems: cartItems.map(item => ({ 
+                id: item.id, 
+                name: item.name, 
+                price: item.price, 
+                quantity: item.quantity,
+                user_id: item.user_id,
+                deliveryFee: item.deliveryFee
+            })),
+            shipping_fee: calculations.shippingFeeNum,
         };
-        
-        const result = await createOrderAction(orderData);
 
-        if (result.error) {
-            toast({
-                title: "Order Failed",
-                description: result.error,
-                variant: "destructive",
-            });
+        const result = await initializeTransactionAction(
+            user.email,
+            calculations.totalPayable,
+            metadata
+        );
+
+        if (result.success && result.data) {
+            window.location.href = result.data.authorization_url;
         } else {
             toast({
-                title: "Order Placed Successfully!",
-                description: "Thank you for your purchase.",
+                title: "Payment Initialization Failed",
+                description: result.error || "An unknown error occurred.",
+                variant: "destructive",
             });
-            clearCart();
-            router.push('/profile');
+            setIsProcessing(false);
         }
     };
-
 
     const formatCurrency = (amount: number) => {
         return `₦${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
@@ -178,8 +189,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                                  </div>
                              </div>
 
-                            <Button type="submit" className="w-full" size="lg" disabled={calculations.subtotalNum <= 0 || isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Button type="submit" className="w-full" size="lg" disabled={calculations.subtotalNum <= 0 || isProcessing}>
+                                {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Pay {formatCurrency(calculations.totalPayable)}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>

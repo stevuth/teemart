@@ -15,6 +15,7 @@ export type Profile = {
     account_name?: string;
     account_number?: string;
     bank_code?: string;
+    recipient_code?: string;
 };
 
 export type Product = {
@@ -86,6 +87,27 @@ export type Order = {
   total_amount: number;
   status: OrderStatus;
 };
+
+export type TransactionStatus = 'pending' | 'released' | 'disputed' | 'refunded';
+
+export type Transaction = {
+    id: string;
+    created_at: string;
+    buyer_id: string;
+    seller_id: string;
+    product_id: string;
+    product_price: number;
+    buyer_fee: number;
+    seller_fee: number;
+    shipping_fee: number;
+    paystack_ref: string;
+    status: TransactionStatus;
+    order_id?: string;
+    product?: { name: string; image: string[] };
+    buyer?: { full_name: string };
+    seller?: { full_name: string };
+};
+
 
 export type OrderItem = {
     id: string;
