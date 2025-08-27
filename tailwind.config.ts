@@ -110,6 +110,10 @@ export default {
         "carousel-rotate": {
           from: { transform: "rotateY(0deg)" },
           to: { transform: "rotateY(-360deg)" },
+        },
+        "scroll-left": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
         }
       },
       animation: {
@@ -118,6 +122,7 @@ export default {
         "fade-in": "fade-in 1s ease-in-out",
         "fade-out": "fade-out 1s ease-in-out",
         "carousel-rotate": "carousel-rotate 25s linear infinite",
+        "scroll-left": "scroll-left 40s linear infinite",
       },
     },
   },

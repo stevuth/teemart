@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -23,8 +24,9 @@ const categoryDetails: Record<Category, { icon: React.ElementType, image: string
 export function CategoryShowcase({ selectedCategory, onCategorySelect }: CategoryShowcaseProps) {
   
   return (
-    <div className="pb-8 border-b">
-       <h2 className="text-2xl font-bold tracking-tight mb-8 text-center">Explore Our Categories</h2>
+    <div className="py-8 border-b">
+      <h2 className="text-2xl font-bold tracking-tight mb-8 text-center">Explore Our Categories</h2>
+
       {/* Mobile Carousel */}
       <div className="w-full h-32 flex items-center justify-center perspective-1000 md:hidden">
         <div className="relative w-[var(--carousel-radius)] h-[var(--carousel-radius)] preserve-3d animate-carousel-rotate">
@@ -67,17 +69,19 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
            })}
         </div>
       </div>
-       {/* Desktop Grid */}
-      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {categories.map((category) => {
+      
+       {/* Desktop Scrolling Animation */}
+       <div className="hidden md:block w-full overflow-hidden">
+        <div className="flex w-max animate-scroll-left hover:pause">
+            {[...categories, ...categories].map((category, index) => {
                  const { icon: Icon, image, hint } = categoryDetails[category];
                  const isSelected = selectedCategory === category;
                  return (
                     <div
-                        key={category}
+                        key={`${category}-${index}`}
                         onClick={() => onCategorySelect(isSelected ? '' : category)}
                         className={cn(
-                            'relative aspect-video rounded-lg overflow-hidden shadow-lg group cursor-pointer transition-all duration-300 ease-in-out',
+                            'relative aspect-video rounded-lg overflow-hidden shadow-lg group cursor-pointer transition-all duration-300 ease-in-out mx-4 flex-shrink-0 w-64',
                             'hover:scale-105',
                             isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
                         )}
@@ -86,7 +90,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                             src={image}
                             alt={category}
                             fill
-                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                            sizes="20vw"
                             className="object-cover transition-transform duration-300"
                             data-ai-hint={hint}
                         />
@@ -100,6 +104,7 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
                     </div>
                  )
             })}
+        </div>
       </div>
     </div>
   );

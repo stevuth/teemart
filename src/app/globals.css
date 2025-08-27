@@ -25,7 +25,7 @@
     --input: 220 13% 94%;
     --ring: 216 74% 11%; /* Dark Navy from Logo */
     --radius: 0.8rem;
-    --carousel-radius: 12rem;
+    --carousel-radius: 9rem;
   }
  
   .dark {
@@ -96,5 +96,9 @@
     to {
       transform: rotateY(-360deg);
     }
+  }
+
+  .hover\:pause:hover {
+    animation-play-state: paused;
   }
 }
