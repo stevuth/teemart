@@ -25,7 +25,8 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
   return (
     <div className="pb-8 border-b">
        <h2 className="text-2xl font-bold tracking-tight mb-8 text-center">Explore Our Categories</h2>
-      <div className="w-full h-32 flex items-center justify-center perspective-1000">
+      {/* Mobile Carousel */}
+      <div className="w-full h-32 flex items-center justify-center perspective-1000 md:hidden">
         <div className="relative w-[var(--carousel-radius)] h-[var(--carousel-radius)] preserve-3d animate-carousel-rotate">
            {categories.map((category, index) => {
               const { icon: Icon, image, hint } = categoryDetails[category];
@@ -65,6 +66,40 @@ export function CategoryShowcase({ selectedCategory, onCategorySelect }: Categor
               )
            })}
         </div>
+      </div>
+       {/* Desktop Grid */}
+      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {categories.map((category) => {
+                 const { icon: Icon, image, hint } = categoryDetails[category];
+                 const isSelected = selectedCategory === category;
+                 return (
+                    <div
+                        key={category}
+                        onClick={() => onCategorySelect(isSelected ? '' : category)}
+                        className={cn(
+                            'relative aspect-video rounded-lg overflow-hidden shadow-lg group cursor-pointer transition-all duration-300 ease-in-out',
+                            'hover:scale-105',
+                            isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+                        )}
+                    >
+                         <Image
+                            src={image}
+                            alt={category}
+                            fill
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                            className="object-cover transition-transform duration-300"
+                            data-ai-hint={hint}
+                        />
+                        <div className={cn(
+                            "absolute inset-0 flex flex-col items-center justify-center p-2 text-center text-white bg-black/50 transition-colors duration-300",
+                            isSelected ? "bg-primary/70" : "group-hover:bg-black/60"
+                        )}>
+                            <Icon className="h-8 w-8 mb-2 drop-shadow-lg" />
+                            <span className="text-base font-semibold whitespace-normal leading-tight drop-shadow-lg">{category}</span>
+                        </div>
+                    </div>
+                 )
+            })}
       </div>
     </div>
   );
