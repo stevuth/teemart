@@ -17,13 +17,7 @@ function VerifyPaymentComponent() {
     const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
     const [message, setMessage] = useState('Verifying your payment, please wait...');
 
-    const verifyPayment = useCallback(async (reference: string, trxref: string) => {
-        if (reference !== trxref) {
-            setStatus('failed');
-            setMessage('Transaction reference mismatch. Please contact support.');
-            return;
-        }
-
+    const verifyPayment = useCallback(async (reference: string) => {
         const result = await verifyTransactionAction(reference);
 
         if (result.success) {
@@ -48,10 +42,9 @@ function VerifyPaymentComponent() {
 
     useEffect(() => {
         const reference = searchParams.get('reference');
-        const trxref = searchParams.get('trxref');
 
-        if (reference && trxref) {
-            verifyPayment(reference, trxref);
+        if (reference) {
+            verifyPayment(reference);
         } else {
             setStatus('failed');
             setMessage('Invalid payment reference. Could not verify transaction.');

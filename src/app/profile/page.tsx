@@ -3,27 +3,38 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
-import type { Product, ReviewWithUser } from '@/lib/types';
+import type { Product, ReviewWithUser, Transaction } from '@/lib/types';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteProductDialog } from '@/components/delete-product-dialog';
 import { ReviewList } from '@/components/review-list';
 import { BackButton } from '@/components/back-button';
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -41,9 +52,14 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [activeListings, setActiveListings] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
+  const [sales, setSales] = useState<Transaction[]>([]);
+  const [purchases, setPurchases] = useState<Transaction[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  
+  const [confirmingTransaction, setConfirmingTransaction] = useState<string | null>(null);
+  const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
+
   const fetchUserData = useCallback(async () => {
     if (!user || !supabase) return;
     setLoadingData(true);
@@ -78,25 +94,31 @@ export default function ProfilePage() {
       if (productIds.length > 0) {
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select(`
-            *,
-            user:profiles (
-              id,
-              full_name,
-              avatar_url
-            )
-          `)
+          .select(`*, user:profiles (id, full_name, avatar_url)`)
           .in('product_id', productIds);
-          
-        if (reviewsError) { 
-            console.error("Error fetching reviews:", reviewsError);
-            setReviews([]);
-        } else {
-            setReviews((reviewsData as ReviewWithUser[]) || []);
-        }
+        if (reviewsError) console.error("Error fetching reviews:", reviewsError);
+        else setReviews((reviewsData as ReviewWithUser[]) || []);
       } else {
         setReviews([]);
       }
+      
+      // Fetch Sales and Purchases
+      const { data: transactions, error: transError } = await supabase
+        .from('transactions')
+        .select('*, product:products(name, image_url), buyer:profiles(full_name), seller:profiles(full_name)')
+        .or(`seller_id.eq.${user.id},buyer_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (transError) throw transError;
+      
+      const formattedTransactions = transactions.map(t => ({
+          ...t,
+          product: t.product ? { ...t.product, image: (t.product as any).image_url || [] } : undefined
+      })) as Transaction[];
+      
+      setSales(formattedTransactions.filter(t => t.seller_id === user.id));
+      setPurchases(formattedTransactions.filter(t => t.buyer_id === user.id));
+
 
     } catch (error: any) {
         console.error("Error fetching profile data: ", error);
@@ -116,6 +138,22 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, router, fetchUserData, supabase]);
   
+  const handleConfirmDelivery = async () => {
+    if (!transactionToConfirm) return;
+    setConfirmingTransaction(transactionToConfirm.id);
+    // Here you would call a server action to release the payment.
+    // For now, we'll simulate it and update the status locally.
+    await new Promise(res => setTimeout(res, 2000));
+    // In a real app:
+    // const result = await releaseEscrowAction(transaction.id);
+    // if (result.success) ...
+    toast({ title: "Delivery Confirmed!", description: `Payment will be released to the seller for ${transactionToConfirm.product?.name}.` });
+    setPurchases(prev => prev.map(t => t.id === transactionToConfirm.id ? { ...t, status: 'released' } : t));
+    setConfirmingTransaction(null);
+    setTransactionToConfirm(null);
+    setConfirmDialogOpen(false);
+  };
+  
   const getInitials = (name?: string | null) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -123,22 +161,9 @@ export default function ProfilePage() {
 
   const handleResendVerification = async () => {
     if (user && supabase) {
-       const { error } = await supabase.auth.resend({
-            type: 'signup',
-            email: user.email!,
-       });
-      if (error) {
-        toast({
-          title: "Error Sending Email",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Verification Email Sent",
-          description: "Please check your inbox (and spam folder) for the verification link.",
-        });
-      }
+       const { error } = await supabase.auth.resend({ type: 'signup', email: user.email! });
+      if (error) toast({ title: "Error Sending Email", description: error.message, variant: "destructive" });
+      else toast({ title: "Verification Email Sent", description: "Please check your inbox (and spam folder) for the verification link." });
     }
   }
 
@@ -159,14 +184,6 @@ export default function ProfilePage() {
       </Alert>
     </div>
   );
-
-  const handleSignOut = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    router.refresh();
-    toast({ title: 'Logged Out', description: "You have been successfully logged out." });
-    router.push('/');
-  };
 
   if (authLoading) {
     return (
@@ -227,8 +244,8 @@ export default function ProfilePage() {
 
   const activityTabs = [
     { value: "active-listings", label: "Active Listings", icon: Package, count: activeListings.length },
-    { value: "my-orders", label: "My Sales", icon: ShoppingBag, count: 0 },
-    { value: "purchase-history", label: "My Purchases", icon: History, count: 0 },
+    { value: "my-sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
+    { value: "my-purchases", label: "My Purchases", icon: History, count: purchases.length },
     { value: "reviews", label: "Reviews Received", icon: Star, count: reviews.length },
   ];
 
@@ -236,6 +253,16 @@ export default function ProfilePage() {
     { value: "verification", label: "Verification", icon: ShieldCheck },
     { value: "payment-details", label: "Payment Details", icon: Banknote },
   ];
+
+  const TransactionStatusBadge = ({ status }: { status: Transaction['status'] }) => {
+    const statusStyles: { [key in Transaction['status']]: string } = {
+        pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+        released: 'bg-green-100 text-green-800 border-green-300',
+        disputed: 'bg-orange-100 text-orange-800 border-orange-300',
+        refunded: 'bg-gray-100 text-gray-800 border-gray-300',
+    };
+    return <Badge variant="outline" className={cn("capitalize", statusStyles[status])}>{status}</Badge>;
+  }
 
   return (
     <>
@@ -245,6 +272,23 @@ export default function ProfilePage() {
           onClose={() => setProductToDelete(null)}
           onDeleted={onListingDeleted}
       />
+      <AlertDialog open={isConfirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Item Receipt</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you have received "{transactionToConfirm?.product?.name}" and it is as described? This action cannot be undone and will release the payment to the seller.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelivery} disabled={confirmingTransaction === transactionToConfirm?.id}>
+              {confirmingTransaction === transactionToConfirm?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Yes, I've Received It
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
         <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -310,97 +354,29 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                     <TabsContent value="active-listings" className="mt-0">
-                      {loadingData ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {[...Array(4)].map((_, i) => (
-                            <div key={i} className="flex flex-col space-y-3">
-                                <Skeleton className="h-[125px] w-full rounded-xl" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-4 w-3/4" />
-                                </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeListings.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {activeListings.map(product => 
-                            <ProductCard 
-                                key={product.id} 
-                                product={product}
-                                isClickable={false}
-                                actions={
-                                    <>
-                                        <Button asChild size="sm" variant="outline" className="w-full">
-                                            <Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link>
-                                        </Button>
-                                        <Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}>
-                                            <Trash2 className="mr-2 h-4 w-4"/>Delete
-                                        </Button>
-                                    </>
-                                }
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                          <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-                          <h3 className="mt-4 text-xl font-medium">No active listings</h3>
-                          <p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p>
-                          <Button asChild className="mt-6" variant="default">
-                              <a href="/sell">List an Item</a>
-                          </Button>
-                        </div>
-                      )}
+                      {loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div> : 
+                       activeListings.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{activeListings.map(product => <ProductCard key={product.id} product={product} isClickable={false} actions={<><Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button><Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></>}/>)}</div> : 
+                       <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>}
                     </TabsContent>
                     
-                    <TabsContent value="my-orders" className="mt-0">
-                        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                            <ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <h3 className="mt-4 text-xl font-medium">No Sales Yet</h3>
-                            <p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p>
-                        </div>
+                    <TabsContent value="my-sales" className="mt-0">
+                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? <div className="space-y-4">{sales.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product?.image[0] || ''} width={80} height={80} alt={t.product?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product?.name}</p><p className="text-sm text-muted-foreground">Buyer: {t.buyer?.full_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex sm:flex-col items-end justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent></Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>}
                     </TabsContent>
 
-                    <TabsContent value="purchase-history" className="mt-0">
-                        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                            <History className="mx-auto h-12 w-12 text-muted-foreground" />
-                            <h3 className="mt-4 text-xl font-medium">No Purchase History</h3>
-                            <p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p>
-                            <Button asChild className="mt-6" variant="default">
-                                <Link href="/">Start Shopping</Link>
-                            </Button>
-                        </div>
+                    <TabsContent value="my-purchases" className="mt-0">
+                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product?.image[0] || ''} width={80} height={80} alt={t.product?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.seller?.full_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'pending' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={confirmingTransaction === t.id}>{confirmingTransaction === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}Confirm Delivery</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
                     </TabsContent>
                     
                     <TabsContent value="reviews" className="mt-0">
-                        {loadingData ? (
-                            <div className="flex justify-center items-center py-16">
-                                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                            </div>
-                        ) : (
-                            <ReviewList reviews={reviews} listings={activeListings} />
-                        )}
+                        {loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} listings={activeListings} />}
                     </TabsContent>
 
                     <TabsContent value="verification" className="mt-0">
-                        {authLoading ? (
-                            <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                        ) : profile ? (
-                            <VerificationForm />
-                        ) : (
-                            renderProfileError("Verification")
-                        )}
+                        {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")}
                     </TabsContent>
 
                     <TabsContent value="payment-details" className="mt-0">
-                        {authLoading ? (
-                            <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                        ) : profile ? (
-                            <PaymentDetailsForm />
-                        ) : (
-                            renderProfileError("Payment Details")
-                        )}
+                        {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : renderProfileError("Payment Details")}
                     </TabsContent>
                 </div>
             </div>

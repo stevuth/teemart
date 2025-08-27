@@ -20,7 +20,8 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
-import { initializeTransactionAction } from '@/app/actions/paystack';
+import { verifyTransactionAction } from '@/app/actions/paystack';
+import { usePaystackPayment } from 'react-paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -41,7 +42,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
-
+    const { clearCart } = useCart();
+    
     const form = useForm<CheckoutFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -51,7 +53,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         },
     });
     
-    const [isProcessing, setIsProcessing] = useState(false);
+    const { isSubmitting } = form.formState;
 
     const calculations = useMemo(() => {
         const subtotalNum = subtotal || 0;
@@ -67,19 +69,16 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const onSubmit = async (data: CheckoutFormValues) => {
-        if (!user || !user.email) {
-            toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
-            return;
-        }
-
-        setIsProcessing(true);
-
-        const metadata = {
-            buyer_id: user.id,
-            customer_name: data.name,
-            customer_phone: data.phone,
-            delivery_address: data.address,
+    const paystackConfig = {
+        reference: new Date().getTime().toString(),
+        email: user?.email || '',
+        amount: Math.round(calculations.totalPayable * 100), // Amount in kobo
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
+        metadata: {
+            buyer_id: user?.id,
+            customer_name: form.getValues().name,
+            customer_phone: form.getValues().phone,
+            delivery_address: form.getValues().address,
             cartItems: cartItems.map(item => ({ 
                 id: item.id, 
                 name: item.name, 
@@ -89,24 +88,60 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                 deliveryFee: item.deliveryFee
             })),
             shipping_fee: calculations.shippingFeeNum,
-        };
+        },
+    };
 
-        const result = await initializeTransactionAction(
-            user.email,
-            calculations.totalPayable,
-            metadata
-        );
+    const handleSuccess = async (reference: any) => {
+        const result = await verifyTransactionAction(reference.reference);
 
-        if (result.success && result.data) {
-            window.location.href = result.data.authorization_url;
+        if (result.success) {
+            clearCart();
+            toast({
+                title: 'Payment Verified',
+                description: 'Your order has been placed successfully.',
+            });
+            router.push('/profile');
         } else {
             toast({
-                title: "Payment Initialization Failed",
-                description: result.error || "An unknown error occurred.",
-                variant: "destructive",
+                title: 'Payment Verification Failed',
+                description: result.error || 'Please contact support if you have been debited.',
+                variant: 'destructive',
             });
-            setIsProcessing(false);
         }
+    };
+
+    const handleClose = () => {
+        toast({
+            title: 'Payment Cancelled',
+            description: 'You have cancelled the payment.',
+            variant: 'destructive',
+        });
+    };
+
+    const initializePayment = usePaystackPayment(paystackConfig);
+
+    const onSubmit = (data: CheckoutFormValues) => {
+        if (!user || !user.email) {
+            toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
+            return;
+        }
+        
+        // The metadata in paystackConfig needs to be updated with the latest form data.
+        const updatedConfig = {
+            ...paystackConfig,
+            metadata: {
+                ...paystackConfig.metadata,
+                customer_name: data.name,
+                customer_phone: data.phone,
+                delivery_address: data.address,
+            }
+        };
+
+        initializePayment({
+            onSuccess: handleSuccess,
+            onClose: handleClose,
+            config: updatedConfig
+        });
     };
 
     const formatCurrency = (amount: number) => {
@@ -189,8 +224,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                                  </div>
                              </div>
 
-                            <Button type="submit" className="w-full" size="lg" disabled={calculations.subtotalNum <= 0 || isProcessing}>
-                                {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Button type="submit" className="w-full" size="lg" disabled={calculations.subtotalNum <= 0 || isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Pay {formatCurrency(calculations.totalPayable)}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
