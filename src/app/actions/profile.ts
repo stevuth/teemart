@@ -29,6 +29,8 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
+        // The set and remove methods are not needed in Server Actions
+        // as they are handled by the middleware.
       },
     }
   );
