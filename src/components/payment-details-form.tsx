@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -14,8 +13,7 @@ import { Loader2, BadgeCheck, Search, ShieldCheck, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { resolveBankAccount, getBankListAction } from "@/app/actions/paystack";
-import { updatePaymentDetailsAction } from "@/app/actions/profile";
+import { getBankListAction, resolveBankAccount, createTransferRecipientAction } from "@/app/actions/paystack";
 
 type Bank = {
     id: number;
@@ -38,7 +36,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, loading: authLoading } = useAuth();
+    const { user, profile, refetchProfile, loading: authLoading, supabase } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -105,6 +103,11 @@ export function PaymentDetailsForm() {
     }, [watchAccountNumber, watchBankCode, banks, toast]);
 
     const onSubmit = async (data: PaymentFormValues) => {
+        if (!user) {
+            toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
+            return;
+        }
+
         if (!resolvedAccount) {
             toast({ 
                 title: "Verification needed", 
@@ -116,28 +119,51 @@ export function PaymentDetailsForm() {
 
         setIsSaving(true);
         
-        const result = await updatePaymentDetailsAction({
-            bank_name: resolvedAccount.bank_name,
-            account_name: resolvedAccount.account_name,
-            account_number: data.accountNumber,
-            bank_code: data.bankCode,
-        });
+        try {
+            // Step 1: Create Paystack recipient using the server action
+            const recipientResult = await createTransferRecipientAction(
+                resolvedAccount.account_name,
+                data.accountNumber,
+                data.bankCode,
+            );
 
-        if (result?.error) {
-            toast({
-                title: "Error Saving Details",
-                description: result.error,
-                variant: "destructive",
-            });
-        } else {
+            if (!recipientResult.success || !recipientResult.recipient_code) {
+                throw new Error(recipientResult.error || 'Failed to create Paystack recipient.');
+            }
+
+            // Step 2: Update profile directly from the client
+            const { error: profileUpdateError } = await supabase
+                .from('profiles')
+                .update({
+                    bank_name: resolvedAccount.bank_name,
+                    account_name: resolvedAccount.account_name,
+                    account_number: data.accountNumber,
+                    bank_code: data.bankCode,
+                    recipient_code: recipientResult.recipient_code,
+                })
+                .eq('id', user.id);
+
+            if (profileUpdateError) {
+                throw profileUpdateError;
+            }
+
             toast({ 
                 title: "Success", 
                 description: "Your payment details have been saved." 
             });
             await refetchProfile();
             setIsEditing(false);
+
+        } catch (error: any) {
+            console.error('Error saving payment details:', error);
+            toast({
+                title: "Error Saving Details",
+                description: error.message,
+                variant: "destructive",
+            });
+        } finally {
+            setIsSaving(false);
         }
-        setIsSaving(false);
     };
 
     return (
