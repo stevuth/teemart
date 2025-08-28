@@ -93,6 +93,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     };
 
     const handleClose = () => {
+        if (isProcessing) return;
         toast({
             title: 'Payment Cancelled',
             description: 'You have cancelled the payment.',
@@ -100,30 +101,11 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         });
     };
     
-    const paystackConfig = {
-        reference: new Date().getTime().toString(),
-        email: user?.email || '',
-        amount: Math.round(calculations.totalPayable * 100), // Amount in kobo
+    const initializePayment = usePaystackPayment({
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
-        metadata: {
-            buyer_id: user?.id,
-            customer_name: form.getValues().name,
-            customer_phone: form.getValues().phone,
-            delivery_address: form.getValues().address,
-            cartItems: cartItems.map(item => ({ 
-                id: item.id, 
-                name: item.name, 
-                price: item.price, 
-                quantity: item.quantity,
-                user_id: item.user_id, // This is the seller's ID
-                image: Array.isArray(item.image) ? item.image : [item.image],
-                deliveryFee: item.deliveryFee
-            })),
-            shipping_fee: calculations.shippingFeeNum,
-        },
-    };
-
-    const initializePayment = usePaystackPayment(paystackConfig);
+        onSuccess: handleSuccess,
+        onClose: handleClose,
+    });
 
     const onSubmit = (data: CheckoutFormValues) => {
         if (!user || !user.email) {
@@ -131,22 +113,29 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             return;
         }
         
-        const updatedConfig = {
-            ...paystackConfig,
+        const paystackConfig = {
+            reference: new Date().getTime().toString(),
             email: user.email,
+            amount: Math.round(calculations.totalPayable * 100), // Amount in kobo
             metadata: {
-                ...paystackConfig.metadata,
+                buyer_id: user.id,
                 customer_name: data.name,
                 customer_phone: data.phone,
                 delivery_address: data.address,
-            }
+                cartItems: cartItems.map(item => ({ 
+                    id: item.id, 
+                    name: item.name, 
+                    price: item.price, 
+                    quantity: item.quantity,
+                    user_id: item.user_id, // This is the seller's ID
+                    image: Array.isArray(item.image) ? item.image : [item.image],
+                    deliveryFee: item.deliveryFee
+                })),
+                shipping_fee: calculations.shippingFeeNum,
+            },
         };
 
-        initializePayment({
-            onSuccess: handleSuccess,
-            onClose: handleClose,
-            config: updatedConfig
-        });
+        initializePayment({ config: paystackConfig });
     };
 
     const formatCurrency = (amount: number) => {
