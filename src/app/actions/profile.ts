@@ -3,9 +3,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { createTransferRecipientAction } from './paystack';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import type { CookieOptions } from '@supabase/ssr';
 
 type PaymentDetails = {
   bank_name: string;
@@ -34,13 +33,10 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     }
   );
 
-  const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (getUserError || !user) {
-    console.error('Action Auth Error: Could not get user.', {
-      getUserError: getUserError?.message,
-      hasCookies: cookieStore.getAll().length > 0,
-    });
+  if (!user) {
+    console.error('Action Auth Error: Could not get user from session cookie.');
     return { error: 'Authentication Error: You must be logged in to update payment details. Please log in again.' };
   }
 
