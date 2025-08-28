@@ -54,8 +54,11 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
   const { data: { user }, error: getUserError } = await supabase.auth.getUser();
 
   if (getUserError || !user) {
-    console.error('Action Error: User not authenticated.', getUserError);
-    return { error: 'You must be logged in to update payment details.' };
+    console.error('Action Auth Error: Could not get user.', {
+      getUserError: getUserError?.message,
+      hasCookies: cookieStore.getAll().length > 0,
+    });
+    return { error: 'Authentication Error: You must be logged in to update payment details. Please log in again.' };
   }
 
   // Create Paystack Transfer Recipient first
