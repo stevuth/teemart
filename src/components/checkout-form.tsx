@@ -102,9 +102,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     };
     
     const initializePayment = usePaystackPayment({
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
-        onSuccess: handleSuccess,
-        onClose: handleClose,
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
     });
 
     const onSubmit = (data: CheckoutFormValues) => {
@@ -114,6 +112,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         }
         
         const paystackConfig = {
+            publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
             reference: new Date().getTime().toString(),
             email: user.email,
             amount: Math.round(calculations.totalPayable * 100), // Amount in kobo
@@ -135,7 +134,11 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             },
         };
 
-        initializePayment({ config: paystackConfig });
+        initializePayment({ 
+            onSuccess: handleSuccess, 
+            onClose: handleClose,
+            config: paystackConfig 
+        });
     };
 
     const formatCurrency = (amount: number) => {
