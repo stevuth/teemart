@@ -69,8 +69,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    // Initialize the hook with the payment configuration.
-    const initializePayment = usePaystackPayment({
+    const paystackConfig = {
         publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
         reference: new Date().getTime().toString(),
         email: user?.email || '',
@@ -91,7 +90,9 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             })),
             shipping_fee: calculations.shippingFeeNum,
         },
-    });
+    };
+    
+    const initializePayment = usePaystackPayment(paystackConfig);
     
     const onSubmit = (data: CheckoutFormValues) => {
         if (!user || !user.email) {
@@ -131,8 +132,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             });
         };
         
-        // Pass the callback functions to initializePayment
-        initializePayment({onSuccess, onClose});
+        initializePayment(onSuccess, onClose);
     };
 
     const formatCurrency = (amount: number) => {
