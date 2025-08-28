@@ -1,9 +1,8 @@
-
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import { createTransferRecipientAction } from './paystack';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 type PaymentDetails = {
@@ -33,10 +32,10 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (!user) {
-    console.error('Action Auth Error: Could not get user from session cookie.');
+  if (authError || !user) {
+    console.error('Action Auth Error: Could not get user from session cookie.', authError);
     return { error: 'Authentication Error: You must be logged in to update payment details. Please log in again.' };
   }
 
