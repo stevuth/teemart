@@ -9,7 +9,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -34,7 +34,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import Image from 'next/image';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -105,16 +106,13 @@ export default function ProfilePage() {
       // Fetch Sales and Purchases
       const { data: transactions, error: transError } = await supabase
         .from('transactions')
-        .select('*, product:products(name, image_url), buyer:profiles(full_name), seller:profiles(full_name)')
+        .select('*, buyer:profiles(full_name), seller:profiles(full_name)')
         .or(`seller_id.eq.${user.id},buyer_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       if (transError) throw transError;
       
-      const formattedTransactions = transactions.map(t => ({
-          ...t,
-          product: t.product ? { ...t.product, image: (t.product as any).image_url || [] } : undefined
-      })) as Transaction[];
+      const formattedTransactions = transactions as Transaction[];
       
       setSales(formattedTransactions.filter(t => t.seller_id === user.id));
       setPurchases(formattedTransactions.filter(t => t.buyer_id === user.id));
@@ -147,7 +145,7 @@ export default function ProfilePage() {
     // In a real app:
     // const result = await releaseEscrowAction(transaction.id);
     // if (result.success) ...
-    toast({ title: "Delivery Confirmed!", description: `Payment will be released to the seller for ${transactionToConfirm.product?.name}.` });
+    toast({ title: "Delivery Confirmed!", description: `Payment will be released to the seller for ${transactionToConfirm.product_details?.name}.` });
     setPurchases(prev => prev.map(t => t.id === transactionToConfirm.id ? { ...t, status: 'released' } : t));
     setConfirmingTransaction(null);
     setTransactionToConfirm(null);
@@ -277,7 +275,7 @@ export default function ProfilePage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Item Receipt</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you have received "{transactionToConfirm?.product?.name}" and it is as described? This action cannot be undone and will release the payment to the seller.
+              Are you sure you have received "{transactionToConfirm?.product_details?.name}" and it is as described? This action cannot be undone and will release the payment to the seller.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -360,11 +358,11 @@ export default function ProfilePage() {
                     </TabsContent>
                     
                     <TabsContent value="my-sales" className="mt-0">
-                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? <div className="space-y-4">{sales.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product?.image[0] || ''} width={80} height={80} alt={t.product?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product?.name}</p><p className="text-sm text-muted-foreground">Buyer: {t.buyer?.full_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex sm:flex-col items-end justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent></Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>}
+                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? <div className="space-y-4">{sales.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product_details?.name}</p><p className="text-sm text-muted-foreground">Buyer: {t.buyer?.full_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex sm:flex-col items-end justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent></Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>}
                     </TabsContent>
 
                     <TabsContent value="my-purchases" className="mt-0">
-                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product?.image[0] || ''} width={80} height={80} alt={t.product?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.seller?.full_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'pending' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={confirmingTransaction === t.id}>{confirmingTransaction === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}Confirm Delivery</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
+                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product_details?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.seller?.full_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'pending' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={confirmingTransaction === t.id}>{confirmingTransaction === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}Confirm Delivery</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
                     </TabsContent>
                     
                     <TabsContent value="reviews" className="mt-0">

@@ -73,7 +73,7 @@ export async function verifyTransactionAction(reference: string) {
             const { cartItems, buyer_id, shipping_fee } = metadata;
 
             // Use a transaction to ensure all inserts succeed or none do.
-            const transactionRecords = cartItems.map((item: CartItem) => {
+            const transactionRecords = cartItems.map((item: CartItem & {image: string[]}) => {
                 const productPrice = item.price * item.quantity;
                 const buyerFee = productPrice * 0.03;
                 const sellerFee = productPrice * 0.02;
@@ -88,6 +88,10 @@ export async function verifyTransactionAction(reference: string) {
                     shipping_fee: item.deliveryFee || 0, // Use individual item delivery fee
                     paystack_ref: reference,
                     status: 'pending' as const,
+                    product_details: {
+                        name: item.name,
+                        image: Array.isArray(item.image) ? item.image : [item.image],
+                    }
                 };
             });
             

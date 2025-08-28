@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     shipping_fee NUMERIC DEFAULT 0,
     paystack_ref VARCHAR(255) UNIQUE NOT NULL,
     status transaction_status DEFAULT 'pending' NOT NULL,
-    order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL
+    order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+    product_details JSONB -- New column for storing product snapshot
 );
 
 -- 3. Enable RLS for the transactions table.
@@ -99,6 +100,13 @@ CREATE POLICY "Users can view their own transactions." ON public.transactions
 FOR SELECT
 TO authenticated
 USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
+
+-- =========== PRODUCTS TABLE RLS (Important for transactions) ===========
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Enable read access for all users" ON public.products;
+CREATE POLICY "Enable read access for all users" ON public.products
+FOR SELECT
+USING (true);
 
 
 -- =========== CLEANUP OLD FUNCTIONS ===========
