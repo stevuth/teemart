@@ -25,12 +25,16 @@ export async function initializeTransactionAction(email: string, amount: number,
         return { success: false, error: 'Server configuration error.' };
     }
 
+    const callbackUrl = process.env.NODE_ENV === 'development'
+        ? 'https://adbc9502aaf7.ngrok-free.app/verify-payment'
+        : `${process.env.NEXT_PUBLIC_SITE_URL}/verify-payment`;
+
     try {
         const response = await axios.post(`${PAYSTACK_API_URL}/transaction/initialize`, {
             email,
             amount: Math.round(amount * 100), // Convert to kobo
             metadata,
-             callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/verify-payment`
+             callback_url: callbackUrl
         }, {
             headers: {
                 Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
