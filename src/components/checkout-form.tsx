@@ -69,47 +69,45 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const handleSuccess = async (reference: { reference: string }) => {
-        setIsProcessing(true);
-        toast({ title: "Payment Successful", description: "Verifying your transaction..." });
-
-        const result = await verifyTransactionAction(reference.reference);
-        
-        if (result.success) {
-            clearCart();
-            toast({
-                title: 'Payment Verified',
-                description: 'Your order has been placed successfully.',
-            });
-            router.push('/profile');
-        } else {
-            toast({
-                title: 'Payment Verification Failed',
-                description: result.error || 'Please contact support.',
-                variant: 'destructive',
-            });
-        }
-        setIsProcessing(false);
-    };
-
-    const handleClose = () => {
-        if (isProcessing) return;
-        toast({
-            title: 'Payment Cancelled',
-            description: 'You have cancelled the payment.',
-            variant: 'destructive',
-        });
-    };
-    
-    const initializePayment = usePaystackPayment({
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-    });
+    const initializePayment = usePaystackPayment();
 
     const onSubmit = (data: CheckoutFormValues) => {
         if (!user || !user.email) {
             toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
             return;
         }
+
+        const handleSuccess = async (reference: { reference: string }) => {
+            setIsProcessing(true);
+            toast({ title: "Payment Successful", description: "Verifying your transaction..." });
+    
+            const result = await verifyTransactionAction(reference.reference);
+            
+            if (result.success) {
+                clearCart();
+                toast({
+                    title: 'Payment Verified',
+                    description: 'Your order has been placed successfully.',
+                });
+                router.push('/profile');
+            } else {
+                toast({
+                    title: 'Payment Verification Failed',
+                    description: result.error || 'Please contact support.',
+                    variant: 'destructive',
+                });
+            }
+            setIsProcessing(false);
+        };
+    
+        const handleClose = () => {
+            if (isProcessing) return;
+            toast({
+                title: 'Payment Cancelled',
+                description: 'You have cancelled the payment.',
+                variant: 'destructive',
+            });
+        };
         
         const paystackConfig = {
             publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
@@ -137,7 +135,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         initializePayment({ 
             onSuccess: handleSuccess, 
             onClose: handleClose,
-            config: paystackConfig 
+            ...paystackConfig 
         });
     };
 
