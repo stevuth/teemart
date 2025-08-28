@@ -3,7 +3,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { createTransferRecipientAction } from './paystack';
-import { createSupabaseServerActionClient } from '@/utils/supabase/actions';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 type PaymentDetails = {
   bank_name: string;
@@ -19,7 +20,24 @@ type PaymentDetails = {
  * @returns An object with either a success flag or an error message.
  */
 export async function updatePaymentDetailsAction(details: PaymentDetails) {
-  const supabase = createSupabaseServerActionClient();
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options) {
+          cookieStore.set({ name, value: '', ...options })
+        },
+      },
+    }
+  );
 
   const { data: { user }, error: getUserError } = await supabase.auth.getUser();
 
@@ -60,5 +78,3 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
   
   return { success: true };
 }
-
-    
