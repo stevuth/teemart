@@ -69,15 +69,37 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const initializePayment = usePaystackPayment();
-
+    // Initialize the hook with the payment configuration.
+    const initializePayment = usePaystackPayment({
+        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
+        reference: new Date().getTime().toString(),
+        email: user?.email || '',
+        amount: Math.round(calculations.totalPayable * 100),
+        metadata: {
+            buyer_id: user?.id,
+            customer_name: form.getValues().name,
+            customer_phone: form.getValues().phone,
+            delivery_address: form.getValues().address,
+            cartItems: cartItems.map(item => ({ 
+                id: item.id, 
+                name: item.name, 
+                price: item.price, 
+                quantity: item.quantity,
+                user_id: item.user_id,
+                image: Array.isArray(item.image) ? item.image : [item.image],
+                deliveryFee: item.deliveryFee
+            })),
+            shipping_fee: calculations.shippingFeeNum,
+        },
+    });
+    
     const onSubmit = (data: CheckoutFormValues) => {
         if (!user || !user.email) {
             toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
             return;
         }
 
-        const handleSuccess = async (reference: { reference: string }) => {
+        const onSuccess = async (reference: { reference: string }) => {
             setIsProcessing(true);
             toast({ title: "Payment Successful", description: "Verifying your transaction..." });
     
@@ -100,7 +122,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             setIsProcessing(false);
         };
     
-        const handleClose = () => {
+        const onClose = () => {
             if (isProcessing) return;
             toast({
                 title: 'Payment Cancelled',
@@ -109,34 +131,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             });
         };
         
-        const paystackConfig = {
-            publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-            reference: new Date().getTime().toString(),
-            email: user.email,
-            amount: Math.round(calculations.totalPayable * 100), // Amount in kobo
-            metadata: {
-                buyer_id: user.id,
-                customer_name: data.name,
-                customer_phone: data.phone,
-                delivery_address: data.address,
-                cartItems: cartItems.map(item => ({ 
-                    id: item.id, 
-                    name: item.name, 
-                    price: item.price, 
-                    quantity: item.quantity,
-                    user_id: item.user_id, // This is the seller's ID
-                    image: Array.isArray(item.image) ? item.image : [item.image],
-                    deliveryFee: item.deliveryFee
-                })),
-                shipping_fee: calculations.shippingFeeNum,
-            },
-        };
-
-        initializePayment({ 
-            onSuccess: handleSuccess, 
-            onClose: handleClose,
-            ...paystackConfig 
-        });
+        // Pass the callback functions to initializePayment
+        initializePayment({onSuccess, onClose});
     };
 
     const formatCurrency = (amount: number) => {
