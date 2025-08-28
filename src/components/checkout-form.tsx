@@ -20,8 +20,7 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
-import { usePaystackPayment } from 'react-paystack';
-import { verifyTransactionAction } from '@/app/actions/paystack';
+import { initializeTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -52,7 +51,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             address: "",
         },
     });
-    
+
     const [isProcessing, setIsProcessing] = useState(false);
 
     const calculations = useMemo(() => {
@@ -69,16 +68,19 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const paystackConfig = {
-        publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
-        reference: new Date().getTime().toString(),
-        email: user?.email || '',
-        amount: Math.round(calculations.totalPayable * 100),
-        metadata: {
+    const onSubmit = async (data: CheckoutFormValues) => {
+        if (!user || !user.email) {
+            toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
+            return;
+        }
+
+        setIsProcessing(true);
+
+        const metadata = {
             buyer_id: user?.id,
-            customer_name: form.getValues().name,
-            customer_phone: form.getValues().phone,
-            delivery_address: form.getValues().address,
+            customer_name: data.name,
+            customer_phone: data.phone,
+            delivery_address: data.address,
             cartItems: cartItems.map(item => ({ 
                 id: item.id, 
                 name: item.name, 
@@ -89,50 +91,21 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                 deliveryFee: item.deliveryFee
             })),
             shipping_fee: calculations.shippingFeeNum,
-        },
-    };
-    
-    const initializePayment = usePaystackPayment(paystackConfig);
-    
-    const onSubmit = (data: CheckoutFormValues) => {
-        if (!user || !user.email) {
-            toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
-            return;
-        }
+        };
 
-        const onSuccess = async (reference: { reference: string }) => {
-            setIsProcessing(true);
-            toast({ title: "Payment Successful", description: "Verifying your transaction..." });
-    
-            const result = await verifyTransactionAction(reference.reference);
-            
-            if (result.success) {
-                clearCart();
-                toast({
-                    title: 'Payment Verified',
-                    description: 'Your order has been placed successfully.',
-                });
-                router.push('/profile');
-            } else {
-                toast({
-                    title: 'Payment Verification Failed',
-                    description: result.error || 'Please contact support.',
-                    variant: 'destructive',
-                });
-            }
-            setIsProcessing(false);
-        };
-    
-        const onClose = () => {
-            if (isProcessing) return;
+        const result = await initializeTransactionAction(user.email, calculations.totalPayable, metadata);
+
+        if (result.success && result.data?.authorization_url) {
+            // Redirect to Paystack's payment page
+            router.push(result.data.authorization_url);
+        } else {
             toast({
-                title: 'Payment Cancelled',
-                description: 'You have cancelled the payment.',
-                variant: 'destructive',
+                title: "Payment Initialization Failed",
+                description: result.error || "Could not connect to payment provider. Please try again.",
+                variant: "destructive"
             });
-        };
-        
-        initializePayment(onSuccess, onClose);
+            setIsProcessing(false);
+        }
     };
 
     const formatCurrency = (amount: number) => {
