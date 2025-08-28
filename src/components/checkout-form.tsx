@@ -21,6 +21,7 @@ import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
 import { usePaystackPayment } from 'react-paystack';
+import { verifyTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -52,7 +53,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         },
     });
     
-    const { isSubmitting } = form.formState;
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const calculations = useMemo(() => {
         const subtotalNum = subtotal || 0;
@@ -67,6 +68,37 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             totalPayable,
         };
     }, [subtotal, shippingFee]);
+    
+    const handleSuccess = async (reference: { reference: string }) => {
+        setIsProcessing(true);
+        toast({ title: "Payment Successful", description: "Verifying your transaction..." });
+
+        const result = await verifyTransactionAction(reference.reference);
+        
+        if (result.success) {
+            clearCart();
+            toast({
+                title: 'Payment Verified',
+                description: 'Your order has been placed successfully.',
+            });
+            router.push('/profile');
+        } else {
+            toast({
+                title: 'Payment Verification Failed',
+                description: result.error || 'Please contact support.',
+                variant: 'destructive',
+            });
+        }
+        setIsProcessing(false);
+    };
+
+    const handleClose = () => {
+        toast({
+            title: 'Payment Cancelled',
+            description: 'You have cancelled the payment.',
+            variant: 'destructive',
+        });
+    };
     
     const paystackConfig = {
         reference: new Date().getTime().toString(),
@@ -91,23 +123,6 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         },
     };
 
-    const handleSuccess = (reference: any) => {
-        toast({
-            title: 'Payment Successful',
-            description: 'Verifying your transaction...',
-        });
-        // The verify-payment page will handle the rest
-        router.push(`/verify-payment?reference=${reference.reference}`);
-    };
-
-    const handleClose = () => {
-        toast({
-            title: 'Payment Cancelled',
-            description: 'You have cancelled the payment.',
-            variant: 'destructive',
-        });
-    };
-
     const initializePayment = usePaystackPayment(paystackConfig);
 
     const onSubmit = (data: CheckoutFormValues) => {
@@ -116,7 +131,6 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             return;
         }
         
-        // The metadata in paystackConfig needs to be updated with the latest form data.
         const updatedConfig = {
             ...paystackConfig,
             email: user.email,
@@ -138,6 +152,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     const formatCurrency = (amount: number) => {
         return `₦${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
     };
+    
+    const { isSubmitting } = form.formState;
 
     return (
         <Form {...form}>
@@ -215,8 +231,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                                  </div>
                              </div>
 
-                            <Button type="submit" className="w-full" size="lg" disabled={calculations.subtotalNum <= 0 || isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <Button type="submit" className="w-full" size="lg" disabled={calculations.subtotalNum <= 0 || isSubmitting || isProcessing}>
+                                {(isSubmitting || isProcessing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Pay {formatCurrency(calculations.totalPayable)}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
