@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -44,6 +45,8 @@ export function PaymentDetailsForm() {
     const [isEditing, setIsEditing] = useState(false);
     const [resolvedAccount, setResolvedAccount] = useState<{ account_name: string, bank_name: string } | null>(null);
 
+    const isVerified = !!(profile?.account_name && profile?.bank_name);
+
     const form = useForm<PaymentFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -51,18 +54,22 @@ export function PaymentDetailsForm() {
             accountNumber: "",
         },
     });
-    
-    const isVerified = !!(profile?.account_name && profile?.bank_name);
 
     useEffect(() => {
+        // When the profile loads or changes, populate the form
         if (profile) {
             form.reset({
                 bankCode: profile.bank_code || "",
                 accountNumber: profile.account_number || "",
             });
+            // If details are already verified, show them but don't force edit mode
             if (isVerified) {
                  setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
             }
+        }
+         // Start in edit mode if details are not yet verified
+        if (!isVerified) {
+            setIsEditing(true);
         }
     }, [profile, form, isVerified]);
 
@@ -120,7 +127,6 @@ export function PaymentDetailsForm() {
         setIsSaving(true);
         
         try {
-            // Step 1: Create Paystack recipient using the server action
             const recipientResult = await createTransferRecipientAction(
                 resolvedAccount.account_name,
                 data.accountNumber,
@@ -131,7 +137,6 @@ export function PaymentDetailsForm() {
                 throw new Error(recipientResult.error || 'Failed to create Paystack recipient.');
             }
 
-            // Step 2: Update profile directly from the client
             const { error: profileUpdateError } = await supabase
                 .from('profiles')
                 .update({
@@ -188,7 +193,7 @@ export function PaymentDetailsForm() {
                 </div>
             </CardHeader>
             <CardContent>
-                {isVerified && !isEditing ? (
+                {!isEditing && isVerified ? (
                      <Alert variant="default" className="bg-green-100 border-green-200 text-green-800">
                         <BadgeCheck className="h-4 w-4 !text-green-800" />
                         <AlertTitle>Your account is verified!</AlertTitle>
@@ -258,7 +263,7 @@ export function PaymentDetailsForm() {
                             )}
                             
                             <div className="flex gap-2 justify-end">
-                                {isEditing && (
+                                {isEditing && isVerified && (
                                      <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
                                 )}
                                 <Button 
