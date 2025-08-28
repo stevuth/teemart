@@ -16,7 +16,6 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { resolveBankAccount, getBankListAction } from "@/app/actions/paystack";
 import { updatePaymentDetailsAction } from "@/app/actions/profile";
-import { createBrowserClient } from '@supabase/ssr';
 
 type Bank = {
     id: number;
@@ -39,7 +38,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, user, loading: authLoading } = useAuth();
+    const { profile, refetchProfile, user, loading: authLoading, supabase } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -116,11 +115,7 @@ export function PaymentDetailsForm() {
         }
 
         setIsSaving(true);
-
-        const supabase = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error || !session) {
