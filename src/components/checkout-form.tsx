@@ -20,7 +20,6 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
-import { verifyTransactionAction } from '@/app/actions/paystack';
 import { usePaystackPayment } from 'react-paystack';
 
 const formSchema = z.object({
@@ -84,30 +83,21 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                 name: item.name, 
                 price: item.price, 
                 quantity: item.quantity,
-                user_id: item.user_id,
+                user_id: item.user_id, // This is the seller's ID
+                image: Array.isArray(item.image) ? item.image : [item.image],
                 deliveryFee: item.deliveryFee
             })),
             shipping_fee: calculations.shippingFeeNum,
         },
     };
 
-    const handleSuccess = async (reference: any) => {
-        const result = await verifyTransactionAction(reference.reference);
-
-        if (result.success) {
-            clearCart();
-            toast({
-                title: 'Payment Verified',
-                description: 'Your order has been placed successfully.',
-            });
-            router.push('/profile');
-        } else {
-            toast({
-                title: 'Payment Verification Failed',
-                description: result.error || 'Please contact support if you have been debited.',
-                variant: 'destructive',
-            });
-        }
+    const handleSuccess = (reference: any) => {
+        toast({
+            title: 'Payment Successful',
+            description: 'Verifying your transaction...',
+        });
+        // The verify-payment page will handle the rest
+        router.push(`/verify-payment?reference=${reference.reference}`);
     };
 
     const handleClose = () => {
@@ -129,6 +119,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         // The metadata in paystackConfig needs to be updated with the latest form data.
         const updatedConfig = {
             ...paystackConfig,
+            email: user.email,
             metadata: {
                 ...paystackConfig.metadata,
                 customer_name: data.name,

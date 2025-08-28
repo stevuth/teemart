@@ -70,7 +70,7 @@ export async function verifyTransactionAction(reference: string) {
         const { status, data } = response.data;
         if (status && data.status === 'success') {
             const { metadata } = data;
-            const { cartItems, buyer_id, shipping_fee } = metadata;
+            const { cartItems, buyer_id } = metadata;
 
             // Use a transaction to ensure all inserts succeed or none do.
             const transactionRecords = cartItems.map((item: CartItem & {image: string[]}) => {
@@ -80,7 +80,7 @@ export async function verifyTransactionAction(reference: string) {
 
                 return {
                     buyer_id,
-                    seller_id: item.user_id,
+                    seller_id: item.user_id, // This comes from the metadata now
                     product_id: item.id,
                     product_price: productPrice,
                     buyer_fee: buyerFee,
