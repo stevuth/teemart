@@ -8,8 +8,8 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Transaction } from '@/lib/types';
 
 const PAYSTACK_API_URL = 'https://api.paystack.co';
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+const PAYSTACK_SECRET_KEY = "sk_test_dc2996e32f46e3b88e8e636b2122cba9914cac4d";
+const PAYSTACK_PUBLIC_KEY = "pk_test_dcdc77291352593b0249c8bc85c6645a20339f03";
 
 
 /**
