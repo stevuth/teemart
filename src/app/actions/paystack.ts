@@ -76,7 +76,8 @@ export async function verifyTransactionAction(reference: string) {
             // Use a transaction to ensure all inserts succeed or none do.
             const transactionRecords = await Promise.all(cartItems.map(async (item: CartItem & {image: string[]}) => {
                 const productPrice = item.price * item.quantity;
-                const buyerFee = productPrice * 0.03;
+                // These fees should be aligned with what's shown to the user at checkout
+                const buyerFee = productPrice * 0.03; 
                 const sellerFee = productPrice * 0.02;
 
                 // Fetch seller name for the snapshot
@@ -90,12 +91,12 @@ export async function verifyTransactionAction(reference: string) {
 
                 return {
                     buyer_id,
-                    seller_id: item.user_id, // This comes from the metadata now
+                    seller_id: item.user_id,
                     product_id: item.id,
                     product_price: productPrice,
                     buyer_fee: buyerFee,
                     seller_fee: sellerFee,
-                    shipping_fee: item.deliveryFee || 0, // Use individual item delivery fee
+                    shipping_fee: item.deliveryFee || 0,
                     paystack_ref: reference,
                     status: 'pending' as const,
                     product_details: {

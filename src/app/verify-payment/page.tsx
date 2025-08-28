@@ -10,6 +10,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { verifyTransactionAction } from '@/app/actions/paystack';
 import { useCart } from '@/hooks/use-cart';
+import Link from 'next/link';
 
 function VerificationContent() {
     const router = useRouter();
@@ -57,7 +58,7 @@ function VerificationContent() {
                     {status === 'failed' && 'Payment Failed'}
                 </CardTitle>
                 <CardDescription>
-                    {status === 'verifying' && 'Please wait while we confirm your transaction.'}
+                    {status === 'verifying' && 'Please wait while we confirm your transaction. Do not close this page.'}
                     {status === 'success' && 'Your order has been placed. You can view it in your profile.'}
                     {status === 'failed' && (error || 'We could not verify your payment. Please try again or contact support.')}
                 </CardDescription>
@@ -65,13 +66,13 @@ function VerificationContent() {
             <CardContent>
                 <div className="flex w-full justify-center gap-4">
                      {status === 'success' && (
-                        <Button onClick={() => router.push('/profile')} className="w-full">
-                            Go to My Profile
+                        <Button asChild className="w-full">
+                            <Link href="/profile">Go to My Profile</Link>
                         </Button>
                     )}
                      {status === 'failed' && (
-                        <Button onClick={() => router.push('/checkout')} className="w-full">
-                            Try Again
+                        <Button asChild className="w-full">
+                           <Link href="/checkout">Try Again</Link>
                         </Button>
                     )}
                 </div>
