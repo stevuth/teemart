@@ -51,7 +51,6 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     details.account_name,
     details.account_number,
     details.bank_code,
-    user.id
   );
 
   if (!recipientResult.success || !recipientResult.recipient_code) {

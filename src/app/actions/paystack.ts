@@ -192,20 +192,18 @@ export async function resolveBankAccount(accountNumber: string, bankCode: string
 
 
 /**
- * Creates a Paystack Transfer Recipient for a seller and saves the recipient code.
+ * Creates a Paystack Transfer Recipient for a seller. This action is self-contained and does not update the database.
+ * The calling action is responsible for saving the returned recipient code.
  * @param name - The seller's account name.
  * @param accountNumber - The seller's account number.
  * @param bankCode - The seller's bank code.
- * @param userId - The seller's user ID.
  * @returns {Promise<{success: boolean, recipient_code?: string, error?: string}>}
  */
-export async function createTransferRecipientAction(name: string, accountNumber: string, bankCode: string, userId: string) {
+export async function createTransferRecipientAction(name: string, accountNumber: string, bankCode: string) {
     if (!PAYSTACK_SECRET_KEY) {
         console.error("Paystack secret key is not set.");
         return { success: false, error: 'Server configuration error.' };
     }
-
-    const supabase = createSupabaseServerClient();
     
     try {
         const response = await axios.post(`${PAYSTACK_API_URL}/transferrecipient`, {
@@ -220,18 +218,6 @@ export async function createTransferRecipientAction(name: string, accountNumber:
 
         if (response.data.status) {
             const recipient_code = response.data.data.recipient_code;
-            
-            // Save recipient code to the seller's profile
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ recipient_code })
-                .eq('id', userId);
-
-            if (updateError) {
-                console.error('Error saving recipient code:', updateError);
-                return { success: false, error: 'Could not save recipient details. Please try again.' };
-            }
-            
             return { success: true, recipient_code };
         } else {
             return { success: false, error: response.data.message };
