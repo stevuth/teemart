@@ -38,7 +38,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, user, loading: authLoading, supabase } = useAuth();
+    const { profile, refetchProfile, loading: authLoading } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -116,24 +116,11 @@ export function PaymentDetailsForm() {
 
         setIsSaving(true);
         
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error || !session) {
-            toast({
-                title: "Authentication Error",
-                description: "Please log in again.",
-                variant: "destructive",
-            });
-            setIsSaving(false);
-            return;
-        }
-
         const result = await updatePaymentDetailsAction({
             bank_name: resolvedAccount.bank_name,
             account_name: resolvedAccount.account_name,
             account_number: data.accountNumber,
             bank_code: data.bankCode,
-            access_token: session.access_token,
         });
 
         if (result?.error) {

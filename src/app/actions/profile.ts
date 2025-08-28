@@ -2,40 +2,51 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 import { createTransferRecipientAction } from './paystack';
-import { createClient } from '@supabase/supabase-js';
 
 type PaymentDetails = {
   bank_name: string;
   account_name: string;
   account_number: string;
   bank_code: string;
-  access_token: string; // The access token is now required
 };
 
 export async function updatePaymentDetailsAction(details: PaymentDetails) {
-  if (!details.access_token) {
-    return { error: 'Missing access token. Please log in again.' };
-  }
-
-  // Create a new Supabase client, authenticated with the user's access token
-  const supabase = createClient(
+  const cookieStore = cookies();
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      global: {
-        headers: {
-          Authorization: `Bearer ${details.access_token}`,
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing cookies.
+          }
+        },
+        remove(name: string, options) {
+          try {
+            cookieStore.set({ name, value: '', ...options });
+          } catch (error) {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing cookies.
+          }
         },
       },
     }
   );
 
-  // Get the authenticated user from the token
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    console.error('Auth Error:', authError);
+    console.error('Auth Error in updatePaymentDetailsAction:', authError);
     return { error: 'Authentication failed. Please log in again.' };
   }
 
@@ -63,7 +74,7 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     .eq('id', user.id);
 
   if (profileUpdateError) {
-    console.error('Supabase update failed:', profileUpdateError);
+    console.error('Supabase profile update failed:', profileUpdateError);
     return { error: `Database error: ${profileUpdateError.message}` };
   }
 
