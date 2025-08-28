@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Image from 'next/image';
+import { releaseEscrowAction } from '../actions/paystack';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -139,14 +140,16 @@ export default function ProfilePage() {
   const handleConfirmDelivery = async () => {
     if (!transactionToConfirm) return;
     setConfirmingTransaction(transactionToConfirm.id);
-    // Here you would call a server action to release the payment.
-    // For now, we'll simulate it and update the status locally.
-    await new Promise(res => setTimeout(res, 2000));
-    // In a real app:
-    // const result = await releaseEscrowAction(transaction.id);
-    // if (result.success) ...
-    toast({ title: "Delivery Confirmed!", description: `Payment will be released to the seller for ${transactionToConfirm.product_details?.name}.` });
-    setPurchases(prev => prev.map(t => t.id === transactionToConfirm.id ? { ...t, status: 'released' } : t));
+    
+    const result = await releaseEscrowAction(transactionToConfirm.id);
+
+    if (result.success) {
+        toast({ title: "Delivery Confirmed!", description: `Payment will be released to the seller for ${transactionToConfirm.product_details?.name}.` });
+        fetchUserData(); // Refetch all data to update the status
+    } else {
+        toast({ title: "Action Failed", description: result.error, variant: "destructive" });
+    }
+    
     setConfirmingTransaction(null);
     setTransactionToConfirm(null);
     setConfirmDialogOpen(false);

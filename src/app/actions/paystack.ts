@@ -5,6 +5,7 @@ import axios from 'axios';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
 import type { CartItem } from '@/contexts/cart-context';
+import type { Transaction } from '@/lib/types';
 
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -273,4 +274,77 @@ export async function initiateTransferAction(amount: number, recipientCode: stri
         console.error("Error initiating transfer:", error.response?.data || error.message);
         return { success: false, error: error.response?.data?.message || 'An error occurred during transfer.' };
     }
+}
+
+
+/**
+ * Releases escrowed funds to a seller for a specific transaction.
+ * @param transactionId The ID of the transaction to release.
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function releaseEscrowAction(transactionId: string) {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "User not authenticated." };
+  }
+
+  // 1. Fetch the transaction and ensure the current user is the buyer.
+  const { data: transaction, error: fetchError } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('id', transactionId)
+    .eq('buyer_id', user.id)
+    .single();
+
+  if (fetchError || !transaction) {
+    return { success: false, error: "Transaction not found or you are not the buyer." };
+  }
+
+  if (transaction.status !== 'pending') {
+    return { success: false, error: `Transaction is already ${transaction.status}.` };
+  }
+
+  // 2. Fetch the seller's profile to get their recipient code.
+  const { data: sellerProfile, error: profileError } = await supabase
+    .from('profiles')
+    .select('recipient_code')
+    .eq('id', transaction.seller_id)
+    .single();
+
+  if (profileError || !sellerProfile || !sellerProfile.recipient_code) {
+    return { success: false, error: "Could not find seller's payment details. The seller may need to set up their bank account." };
+  }
+
+  // 3. Calculate the payout amount.
+  const payoutAmount = (transaction.product_price - transaction.seller_fee) + transaction.shipping_fee;
+
+  // 4. Initiate the transfer to the seller.
+  const transferResult = await initiateTransferAction(
+    payoutAmount,
+    sellerProfile.recipient_code,
+    `Payment for order: ${transaction.product_details.name}`
+  );
+
+  if (!transferResult.success) {
+    // Note: Don't update transaction status if transfer fails.
+    // This allows for retries. You might add more robust retry logic here.
+    return { success: false, error: `Paystack transfer failed: ${transferResult.error}` };
+  }
+
+  // 5. Update the transaction status in the database to 'released'.
+  const { error: updateError } = await supabase
+    .from('transactions')
+    .update({ status: 'released' })
+    .eq('id', transaction.id);
+
+  if (updateError) {
+    // This is a critical state. The transfer was made, but DB update failed.
+    // Log this for manual intervention.
+    console.error(`CRITICAL: Transfer successful for transaction ${transaction.id}, but DB update failed.`, updateError);
+    return { success: false, error: "Payment was sent, but there was an error updating the transaction status. Please contact support." };
+  }
+
+  return { success: true };
 }
