@@ -1,6 +1,3 @@
-
-"use server"
-
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -25,5 +22,3 @@ export function createSupabaseServerActionClient() {
     }
   )
 }
-
-    
