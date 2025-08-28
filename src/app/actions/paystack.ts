@@ -73,10 +73,19 @@ export async function verifyTransactionAction(reference: string) {
             const { cartItems, buyer_id } = metadata;
 
             // Use a transaction to ensure all inserts succeed or none do.
-            const transactionRecords = cartItems.map((item: CartItem & {image: string[]}) => {
+            const transactionRecords = await Promise.all(cartItems.map(async (item: CartItem & {image: string[]}) => {
                 const productPrice = item.price * item.quantity;
                 const buyerFee = productPrice * 0.03;
                 const sellerFee = productPrice * 0.02;
+
+                // Fetch seller name for the snapshot
+                const { data: sellerProfile, error: sellerError } = await supabase
+                    .from('profiles')
+                    .select('full_name')
+                    .eq('id', item.user_id)
+                    .single();
+                
+                if (sellerError) throw new Error(`Could not find seller profile for user ID: ${item.user_id}`);
 
                 return {
                     buyer_id,
@@ -91,9 +100,11 @@ export async function verifyTransactionAction(reference: string) {
                     product_details: {
                         name: item.name,
                         image: Array.isArray(item.image) ? item.image : [item.image],
+                        buyer_name: metadata.customer_name,
+                        seller_name: sellerProfile.full_name,
                     }
                 };
-            });
+            }));
             
             const { error } = await supabase.from('transactions').insert(transactionRecords);
 

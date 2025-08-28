@@ -93,6 +93,8 @@ export type TransactionStatus = 'pending' | 'released' | 'disputed' | 'refunded'
 export type ProductSnapshot = {
   name: string;
   image: string[];
+  buyer_name: string;
+  seller_name: string;
 };
 
 export type Transaction = {
@@ -109,8 +111,6 @@ export type Transaction = {
     status: TransactionStatus;
     order_id?: string;
     product_details: ProductSnapshot; // Use the new JSONB column
-    buyer?: { full_name: string };
-    seller?: { full_name: string };
 };
 
 
