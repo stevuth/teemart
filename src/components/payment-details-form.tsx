@@ -16,6 +16,7 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { resolveBankAccount, getBankListAction } from "@/app/actions/paystack";
 import { updatePaymentDetailsAction } from "@/app/actions/profile";
+import { createBrowserClient } from '@supabase/ssr';
 
 type Bank = {
     id: number;
@@ -115,20 +116,30 @@ export function PaymentDetailsForm() {
         }
 
         setIsSaving(true);
-        console.log('[Form Log] Submitting details:', JSON.stringify({
-          bank_code: data.bankCode,
-          account_number: data.accountNumber,
-          resolvedAccount,
-        }, null, 2));
+
+        const supabase = createBrowserClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error || !session) {
+            toast({
+                title: "Authentication Error",
+                description: "Please log in again.",
+                variant: "destructive",
+            });
+            setIsSaving(false);
+            return;
+        }
 
         const result = await updatePaymentDetailsAction({
             bank_name: resolvedAccount.bank_name,
             account_name: resolvedAccount.account_name,
             account_number: data.accountNumber,
             bank_code: data.bankCode,
+            access_token: session.access_token,
         });
-        
-        console.log('[Form Log] Server action result:', JSON.stringify(result, null, 2));
 
         if (result?.error) {
             toast({

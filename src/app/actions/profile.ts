@@ -3,62 +3,43 @@
 
 import { revalidatePath } from 'next/cache';
 import { createTransferRecipientAction } from './paystack';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 type PaymentDetails = {
   bank_name: string;
   account_name: string;
   account_number: string;
   bank_code: string;
+  access_token: string; // The access token is now required
 };
 
-/**
- * A Server Action to update the payment details for the currently authenticated user.
- * It also creates a Paystack Transfer Recipient if one doesn't exist.
- * @param details The payment details to save.
- * @returns An object with either a success flag or an error message.
- */
 export async function updatePaymentDetailsAction(details: PaymentDetails) {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
+  if (!details.access_token) {
+    return { error: 'Missing access token. Please log in again.' };
+  }
+
+  // Create a new Supabase client, authenticated with the user's access token
+  const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options });
-          } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
+      global: {
+        headers: {
+          Authorization: `Bearer ${details.access_token}`,
         },
       },
     }
   );
 
+  // Get the authenticated user from the token
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    console.error('Action Auth Error: Could not get user from session cookie.', { authError });
-    return { error: 'Authentication Error: You must be logged in to update payment details. Please log in again.' };
+    console.error('Auth Error:', authError);
+    return { error: 'Authentication failed. Please log in again.' };
   }
 
-  // Create Paystack Transfer Recipient first
+  // Step 1: Create Paystack recipient
   const recipientResult = await createTransferRecipientAction(
     details.account_name,
     details.account_number,
@@ -66,10 +47,10 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
   );
 
   if (!recipientResult.success || !recipientResult.recipient_code) {
-    return { error: recipientResult.error || 'Failed to create payment recipient with Paystack.' };
+    return { error: recipientResult.error || 'Failed to create Paystack recipient.' };
   }
-  
-  // Now, update the profile with all details
+
+  // Step 2: Update profile in the database
   const { error: profileUpdateError } = await supabase
     .from('profiles')
     .update({
@@ -82,11 +63,10 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     .eq('id', user.id);
 
   if (profileUpdateError) {
-    console.error('Action Error: Supabase update failed:', { code: profileUpdateError.code, message: profileUpdateError.message, details: profileUpdateError.details });
+    console.error('Supabase update failed:', profileUpdateError);
     return { error: `Database error: ${profileUpdateError.message}` };
   }
 
   revalidatePath('/profile');
-  
   return { success: true };
 }
