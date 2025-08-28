@@ -3,8 +3,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { createTransferRecipientAction } from './paystack';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { CookieOptions } from '@supabase/ssr';
 
 type PaymentDetails = {
   bank_name: string;
@@ -27,10 +28,8 @@ export async function updatePaymentDetailsAction(details: PaymentDetails) {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value
+          return cookieStore.get(name)?.value;
         },
-        // The set and remove methods are not needed in Server Actions
-        // as they are handled by the middleware.
       },
     }
   );
