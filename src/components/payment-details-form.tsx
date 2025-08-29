@@ -42,10 +42,10 @@ export function PaymentDetailsForm() {
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditing, setIsEditing] = useState(!profile?.recipient_code);
     const [resolvedAccount, setResolvedAccount] = useState<{ account_name: string, bank_name: string } | null>(null);
 
-    const isVerified = !!(profile?.account_name && profile?.bank_name);
+    const isVerified = !!(profile?.account_name && profile?.bank_name && profile?.recipient_code);
 
     const form = useForm<PaymentFormValues>({
         resolver: zodResolver(formSchema),
@@ -55,17 +55,20 @@ export function PaymentDetailsForm() {
         },
     });
     
-    useEffect(() => {
-        if (isVerified && !isEditing) {
-            form.reset({
-                bankCode: profile.bank_code || "",
-                accountNumber: profile.account_number || "",
-            });
-             setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
-        } else if (!isVerified) {
-            setIsEditing(true);
+     useEffect(() => {
+        // This effect ensures the form is in the correct state (editing or viewing)
+        // when the component mounts or the profile data changes.
+        if (profile?.recipient_code) {
+          setIsEditing(false);
+          form.reset({
+            bankCode: profile.bank_code || "",
+            accountNumber: profile.account_number || "",
+          });
+        } else {
+          setIsEditing(true);
         }
-    }, [profile, isVerified, isEditing, form]);
+    }, [profile, form]);
+
 
     useEffect(() => {
         async function fetchBanks() {
@@ -83,7 +86,10 @@ export function PaymentDetailsForm() {
     
     const handleVerification = useCallback(async () => {
         const { accountNumber, bankCode } = form.getValues();
-        if (accountNumber.length !== 10 || !bankCode) return;
+        if (accountNumber.length !== 10 || !bankCode) {
+            toast({title: "Info", description: "Please select a bank and enter a 10-digit account number."})
+            return;
+        };
         
         setIsVerifying(true);
         setResolvedAccount(null);
@@ -148,8 +154,9 @@ export function PaymentDetailsForm() {
                 title: "Success", 
                 description: "Your payment details have been saved." 
             });
+            // This is the key: refetch the profile which will cause a re-render
+            // with the new data, and the useEffect will handle setting isEditing to false.
             await refetchProfile();
-            setIsEditing(false);
 
         } catch (error: any) {
             console.error('Error saving payment details:', error);
@@ -165,7 +172,7 @@ export function PaymentDetailsForm() {
 
     const handleEditClick = () => {
         setIsEditing(true);
-        setResolvedAccount(null); // This is the crucial fix
+        setResolvedAccount(null);
         form.reset({
             bankCode: profile?.bank_code || "",
             accountNumber: profile?.account_number || "",
@@ -211,7 +218,7 @@ export function PaymentDetailsForm() {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Bank</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={authLoading || isSaving || isVerifying}>
+                                        <Select onValueChange={(value) => { field.onChange(value); setResolvedAccount(null); }} defaultValue={field.value} value={field.value} disabled={authLoading || isSaving || isVerifying}>
                                             <FormControl>
                                                 <SelectTrigger disabled={loadingBanks || isVerifying || isSaving}>
                                                     <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
@@ -235,7 +242,7 @@ export function PaymentDetailsForm() {
                                         <FormLabel>Account Number</FormLabel>
                                         <FormControl>
                                             <div className="relative">
-                                                 <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} disabled={authLoading || isSaving} />
+                                                 <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} onChange={(e) => {field.onChange(e); setResolvedAccount(null);}} disabled={authLoading || isSaving} />
                                                  <Button 
                                                     type="button"
                                                     size="sm"
@@ -282,3 +289,4 @@ export function PaymentDetailsForm() {
         </Card>
     );
 }
+
