@@ -54,24 +54,29 @@ export function PaymentDetailsForm() {
             accountNumber: "",
         },
     });
-
+    
+    // Effect to set initial editing state based on profile verification
     useEffect(() => {
-        // When the profile loads or changes, populate the form
+        if (!isVerified) {
+            setIsEditing(true);
+        } else {
+            setIsEditing(false);
+        }
+    }, [isVerified]);
+    
+    // Effect to populate form when profile data is available
+    useEffect(() => {
         if (profile) {
             form.reset({
                 bankCode: profile.bank_code || "",
                 accountNumber: profile.account_number || "",
             });
-            // If details are already verified, show them but don't force edit mode
             if (isVerified) {
-                 setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
+                setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
             }
         }
-         // Start in edit mode if details are not yet verified
-        if (!isVerified) {
-            setIsEditing(true);
-        }
     }, [profile, form, isVerified]);
+
 
     useEffect(() => {
         async function fetchBanks() {
