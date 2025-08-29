@@ -14,7 +14,9 @@ import { Loader2, BadgeCheck, Search, ShieldCheck, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { getBankListAction, resolveBankAccount, createTransferRecipientAction } from "@/app/actions/paystack";
+import { getBankListAction, resolveBankAccount } from "@/app/actions/paystack";
+import { updatePaymentDetailsAction } from "@/app/actions/profile";
+
 
 type Bank = {
     id: number;
@@ -37,7 +39,7 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { user, profile, refetchProfile, loading: authLoading, supabase } = useAuth();
+    const { profile, refetchProfile, loading: authLoading } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
@@ -56,8 +58,6 @@ export function PaymentDetailsForm() {
     });
     
      useEffect(() => {
-        // This effect ensures the form is in the correct state (editing or viewing)
-        // when the component mounts or the profile data changes.
         if (profile?.recipient_code) {
           setIsEditing(false);
           form.reset({
@@ -108,66 +108,29 @@ export function PaymentDetailsForm() {
     }, [banks, toast, form]);
 
     const onSubmit = async (data: PaymentFormValues) => {
-        if (!user) {
-            toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
-            return;
-        }
-
         if (!resolvedAccount) {
-            toast({ 
-                title: "Verification needed", 
-                description: "Please verify account details first.", 
-                variant: "destructive" 
-            });
+            toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
             return;
         }
 
         setIsSaving(true);
         
-        try {
-            const recipientResult = await createTransferRecipientAction(
-                resolvedAccount.account_name,
-                data.accountNumber,
-                data.bankCode,
-            );
+        const result = await updatePaymentDetailsAction({
+            bankCode: data.bankCode,
+            accountNumber: data.accountNumber,
+            accountName: resolvedAccount.account_name,
+            bankName: resolvedAccount.bank_name
+        });
 
-            if (!recipientResult.success || !recipientResult.recipient_code) {
-                throw new Error(recipientResult.error || 'Failed to create Paystack recipient.');
-            }
-
-            const { error: profileUpdateError } = await supabase
-                .from('profiles')
-                .update({
-                    bank_name: resolvedAccount.bank_name,
-                    account_name: resolvedAccount.account_name,
-                    account_number: data.accountNumber,
-                    bank_code: data.bankCode,
-                    recipient_code: recipientResult.recipient_code,
-                })
-                .eq('id', user.id);
-
-            if (profileUpdateError) {
-                throw profileUpdateError;
-            }
-
-            toast({ 
-                title: "Success", 
-                description: "Your payment details have been saved." 
-            });
-            // This is the key: refetch the profile which will cause a re-render
-            // with the new data, and the useEffect will handle setting isEditing to false.
+        if (result.success) {
+            toast({ title: "Success", description: "Your payment details have been saved." });
             await refetchProfile();
-
-        } catch (error: any) {
-            console.error('Error saving payment details:', error);
-            toast({
-                title: "Error Saving Details",
-                description: error.message,
-                variant: "destructive",
-            });
-        } finally {
-            setIsSaving(false);
+            setIsEditing(false); // Switch to view mode
+        } else {
+            toast({ title: "Error Saving Details", description: result.error, variant: "destructive" });
         }
+        
+        setIsSaving(false);
     };
 
     const handleEditClick = () => {
@@ -289,4 +252,3 @@ export function PaymentDetailsForm() {
         </Card>
     );
 }
-
