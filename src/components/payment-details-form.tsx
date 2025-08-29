@@ -55,27 +55,21 @@ export function PaymentDetailsForm() {
         },
     });
     
-    // Effect to set initial editing state based on profile verification
     useEffect(() => {
-        if (!isVerified) {
-            setIsEditing(true);
-        } else {
-            setIsEditing(false);
-        }
-    }, [isVerified]);
-    
-    // Effect to populate form when profile data is available
-    useEffect(() => {
-        if (profile) {
+        if (isVerified && !isEditing) {
             form.reset({
                 bankCode: profile.bank_code || "",
                 accountNumber: profile.account_number || "",
             });
-            if (isVerified) {
-                setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
-            }
+             setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
         }
-    }, [profile, form, isVerified]);
+    }, [profile, isVerified, isEditing, form]);
+
+    useEffect(() => {
+        if (!isVerified) {
+            setIsEditing(true);
+        }
+    }, [isVerified]);
 
 
     useEffect(() => {
@@ -94,14 +88,15 @@ export function PaymentDetailsForm() {
     
     const watchAccountNumber = form.watch("accountNumber");
     const watchBankCode = form.watch("bankCode");
-    
+
     const handleVerification = useCallback(async () => {
-        if (watchAccountNumber.length === 10 && watchBankCode) {
+        const { accountNumber, bankCode } = form.getValues();
+        if (accountNumber.length === 10 && bankCode) {
             setIsVerifying(true);
             setResolvedAccount(null);
-            const result = await resolveBankAccount(watchAccountNumber, watchBankCode);
+            const result = await resolveBankAccount(accountNumber, bankCode);
             if (result.success && result.data) {
-                const selectedBank = banks.find(b => b.code === watchBankCode);
+                const selectedBank = banks.find(b => b.code === bankCode);
                 setResolvedAccount({
                     account_name: result.data.account_name,
                     bank_name: selectedBank?.name || ''
@@ -112,7 +107,7 @@ export function PaymentDetailsForm() {
             }
             setIsVerifying(false);
         }
-    }, [watchAccountNumber, watchBankCode, banks, toast]);
+    }, [banks, toast, form]);
 
     const onSubmit = async (data: PaymentFormValues) => {
         if (!user) {
@@ -176,6 +171,15 @@ export function PaymentDetailsForm() {
         }
     };
 
+    const handleEditClick = () => {
+        setIsEditing(true);
+        setResolvedAccount(null);
+        form.reset({
+            bankCode: profile?.bank_code || "",
+            accountNumber: profile?.account_number || "",
+        })
+    }
+
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
@@ -190,7 +194,7 @@ export function PaymentDetailsForm() {
                         </CardDescription>
                     </div>
                     {isVerified && !isEditing && (
-                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                        <Button variant="outline" size="sm" onClick={handleEditClick}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                         </Button>
