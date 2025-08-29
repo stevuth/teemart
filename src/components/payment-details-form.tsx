@@ -62,15 +62,10 @@ export function PaymentDetailsForm() {
                 accountNumber: profile.account_number || "",
             });
              setResolvedAccount({ account_name: profile.account_name!, bank_name: profile.bank_name! });
-        }
-    }, [profile, isVerified, isEditing, form]);
-
-    useEffect(() => {
-        if (!isVerified) {
+        } else if (!isVerified) {
             setIsEditing(true);
         }
-    }, [isVerified]);
-
+    }, [profile, isVerified, isEditing, form]);
 
     useEffect(() => {
         async function fetchBanks() {
@@ -86,27 +81,24 @@ export function PaymentDetailsForm() {
         fetchBanks();
     }, [toast]);
     
-    const watchAccountNumber = form.watch("accountNumber");
-    const watchBankCode = form.watch("bankCode");
-
     const handleVerification = useCallback(async () => {
         const { accountNumber, bankCode } = form.getValues();
-        if (accountNumber.length === 10 && bankCode) {
-            setIsVerifying(true);
-            setResolvedAccount(null);
-            const result = await resolveBankAccount(accountNumber, bankCode);
-            if (result.success && result.data) {
-                const selectedBank = banks.find(b => b.code === bankCode);
-                setResolvedAccount({
-                    account_name: result.data.account_name,
-                    bank_name: selectedBank?.name || ''
-                });
-                toast({ title: "Account Verified", description: `Account Name: ${result.data.account_name}`});
-            } else {
-                 toast({ title: "Verification Failed", description: result.error || "Could not verify account details.", variant: "destructive" });
-            }
-            setIsVerifying(false);
+        if (accountNumber.length !== 10 || !bankCode) return;
+        
+        setIsVerifying(true);
+        setResolvedAccount(null);
+        const result = await resolveBankAccount(accountNumber, bankCode);
+        if (result.success && result.data) {
+            const selectedBank = banks.find(b => b.code === bankCode);
+            setResolvedAccount({
+                account_name: result.data.account_name,
+                bank_name: selectedBank?.name || ''
+            });
+            toast({ title: "Account Verified", description: `Account Name: ${result.data.account_name}`});
+        } else {
+             toast({ title: "Verification Failed", description: result.error || "Could not verify account details.", variant: "destructive" });
         }
+        setIsVerifying(false);
     }, [banks, toast, form]);
 
     const onSubmit = async (data: PaymentFormValues) => {
@@ -173,11 +165,11 @@ export function PaymentDetailsForm() {
 
     const handleEditClick = () => {
         setIsEditing(true);
-        setResolvedAccount(null);
+        setResolvedAccount(null); // This is the crucial fix
         form.reset({
             bankCode: profile?.bank_code || "",
             accountNumber: profile?.account_number || "",
-        })
+        });
     }
 
     return (
@@ -249,7 +241,7 @@ export function PaymentDetailsForm() {
                                                     size="sm"
                                                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
                                                     onClick={handleVerification}
-                                                    disabled={isVerifying || field.value.length !== 10 || !watchBankCode || isSaving}
+                                                    disabled={isVerifying || field.value.length !== 10 || !form.getValues().bankCode || isSaving}
                                                  >
                                                     {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                                                     Verify
@@ -273,7 +265,7 @@ export function PaymentDetailsForm() {
                             
                             <div className="flex gap-2 justify-end">
                                 {isEditing && isVerified && (
-                                     <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                                     <Button type="button" variant="ghost" onClick={() => { setIsEditing(false); setResolvedAccount(null); }}>Cancel</Button>
                                 )}
                                 <Button 
                                     type="submit"
