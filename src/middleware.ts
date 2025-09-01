@@ -32,3 +32,18 @@ export async function middleware(req: NextRequest) {
 
   return res
 }
+
+// Add a config object to specify which routes the middleware should run on.
+// This is more efficient than running it on every single request.
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+}
