@@ -14,8 +14,7 @@ import { Loader2, BadgeCheck, Search, ShieldCheck, Edit } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { getBankListAction, resolveBankAccount } from "@/app/actions/paystack";
-import { updatePaymentDetailsAction } from "@/app/actions/profile";
+import { getBankListAction, resolveBankAccount, createTransferRecipientAction } from "@/app/actions/paystack";
 
 
 type Bank = {
@@ -39,12 +38,12 @@ type PaymentFormValues = z.infer<typeof formSchema>;
 
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, loading: authLoading } = useAuth();
+    const { user, profile, refetchProfile, loading: authLoading, supabase } = useAuth();
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [isEditing, setIsEditing] = useState(!profile?.recipient_code);
+    const [isEditing, setIsEditing] = useState(false);
     const [resolvedAccount, setResolvedAccount] = useState<{ account_name: string, bank_name: string } | null>(null);
 
     const isVerified = !!(profile?.account_name && profile?.bank_name && profile?.recipient_code);
@@ -108,6 +107,11 @@ export function PaymentDetailsForm() {
     }, [banks, toast, form]);
 
     const onSubmit = async (data: PaymentFormValues) => {
+        if (!user) {
+            toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
+            return;
+        }
+
         if (!resolvedAccount) {
             toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
             return;
@@ -115,27 +119,49 @@ export function PaymentDetailsForm() {
 
         setIsSaving(true);
         
-        const result = await updatePaymentDetailsAction({
-            bankCode: data.bankCode,
-            accountNumber: data.accountNumber,
-            accountName: resolvedAccount.account_name,
-            bankName: resolvedAccount.bank_name
-        });
+        try {
+            // Step 1: Create Paystack Transfer Recipient
+            const recipientResult = await createTransferRecipientAction(
+                resolvedAccount.account_name,
+                data.accountNumber,
+                data.bankCode
+            );
 
-        if (result.success) {
+            if (!recipientResult.success || !recipientResult.recipient_code) {
+                throw new Error(`Failed to create Paystack recipient: ${recipientResult.error}`);
+            }
+
+            // Step 2: Update the user's profile in Supabase
+            const { error: profileUpdateError } = await supabase
+                .from('profiles')
+                .update({
+                    bank_name: resolvedAccount.bank_name,
+                    account_name: resolvedAccount.account_name,
+                    account_number: data.accountNumber,
+                    bank_code: data.bankCode,
+                    recipient_code: recipientResult.recipient_code,
+                })
+                .eq('id', user.id);
+
+            if (profileUpdateError) {
+                throw profileUpdateError;
+            }
+
             toast({ title: "Success", description: "Your payment details have been saved." });
             await refetchProfile();
             setIsEditing(false); // Switch to view mode
-        } else {
-            toast({ title: "Error Saving Details", description: result.error, variant: "destructive" });
+
+        } catch (error: any) {
+            console.error('Error saving payment details:', error);
+            toast({ title: "Error Saving Details", description: error.message || "An unexpected error occurred.", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
         }
-        
-        setIsSaving(false);
     };
 
     const handleEditClick = () => {
         setIsEditing(true);
-        setResolvedAccount(null);
+        setResolvedAccount(null); // Clear previous verification
         form.reset({
             bankCode: profile?.bank_code || "",
             accountNumber: profile?.account_number || "",
