@@ -1,11 +1,11 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next({
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
     request: {
-      headers: req.headers,
+      headers: request.headers,
     },
   })
 
@@ -14,27 +14,56 @@ export async function middleware(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          return req.cookies.get(name)?.value
+        get(name: string) {
+          return request.cookies.get(name)?.value
         },
-        set(name, value, options) {
-          res.cookies.set({ name, value, ...options })
+        set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is updated, update the request cookies and response cookies
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
         },
-        remove(name, options) {
-          res.cookies.set({ name, value: '', ...options })
+        remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the request cookies and response cookies
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
         },
       },
     }
   )
 
-  // This will refresh the session if needed and set cookies again
+  // This will refresh the session if needed and update the cookies
   await supabase.auth.getUser()
 
-  return res
+  return response
 }
 
-// Add a config object to specify which routes the middleware should run on.
-// This is more efficient than running it on every single request.
+
 export const config = {
   matcher: [
     /*
