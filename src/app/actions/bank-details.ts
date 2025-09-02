@@ -11,12 +11,14 @@ export type State = {
 };
 
 export async function saveBankDetails(prevState: State, formData: FormData): Promise<State> {
+    // This is the key fix: create a Supabase client that can read the user's session from cookies.
     const supabase = createSupabaseServerClient();
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
+            console.error('Auth Error in saveBankDetails:', authError);
             return { success: false, message: 'Authentication failed: You must be logged in.' };
         }
 
