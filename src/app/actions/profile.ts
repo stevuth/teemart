@@ -1,7 +1,6 @@
 
 'use server';
 
-import { cookies } from 'next/headers';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
 import { createTransferRecipientAction } from './paystack';
 import type { z } from 'zod';
@@ -11,19 +10,20 @@ type PaymentDetailsInput = z.infer<typeof paymentDetailsSchema>;
 
 /**
  * Creates a Paystack recipient and updates the user's profile with payment details.
- * This action is called from the client after account details have been verified.
+ * This server action is secure and runs with the user's authenticated session.
  * @param {PaymentDetailsInput} paymentData - The verified payment details.
  * @returns {Promise<{success: boolean, error?: string}>} - The result of the operation.
  */
 export async function updatePaymentDetailsAction(paymentData: PaymentDetailsInput) {
+    // This creates a Supabase client that can reliably read the user's session
     const supabase = createSupabaseServerClient();
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: 'You must be logged in to perform this action.' };
-    }
-
     try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            return { success: false, error: 'Authentication failed: You must be logged in to perform this action.' };
+        }
+
         // Step 1: Create Paystack Transfer Recipient
         const recipientResult = await createTransferRecipientAction(
             paymentData.accountName,
@@ -49,7 +49,7 @@ export async function updatePaymentDetailsAction(paymentData: PaymentDetailsInpu
 
         if (profileUpdateError) {
             console.error('Supabase profile update error:', profileUpdateError);
-            throw new Error(profileUpdateError.message);
+            throw new Error(`Database update failed: ${profileUpdateError.message}`);
         }
 
         return { success: true };
