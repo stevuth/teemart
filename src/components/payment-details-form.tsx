@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useFormState } from "react-dom";
+import { useState, useEffect, useCallback, useActionState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -50,7 +49,7 @@ const initialState: State = {
 export function PaymentDetailsForm() {
     const { toast } = useToast();
     const { profile, refetchProfile } = useAuth();
-    const [formState, formAction] = useFormState(saveBankDetails, initialState);
+    const [formState, formAction] = useActionState(saveBankDetails, initialState);
     
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
