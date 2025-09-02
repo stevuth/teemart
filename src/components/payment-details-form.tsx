@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useFormState } from "react-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { getBankListAction, resolveBankAccount } from "@/app/actions/paystack";
-import { updatePaymentDetailsAction } from "@/app/actions/profile";
+import { saveBankDetails, type State } from "@/app/actions/bank-details";
 
 type Bank = {
     id: number;
@@ -29,7 +30,6 @@ type Bank = {
     active: boolean;
 };
 
-// Moved schema here to be accessible by the server action
 export const paymentDetailsSchema = z.object({
   bankCode: z.string().min(1, "Please select a bank."),
   accountNumber: z.string().length(10, "Account number must be 10 digits."),
@@ -42,13 +42,19 @@ const formSchema = paymentDetailsSchema.omit({ accountName: true, bankName: true
 type PaymentFormValues = z.infer<typeof formSchema>;
 type ResolvedAccount = { account_name: string; bank_name: string };
 
+const initialState: State = {
+    message: null,
+    success: false,
+};
+
 export function PaymentDetailsForm() {
     const { toast } = useToast();
-    const { profile, refetchProfile, loading: authLoading } = useAuth();
+    const { profile, refetchProfile } = useAuth();
+    const [formState, formAction] = useFormState(saveBankDetails, initialState);
+    
     const [banks, setBanks] = useState<Bank[]>([]);
     const [loadingBanks, setLoadingBanks] = useState(true);
     const [isVerifying, setIsVerifying] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [resolvedAccount, setResolvedAccount] = useState<ResolvedAccount | null>(null);
 
@@ -61,6 +67,18 @@ export function PaymentDetailsForm() {
             accountNumber: "",
         },
     });
+
+    useEffect(() => {
+        if (formState.success) {
+            toast({ title: "Success", description: formState.message });
+            refetchProfile();
+            setIsEditing(false);
+            setResolvedAccount(null);
+            form.reset();
+        } else if (formState.message) {
+            toast({ title: "Error", description: formState.message, variant: "destructive" });
+        }
+    }, [formState, toast, refetchProfile, form]);
     
     useEffect(() => {
         if (profile?.recipient_code) {
@@ -111,48 +129,6 @@ export function PaymentDetailsForm() {
         setIsVerifying(false);
     }, [banks, toast, form]);
 
-    const onSubmit = async (data: PaymentFormValues) => {
-        if (!resolvedAccount) {
-            toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
-            return;
-        }
-
-        setIsSaving(true);
-        
-        try {
-            const result = await updatePaymentDetailsAction({
-                ...data,
-                accountName: resolvedAccount.account_name,
-                bankName: resolvedAccount.bank_name
-            });
-
-            if (result.success) {
-                toast({ title: "Success", description: "Your payment details have been saved." });
-                await refetchProfile();
-                setIsEditing(false);
-                setResolvedAccount(null);
-            } else {
-                // This will now catch the specific error from the server action
-                throw new Error(result.error || 'An unknown error occurred on the server.');
-            }
-        } catch (error: any) {
-            console.error("--- DETAILED SAVE ERROR ---");
-            console.error("Timestamp:", new Date().toISOString());
-            console.error("Error Name:", error.name);
-            console.error("Error Message:", error.message);
-            console.error("Full Error Object:", error);
-            console.error("---------------------------");
-            
-            toast({ 
-                title: "Error Saving Details", 
-                description: error.message || 'An unexpected error occurred. Check the console for details.', 
-                variant: "destructive" 
-            });
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
     const handleEditClick = () => {
         setIsEditing(true);
         setResolvedAccount(null);
@@ -193,80 +169,89 @@ export function PaymentDetailsForm() {
                         </AlertDescription>
                     </Alert>
                 ) : (
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            <FormField
-                                control={form.control}
-                                name="bankCode"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Bank</FormLabel>
-                                        <Select onValueChange={(value) => { field.onChange(value); setResolvedAccount(null); }} defaultValue={field.value} value={field.value} disabled={authLoading || isSaving || isVerifying}>
+                    <form action={(formData) => {
+                        if (!resolvedAccount) {
+                            toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
+                            return;
+                        }
+                        formData.append('accountName', resolvedAccount.account_name);
+                        formData.append('bankName', resolvedAccount.bank_name);
+                        formAction(formData);
+                    }}>
+                        <Form {...form}>
+                            <div className="space-y-6">
+                                <FormField
+                                    control={form.control}
+                                    name="bankCode"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Bank</FormLabel>
+                                            <Select onValueChange={(value) => { field.onChange(value); setResolvedAccount(null); }} defaultValue={field.value} value={field.value} name={field.name}>
+                                                <FormControl>
+                                                    <SelectTrigger disabled={loadingBanks || isVerifying}>
+                                                        <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {banks.map((bank, index) => (
+                                                        <SelectItem key={`${bank.code}-${index}`} value={bank.code}>{bank.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="accountNumber"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Account Number</FormLabel>
                                             <FormControl>
-                                                <SelectTrigger disabled={loadingBanks || isVerifying || isSaving}>
-                                                    <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
-                                                </SelectTrigger>
+                                                <div className="relative">
+                                                     <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} onChange={(e) => {field.onChange(e); setResolvedAccount(null);}} />
+                                                     <Button 
+                                                        type="button"
+                                                        size="sm"
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
+                                                        onClick={handleVerification}
+                                                        disabled={isVerifying || field.value.length !== 10 || !form.getValues().bankCode}
+                                                     >
+                                                        {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                                                        Verify
+                                                     </Button>
+                                                </div>
                                             </FormControl>
-                                            <SelectContent>
-                                                {banks.map((bank, index) => (
-                                                    <SelectItem key={`${bank.code}-${index}`} value={bank.code}>{bank.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                
+                                {resolvedAccount && (
+                                    <Alert variant="default" className="bg-blue-100 border-blue-200 text-blue-800">
+                                        <ShieldCheck className="h-4 w-4 !text-blue-800" />
+                                        <AlertTitle>Account Ready to Save</AlertTitle>
+                                        <AlertDescription>
+                                            Verified Account Name: <strong>{resolvedAccount.account_name}</strong>
+                                        </AlertDescription>
+                                    </Alert>
                                 )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="accountNumber"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Account Number</FormLabel>
-                                        <FormControl>
-                                            <div className="relative">
-                                                 <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} onChange={(e) => {field.onChange(e); setResolvedAccount(null);}} disabled={authLoading || isSaving} />
-                                                 <Button 
-                                                    type="button"
-                                                    size="sm"
-                                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
-                                                    onClick={handleVerification}
-                                                    disabled={isVerifying || field.value.length !== 10 || !form.getValues().bankCode || isSaving}
-                                                 >
-                                                    {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                                                    Verify
-                                                 </Button>
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            
-                            {resolvedAccount && (
-                                <Alert variant="default" className="bg-blue-100 border-blue-200 text-blue-800">
-                                    <ShieldCheck className="h-4 w-4 !text-blue-800" />
-                                    <AlertTitle>Account Ready to Save</AlertTitle>
-                                    <AlertDescription>
-                                        Verified Account Name: <strong>{resolvedAccount.account_name}</strong>
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                            
-                            <div className="flex gap-2 justify-end">
-                                {isEditing && isVerified && (
-                                     <Button type="button" variant="ghost" onClick={() => { setIsEditing(false); setResolvedAccount(null); }}>Cancel</Button>
-                                )}
-                                <Button 
-                                    type="submit"
-                                    disabled={authLoading || isSaving || !resolvedAccount}
-                                >
-                                    {(isSaving || authLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Save Details
-                                </Button>
+                                
+                                <div className="flex gap-2 justify-end">
+                                    {isEditing && isVerified && (
+                                         <Button type="button" variant="ghost" onClick={() => { setIsEditing(false); setResolvedAccount(null); }}>Cancel</Button>
+                                    )}
+                                    <Button 
+                                        type="submit"
+                                        disabled={!resolvedAccount}
+                                    >
+                                        Save Details
+                                    </Button>
+                                </div>
                             </div>
-                        </form>
-                    </Form>
+                        </Form>
+                    </form>
                 )}
             </CardContent>
         </Card>
