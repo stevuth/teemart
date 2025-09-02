@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/utils/supabase/server';
 import { createTransferRecipientAction } from './paystack';
 import type { z } from 'zod';
 import type { paymentDetailsSchema } from '@/components/payment-details-form';
+import { cookies } from 'next/headers';
 
 type PaymentDetailsInput = z.infer<typeof paymentDetailsSchema>;
 
@@ -15,6 +16,8 @@ type PaymentDetailsInput = z.infer<typeof paymentDetailsSchema>;
  * @returns {Promise<{success: boolean, error?: string}>} - The result of the operation.
  */
 export async function updatePaymentDetailsAction(paymentData: PaymentDetailsInput) {
+    // This is the correct way to create an authenticated Supabase client in a Server Action.
+    const cookieStore = cookies();
     const supabase = createSupabaseServerClient();
     
     const { data: { user } } = await supabase.auth.getUser();
