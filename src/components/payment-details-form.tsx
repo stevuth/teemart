@@ -119,22 +119,38 @@ export function PaymentDetailsForm() {
 
         setIsSaving(true);
         
-        const result = await updatePaymentDetailsAction({
-            ...data,
-            accountName: resolvedAccount.account_name,
-            bankName: resolvedAccount.bank_name
-        });
+        try {
+            const result = await updatePaymentDetailsAction({
+                ...data,
+                accountName: resolvedAccount.account_name,
+                bankName: resolvedAccount.bank_name
+            });
 
-        if (result.success) {
-            toast({ title: "Success", description: "Your payment details have been saved." });
-            await refetchProfile();
-            setIsEditing(false); // Switch to view mode
-            setResolvedAccount(null); // Clear resolved account state
-        } else {
-            toast({ title: "Error Saving Details", description: result.error || 'An unexpected error occurred.', variant: "destructive" });
+            if (result.success) {
+                toast({ title: "Success", description: "Your payment details have been saved." });
+                await refetchProfile();
+                setIsEditing(false);
+                setResolvedAccount(null);
+            } else {
+                // This will now catch the specific error from the server action
+                throw new Error(result.error || 'An unknown error occurred on the server.');
+            }
+        } catch (error: any) {
+            console.error("--- DETAILED SAVE ERROR ---");
+            console.error("Timestamp:", new Date().toISOString());
+            console.error("Error Name:", error.name);
+            console.error("Error Message:", error.message);
+            console.error("Full Error Object:", error);
+            console.error("---------------------------");
+            
+            toast({ 
+                title: "Error Saving Details", 
+                description: error.message || 'An unexpected error occurred. Check the console for details.', 
+                variant: "destructive" 
+            });
+        } finally {
+            setIsSaving(false);
         }
-
-        setIsSaving(false);
     };
 
     const handleEditClick = () => {

@@ -16,7 +16,6 @@ type PaymentDetailsInput = z.infer<typeof paymentDetailsSchema>;
  * @returns {Promise<{success: boolean, error?: string}>} - The result of the operation.
  */
 export async function updatePaymentDetailsAction(paymentData: PaymentDetailsInput) {
-    // This is the correct way to create an authenticated Supabase client in a Server Action.
     const cookieStore = cookies();
     const supabase = createSupabaseServerClient();
     
