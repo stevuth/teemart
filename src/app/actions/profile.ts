@@ -15,11 +15,11 @@ type PaymentDetailsInput = z.infer<typeof paymentDetailsSchema>;
  * @returns {Promise<{success: boolean, error?: string}>} - The result of the operation.
  */
 export async function updatePaymentDetailsAction(paymentData: PaymentDetailsInput) {
-    // This creates a Supabase client that can reliably read the user's session
     const supabase = createSupabaseServerClient();
     
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
+
         if (authError || !user) {
             return { success: false, error: 'Authentication failed: You must be logged in to perform this action.' };
         }
