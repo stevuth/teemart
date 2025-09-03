@@ -164,6 +164,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
         
         if (imageFiles.length > 0) {
             for (const imageFile of imageFiles) {
+                // Correct file path generation
                 const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
                 const { data: uploadData, error: uploadError } = await supabase
                     .storage.from('product-images').upload(fileName, imageFile);
