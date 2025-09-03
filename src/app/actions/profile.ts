@@ -25,7 +25,6 @@ export async function updatePaymentDetailsAction(
 ): Promise<FormState> {
     const supabase = createSupabaseServerClient();
     
-    // 1. Get User - This is the critical step that was failing.
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         return {
@@ -34,7 +33,6 @@ export async function updatePaymentDetailsAction(
         };
     }
         
-    // 2. Validate Form Data
     const validatedFields = FormSchema.safeParse({
         accountNumber: formData.get('accountNumber'),
         bankCode: formData.get('bankCode'),
@@ -50,7 +48,6 @@ export async function updatePaymentDetailsAction(
     const { accountNumber, bankCode } = validatedFields.data;
 
     try {
-        // 3. Create Paystack Recipient
         const recipientResult = await createTransferRecipientAction(
             accountNumber,
             bankCode
@@ -62,7 +59,6 @@ export async function updatePaymentDetailsAction(
 
         const { account_name, recipient_code, bank_name } = recipientResult.data;
 
-        // 4. Update Profile in Database
         const { error: profileUpdateError } = await supabase
             .from('profiles')
             .update({
