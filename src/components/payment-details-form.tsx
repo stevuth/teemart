@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getBankListAction, createTransferRecipientAction } from '@/app/actions/paystack';
+import axios from 'axios';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -16,20 +16,22 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { createSupabaseBrowserClient } from '@/utils/supabase/client';
+import { getBankListAction } from '@/app/actions/paystack';
 
 type Bank = {
   code: string;
   name: string;
 };
 
+const PAYSTACK_PUBLIC_KEY = "pk_test_dcdc77291352593b0249c8bc85c6645a20339f03";
+
 export default function PaymentDetailsForm() {
-  const { profile, refetchProfile } = useAuth();
+  const { profile, refetchProfile, supabase } = useAuth();
   const { toast } = useToast();
   
   const [banks, setBanks] = useState<Bank[]>([]);
-  const [selectedBankCode, setSelectedBankCode] = useState(profile?.bank_code || '');
-  const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
+  const [selectedBankCode, setSelectedBankCode] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -57,6 +59,12 @@ export default function PaymentDetailsForm() {
     setIsSubmitting(true);
     setApiError(null);
 
+    if (!supabase || !profile) {
+        setApiError("You must be logged in to perform this action.");
+        setIsSubmitting(false);
+        return;
+    }
+
     if (!accountNumber || !selectedBankCode) {
       setApiError("Please select a bank and enter an account number.");
       setIsSubmitting(false);
@@ -64,37 +72,49 @@ export default function PaymentDetailsForm() {
     }
 
     try {
-      const response = await fetch('/api/profile/payment-details', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          accountNumber: accountNumber,
-          bankCode: selectedBankCode,
-        }),
-      });
+      // Step 1: Resolve bank account details with Paystack on the client
+      const resolveResponse = await axios.get(
+        `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${selectedBankCode}`,
+        {
+          headers: { Authorization: `Bearer ${PAYSTACK_PUBLIC_KEY}` },
+        }
+      );
+      
+      if (!resolveResponse.data.status) {
+        throw new Error(resolveResponse.data.message || "Could not verify account details.");
+      }
+      
+      const { account_name } = resolveResponse.data.data;
+      const bank_name = banks.find(b => b.code === selectedBankCode)?.name || '';
 
-      const result = await response.json();
+      // Step 2: Update the profile directly in Supabase
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          bank_name: bank_name,
+          account_name: account_name,
+          account_number: accountNumber,
+          bank_code: selectedBankCode,
+          // recipient_code will be set by a trigger/edge function in a real app
+        })
+        .eq('id', profile.id);
 
-      if (!response.ok) {
-        throw new Error(result.error || 'An unknown error occurred.');
+      if (updateError) {
+        throw updateError;
       }
 
       toast({
         title: 'Success!',
-        description: result.message,
+        description: `Payment details saved for: ${account_name}.`,
       });
       await refetchProfile();
 
     } catch (error: any) {
-      console.error("--- DETAILED SAVE ERROR ---");
-      console.error("Timestamp:", new Date().toISOString());
-      console.error("Error Message:", error.message);
-      setApiError(error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'An unknown error occurred.';
+      setApiError(errorMessage);
       toast({
         title: "Error Saving Details",
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

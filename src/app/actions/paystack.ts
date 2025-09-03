@@ -161,62 +161,6 @@ export async function getBankListAction() {
     }
 }
 
-/**
- * Creates a Paystack Transfer Recipient for a seller. This action is self-contained and authenticated.
- * @param accountNumber - The seller's account number.
- * @param bankCode - The seller's bank code.
- * @returns {Promise<{success: boolean, data?: { account_name: string, recipient_code: string, bank_name: string }, error?: string}>}
- */
-export async function createTransferRecipientAction(accountNumber: string, bankCode: string) {
-    const supabase = createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-        return { success: false, error: 'Authentication failed. You must be logged in.' };
-    }
-
-    if (!PAYSTACK_SECRET_KEY) {
-        return { success: false, error: 'Server configuration error.' };
-    }
-
-    try {
-        // 1. Resolve bank account first
-        const resolveResponse = await axios.get(`${PAYSTACK_API_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
-            headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
-        });
-
-        if (!resolveResponse.data.status) {
-            throw new Error(resolveResponse.data.message || 'Could not verify account details.');
-        }
-        
-        const account_name = resolveResponse.data.data.account_name;
-        const resolved_bank_name = resolveResponse.data.data.bank_name;
-
-        // 2. Create transfer recipient with the resolved name
-        const recipientResponse = await axios.post(`${PAYSTACK_API_URL}/transferrecipient`, {
-            type: "nuban",
-            name: account_name,
-            account_number: accountNumber,
-            bank_code: bankCode,
-            currency: "NGN"
-        }, {
-            headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
-        });
-
-        if (recipientResponse.data.status) {
-            const recipient_code = recipientResponse.data.data.recipient_code;
-            return { success: true, data: { account_name, recipient_code, bank_name: resolved_bank_name } };
-        } else {
-            throw new Error(recipientResponse.data.message);
-        }
-
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.message || error.message || 'An error occurred during Paystack operation.';
-        console.error("Error in createTransferRecipientAction:", errorMessage);
-        return { success: false, error: errorMessage };
-    }
-}
-
 
 /**
  * Initiates a transfer to a seller.
