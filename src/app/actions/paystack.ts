@@ -202,6 +202,14 @@ export async function resolveBankAccount(accountNumber: string, bankCode: string
  * @returns {Promise<{success: boolean, recipient_code?: string, error?: string}>}
  */
 export async function createTransferRecipientAction(name: string, accountNumber: string, bankCode: string) {
+    // This action MUST be authenticated, as it's a prerequisite for a profile update.
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: 'Authentication failed. You must be logged in to create a transfer recipient.' };
+    }
+
     if (!PAYSTACK_SECRET_KEY) {
         console.error("Paystack secret key is not set.");
         return { success: false, error: 'Server configuration error.' };

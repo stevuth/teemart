@@ -22,6 +22,7 @@ export async function updatePaymentDetailsAction(input: UpdateDetailsInput) {
 
         const { bankCode, accountNumber, accountName, bankName } = input;
 
+        // This action now implicitly checks for authentication first
         const recipientResult = await createTransferRecipientAction(
             accountName,
             accountNumber,
@@ -51,6 +52,10 @@ export async function updatePaymentDetailsAction(input: UpdateDetailsInput) {
         return { success: true, message: 'Your payment details have been saved.' };
 
     } catch (error: any) {
+        console.error("--- DETAILED SAVE ERROR ---");
+        console.error("Timestamp:", new Date().toISOString());
+        console.error("Error Message:", error.message);
+        console.error("---------------------------");
         return { success: false, error: error.message };
     }
 }
