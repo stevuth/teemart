@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useActionState, useEffect, useState, useTransition } from 'react';
@@ -24,10 +23,10 @@ type Bank = {
   name: string;
 };
 
-export default function PaymentDetailsForm() {
+export function PaymentDetailsForm() {
   const { profile } = useAuth();
   const initialState: State = { success: false, message: null };
-  const [state, formAction] = useActionState(saveBankDetails, initialState);
+  const [state, formAction, isPending] = useActionState(saveBankDetails, initialState);
 
   const [banks, setBanks] = useState<Bank[]>([]);
   const [selectedBankCode, setSelectedBankCode] = useState(profile?.bank_code || '');
@@ -36,8 +35,6 @@ export default function PaymentDetailsForm() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationError, setVerificationError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
 
   useEffect(() => {
     async function fetchBanks() {
@@ -56,15 +53,9 @@ export default function PaymentDetailsForm() {
     }
   }, [profile]);
   
-  useEffect(() => {
-    setVerificationError(null);
-    setIsVerified(false);
-    if (accountNumber.length === 10 && selectedBankCode) {
-      handleVerifyAccount();
-    }
-  }, [accountNumber, selectedBankCode]);
-
   const handleVerifyAccount = async () => {
+    if (accountNumber.length !== 10 || !selectedBankCode) return;
+    
     setIsVerifying(true);
     setVerificationError(null);
     const result = await resolveBankAccount(accountNumber, selectedBankCode);
@@ -79,16 +70,21 @@ export default function PaymentDetailsForm() {
     setIsVerifying(false);
   };
   
-   const handleSubmit = (formData: FormData) => {
-    startTransition(() => {
-      formAction(formData);
-    });
-  };
+  useEffect(() => {
+    setVerificationError(null);
+    setIsVerified(false);
+    const handler = setTimeout(() => {
+        handleVerifyAccount();
+    }, 500); // Debounce API call
+
+    return () => clearTimeout(handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountNumber, selectedBankCode]);
 
   const selectedBankName = banks.find(b => b.code === selectedBankCode)?.name || profile?.bank_name;
 
   return (
-    <form action={handleSubmit} className="space-y-6">
+    <form action={formAction} className="space-y-6">
       <div className="grid grid-cols-1 gap-4">
         <div>
           <Label htmlFor="bankCode">Bank</Label>
@@ -137,11 +133,11 @@ export default function PaymentDetailsForm() {
               {isVerifying && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
            </div>
            {verificationError && <p className="text-sm text-destructive mt-1">{verificationError}</p>}
-           {isVerified && <p className="text-sm text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Account verified</p>}
+           {isVerified && !isVerifying && <p className="text-sm text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Account verified</p>}
         </div>
       </div>
       
-      {state.message && (
+      {state?.message && (
         <Alert variant={state.success ? 'default' : 'destructive'} className={state.success ? 'bg-green-100 border-green-300' : ''}>
           <AlertTitle>{state.success ? 'Success!' : 'Error'}</AlertTitle>
           <AlertDescription>{state.message}</AlertDescription>
