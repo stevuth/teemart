@@ -1,8 +1,8 @@
+
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getBankListAction, resolveBankAccount } from '@/app/actions/paystack';
-import { saveBankDetails, type State } from '@/app/actions/bank-details';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -14,10 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { revalidatePath } from 'next/cache';
 
 type Bank = {
   code: string;
@@ -25,17 +25,18 @@ type Bank = {
 };
 
 export function PaymentDetailsForm() {
-  const { profile } = useAuth();
+  const { profile, refetchProfile } = useAuth();
   const { toast } = useToast();
-  const initialState: State = { success: false, message: null };
-  const [state, formAction, isPending] = useActionState(saveBankDetails, initialState);
 
   const [banks, setBanks] = useState<Bank[]>([]);
   const [selectedBankCode, setSelectedBankCode] = useState(profile?.bank_code || '');
   const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
   const [accountName, setAccountName] = useState(profile?.account_name || '');
+  
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,29 +56,6 @@ export function PaymentDetailsForm() {
     }
   }, [profile]);
   
-   useEffect(() => {
-    if (state.message) {
-      if (state.success) {
-        toast({
-          title: 'Success!',
-          description: state.message,
-        });
-      } else {
-        toast({
-          title: 'Error Saving Details',
-          description: state.message,
-          variant: 'destructive',
-        });
-        // Detailed console logging
-        console.error("--- DETAILED PAYMENT SAVE ERROR ---");
-        console.error("Timestamp:", new Date().toISOString());
-        console.error("Error Message:", state.message);
-        console.error("-----------------------------------");
-      }
-    }
-  }, [state, toast]);
-
-
   const handleVerifyAccount = async () => {
     if (accountNumber.length !== 10 || !selectedBankCode) return;
     
@@ -110,10 +88,59 @@ export function PaymentDetailsForm() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountNumber, selectedBankCode]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    
+    const selectedBankName = banks.find(b => b.code === selectedBankCode)?.name || profile?.bank_name;
+
+    try {
+        const response = await fetch('/api/profile/bank-details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bankCode: selectedBankCode,
+                accountNumber,
+                accountName,
+                bankName: selectedBankName
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || `Request failed with status ${response.status}`);
+        }
+
+        toast({
+            title: 'Success!',
+            description: result.message,
+        });
+        
+        await refetchProfile();
+
+    } catch (error: any) {
+         console.error("--- DETAILED SAVE ERROR ---");
+         console.error("Timestamp:", new Date().toISOString());
+         console.error("Error Name:", error.name);
+         console.error("Error Message:", error.message);
+         console.error("Full Error Object:", error);
+         console.error("---------------------------");
+
+        toast({
+            title: "Error Saving Details",
+            description: error.message || "An unexpected error occurred.",
+            variant: 'destructive',
+        });
+    } finally {
+        setIsSaving(false);
+    }
+  }
+
   const selectedBankName = banks.find(b => b.code === selectedBankCode)?.name || profile?.bank_name;
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-4">
         <div>
           <Label htmlFor="bankCode">Bank</Label>
@@ -134,7 +161,6 @@ export function PaymentDetailsForm() {
                     ))}
                 </SelectContent>
             </Select>
-             <input type="hidden" name="bankName" value={selectedBankName || ''} />
         </div>
         <div>
           <Label htmlFor="accountNumber">Account Number</Label>
@@ -166,14 +192,10 @@ export function PaymentDetailsForm() {
         </div>
       </div>
       
-      {/* The Alert component is now handled by the useEffect and toast */}
-      
-      <Button type="submit" className="w-full" disabled={isPending || !isVerified}>
-        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <Button type="submit" className="w-full" disabled={isSaving || !isVerified}>
+        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Save Details
       </Button>
     </form>
   );
 }
-
-export default PaymentDetailsForm;
