@@ -112,4 +112,3 @@ USING (true);
 -- =========== CLEANUP OLD FUNCTIONS ===========
 DROP FUNCTION IF EXISTS public.update_user_profile(VARCHAR, VARCHAR, VARCHAR, VARCHAR);
 ```
-
