@@ -23,7 +23,7 @@ type Bank = {
   name: string;
 };
 
-export function PaymentDetailsForm() {
+export default function PaymentDetailsForm() {
   const { profile, refetchProfile } = useAuth();
   const { toast } = useToast();
   
