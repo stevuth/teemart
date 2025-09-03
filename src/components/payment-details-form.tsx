@@ -47,6 +47,11 @@ export default function PaymentDetailsForm() {
       
       try {
           const selectedBank = nigerianBanks.find(b => b.name === bankName);
+          if (!selectedBank) {
+              toast({ title: "Invalid Bank", description: "Please select a valid bank from the list.", variant: "destructive" });
+              setIsSaving(false);
+              return;
+          }
 
           const { error } = await supabase
             .from('profiles')
@@ -54,8 +59,8 @@ export default function PaymentDetailsForm() {
                 bank_name: bankName,
                 account_name: accountName,
                 account_number: accountNumber,
-                bank_code: selectedBank?.code, // Save bank code for future use
-                recipient_code: null, // Clear any old recipient code
+                bank_code: selectedBank.code,
+                recipient_code: null, // Clear recipient code to force re-creation on next payout
             })
             .eq('id', profile!.id);
           
