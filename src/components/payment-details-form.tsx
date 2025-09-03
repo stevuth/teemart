@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { getBankListAction, resolveBankAccount } from '@/app/actions/paystack';
 import { saveBankDetails, type State } from '@/app/actions/bank-details';
 import { Button } from './ui/button';
@@ -17,6 +17,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from './ui/use-toast';
 
 type Bank = {
   code: string;
@@ -25,6 +26,7 @@ type Bank = {
 
 export function PaymentDetailsForm() {
   const { profile } = useAuth();
+  const { toast } = useToast();
   const initialState: State = { success: false, message: null };
   const [state, formAction, isPending] = useActionState(saveBankDetails, initialState);
 
@@ -53,6 +55,29 @@ export function PaymentDetailsForm() {
     }
   }, [profile]);
   
+   useEffect(() => {
+    if (state.message) {
+      if (state.success) {
+        toast({
+          title: 'Success!',
+          description: state.message,
+        });
+      } else {
+        toast({
+          title: 'Error Saving Details',
+          description: state.message,
+          variant: 'destructive',
+        });
+        // Detailed console logging
+        console.error("--- DETAILED PAYMENT SAVE ERROR ---");
+        console.error("Timestamp:", new Date().toISOString());
+        console.error("Error Message:", state.message);
+        console.error("-----------------------------------");
+      }
+    }
+  }, [state, toast]);
+
+
   const handleVerifyAccount = async () => {
     if (accountNumber.length !== 10 || !selectedBankCode) return;
     
@@ -73,11 +98,15 @@ export function PaymentDetailsForm() {
   useEffect(() => {
     setVerificationError(null);
     setIsVerified(false);
-    const handler = setTimeout(() => {
-        handleVerifyAccount();
-    }, 500); // Debounce API call
+    setAccountName(''); // Clear account name on change
+    
+    if (accountNumber.length === 10 && selectedBankCode) {
+        const handler = setTimeout(() => {
+            handleVerifyAccount();
+        }, 500); // Debounce API call
 
-    return () => clearTimeout(handler);
+        return () => clearTimeout(handler);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountNumber, selectedBankCode]);
 
@@ -137,12 +166,7 @@ export function PaymentDetailsForm() {
         </div>
       </div>
       
-      {state?.message && (
-        <Alert variant={state.success ? 'default' : 'destructive'} className={state.success ? 'bg-green-100 border-green-300' : ''}>
-          <AlertTitle>{state.success ? 'Success!' : 'Error'}</AlertTitle>
-          <AlertDescription>{state.message}</AlertDescription>
-        </Alert>
-      )}
+      {/* The Alert component is now handled by the useEffect and toast */}
       
       <Button type="submit" className="w-full" disabled={isPending || !isVerified}>
         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

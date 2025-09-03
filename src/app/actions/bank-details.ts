@@ -64,6 +64,6 @@ export async function saveBankDetails(prevState: State, formData: FormData): Pro
 
   } catch (error: any) {
     console.error('Error in saveBankDetails action:', error);
-    return { success: false, message: error.message || 'An unexpected server error occurred.' };
+    return { success: false, message: `An unexpected server error occurred: ${error.message}` };
   }
 }
