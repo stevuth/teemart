@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from 'react';
-import { useFormState } from 'react-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -18,6 +17,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { getBankListAction } from '@/app/actions/paystack';
 import { updatePaymentDetailsAction } from '@/app/actions/profile';
+import { useFormState } from 'react-dom';
 
 type Bank = {
   code: string;
@@ -30,14 +30,17 @@ const initialState = {
 };
 
 export default function PaymentDetailsForm() {
-  const { profile, refetchProfile } = useAuth();
+  const { user, profile, refetchProfile, supabase } = useAuth();
   const { toast } = useToast();
   
   const [banks, setBanks] = useState<Bank[]>([]);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const [state, formAction] = useFormState(updatePaymentDetailsAction, initialState);
+  const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
+  const [bankCode, setBankCode] = useState(profile?.bank_code || '');
 
+  // Fetch the list of banks on component mount
   useEffect(() => {
     async function fetchBanks() {
       const result = await getBankListAction();
@@ -50,27 +53,64 @@ export default function PaymentDetailsForm() {
     fetchBanks();
   }, [toast]);
   
-  useEffect(() => {
-    if (state?.message) {
-      if (state.error) {
-        toast({ title: 'Error', description: state.message, variant: 'destructive' });
-      } else {
-        toast({ title: 'Success!', description: state.message });
-        startTransition(() => {
-          refetchProfile();
-        });
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (!accountNumber || !bankCode) {
+          toast({ title: "Missing fields", description: "Please provide an account number and select a bank.", variant: "destructive" });
+          return;
       }
-    }
-  }, [state, toast, refetchProfile]);
+      setIsVerifying(true);
+      
+      try {
+          // Step 1: Call our secure API route to verify the account
+          const verifyResponse = await fetch('/api/profile/payment-details', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accountNumber, bankCode })
+          });
+
+          const verifyResult = await verifyResponse.json();
+
+          if (!verifyResponse.ok) {
+              throw new Error(verifyResult.error || 'Verification failed.');
+          }
+
+          const { account_name } = verifyResult;
+          const selectedBank = banks.find(b => b.code === bankCode);
+
+          // Step 2: On successful verification, create the Paystack recipient and update the profile
+          startTransition(async () => {
+              const updateResult = await updatePaymentDetailsAction(null, {
+                  accountNumber,
+                  bankCode,
+                  bankName: selectedBank?.name || '',
+                  accountName: account_name,
+              });
+
+              if (updateResult?.error) {
+                  toast({ title: 'Save Failed', description: updateResult.message, variant: 'destructive' });
+              } else {
+                  toast({ title: 'Success!', description: updateResult.message });
+                  await refetchProfile();
+              }
+          });
+
+      } catch (error: any) {
+          toast({ title: 'Verification Error', description: error.message, variant: 'destructive' });
+      } finally {
+          setIsVerifying(false);
+      }
+  }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
           <Label htmlFor="bankCode">Bank</Label>
            <Select
             name="bankCode"
-            defaultValue={profile?.bank_code || ''}
+            value={bankCode}
+            onValueChange={setBankCode}
             required
             >
                 <SelectTrigger id="bankCode">
@@ -90,7 +130,8 @@ export default function PaymentDetailsForm() {
           <Input
             id="accountNumber"
             name="accountNumber"
-            defaultValue={profile?.account_number || ''}
+            value={accountNumber}
+            onChange={(e) => setAccountNumber(e.target.value)}
             maxLength={10}
             placeholder="Enter 10-digit account number"
             required
@@ -110,8 +151,8 @@ export default function PaymentDetailsForm() {
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <Button type="submit" className="w-full" disabled={isVerifying || isPending}>
+        {(isVerifying || isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Verify and Save Details
       </Button>
     </form>

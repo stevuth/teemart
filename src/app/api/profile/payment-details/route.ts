@@ -1,64 +1,67 @@
 
 import { NextResponse } from 'next/server';
+import axios from 'axios';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
-import { createTransferRecipientAction } from '@/app/actions/paystack';
 
+const PAYSTACK_API_URL = 'https://api.paystack.co';
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "sk_test_dc2996e32f46e3b88e8e636b2122cba9914cac4d";
+
+/**
+ * This API route securely resolves a bank account using the Paystack API.
+ * It acts as a proxy to avoid exposing the secret key on the client.
+ */
 export async function POST(request: Request) {
     const supabase = createSupabaseServerClient();
+    
+    // 1. Check for an authenticated user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return new NextResponse(
+            JSON.stringify({ error: 'Authentication failed: You must be logged in.' }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+    
+    // 2. Get account details from the request body
+    const { accountNumber, bankCode } = await request.json();
+    if (!accountNumber || !bankCode) {
+        return new NextResponse(
+            JSON.stringify({ error: 'Account number and bank code are required.' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
 
+    // 3. Call Paystack's bank resolve endpoint
     try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const response = await axios.get(`${PAYSTACK_API_URL}/bank/resolve`, {
+            params: {
+                account_number: accountNumber,
+                bank_code: bankCode
+            },
+            headers: {
+                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+            }
+        });
 
-        if (!user) {
+        if (response.data.status) {
+            // On success, return the verified data
+            return NextResponse.json({
+                success: true,
+                account_name: response.data.data.account_name,
+                account_number: response.data.data.account_number,
+            });
+        } else {
+            // If Paystack returns a non-error but status is false
             return new NextResponse(
-                JSON.stringify({ error: 'Authentication failed: You must be logged in.' }),
-                { status: 401, headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-
-        const body = await request.json();
-        const { accountNumber, bankCode } = body;
-
-        if (!accountNumber || !bankCode) {
-            return new NextResponse(
-                JSON.stringify({ error: 'Account number and bank code are required.' }),
+                JSON.stringify({ error: response.data.message || 'Could not verify account details.' }),
                 { status: 400, headers: { 'Content-Type': 'application/json' } }
             );
         }
-
-        const recipientResult = await createTransferRecipientAction(
-            accountNumber,
-            bankCode
-        );
-
-        if (!recipientResult.success || !recipientResult.data) {
-            throw new Error(recipientResult.error || 'Failed to create payment recipient with Paystack.');
-        }
-
-        const { account_name, recipient_code, bank_name } = recipientResult.data;
-
-        const { error: profileUpdateError } = await supabase
-            .from('profiles')
-            .update({
-                bank_name: bank_name,
-                account_name: account_name,
-                account_number: accountNumber,
-                bank_code: bankCode,
-                recipient_code: recipient_code,
-            })
-            .eq('id', user.id);
-
-        if (profileUpdateError) {
-            console.error('Supabase profile update error:', profileUpdateError);
-            throw new Error(`Database update failed: ${profileUpdateError.message}`);
-        }
-
-        return NextResponse.json({ message: `Your payment details have been saved for: ${account_name}.` });
-
     } catch (error: any) {
-        console.error("Error in POST /api/profile/bank-details:", error);
+        // Handle network errors or errors from Paystack's API
+        console.error("Error resolving bank account:", error.response?.data || error.message);
         return new NextResponse(
-            JSON.stringify({ error: error.message || 'An internal server error occurred.' }),
+            JSON.stringify({ error: error.response?.data?.message || 'An unexpected error occurred.' }),
             { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
     }
