@@ -271,7 +271,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Price (₦)</FormLabel>
                         <FormControl>
-                        <Input type="number" step="any" placeholder="Enter price" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                        <Input type="number" step="any" placeholder="Enter price" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
