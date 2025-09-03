@@ -48,15 +48,11 @@ TO authenticated
 WITH CHECK (auth.uid() = id);
 
 -- 7. Allow authenticated users to update their own payment details.
--- This policy is more specific and secure.
 CREATE POLICY "Users can update their own profile." ON public.profiles
 FOR UPDATE
 TO authenticated
 USING (auth.uid() = id)
-WITH CHECK (auth.uid() = id)
--- Specify the only columns a user is allowed to update
-USING (true)
-;
+WITH CHECK (auth.uid() = id);
 
 
 -- =========== TRANSACTIONS TABLE SETUP ===========
