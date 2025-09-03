@@ -2,8 +2,43 @@
 "use server";
 
 import { NextResponse } from 'next/server';
+import axios from 'axios';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
-import { createTransferRecipientAction } from '@/app/actions/paystack';
+
+const PAYSTACK_API_URL = 'https://api.paystack.co';
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "sk_test_dc2996e32f46e3b88e8e636b2122cba9914cac4d";
+
+async function createTransferRecipient(name: string, accountNumber: string, bankCode: string) {
+    if (!PAYSTACK_SECRET_KEY) throw new Error('Paystack secret key is not configured.');
+
+    const response = await axios.post(
+        `${PAYSTACK_API_URL}/transferrecipient`,
+        {
+            type: "nuban",
+            name,
+            account_number: accountNumber,
+            bank_code: bankCode,
+            currency: "NGN"
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+                "Content-Type": "application/json",
+            }
+        }
+    );
+
+    if (!response.data.status) {
+        throw new Error(response.data.message || 'Failed to create transfer recipient with Paystack.');
+    }
+    
+    const recipientData = response.data.data;
+    const accountName = recipientData.details.account_name;
+    const recipientCode = recipientData.recipient_code;
+    
+    return { account_name: accountName, recipient_code: recipientCode };
+}
+
 
 export async function POST(request: Request) {
     const supabase = createSupabaseServerClient();
@@ -28,41 +63,32 @@ export async function POST(request: Request) {
             );
         }
 
-        // The createTransferRecipientAction is already authenticated, but we re-auth here for safety.
-        const recipientResult = await createTransferRecipientAction(
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError || !profile) {
+            throw new Error('Could not retrieve user profile to get full name.');
+        }
+
+        const { account_name, recipient_code } = await createTransferRecipient(
+            profile.full_name,
             accountNumber,
             bankCode
         );
-
-        if (!recipientResult.success || !recipientResult.data) {
-            throw new Error(recipientResult.error || 'Failed to create payment recipient with Paystack.');
-        }
-
-        const { account_name, recipient_code, bank_name } = recipientResult.data;
-
-        const { error: profileUpdateError } = await supabase
-            .from('profiles')
-            .update({
-                bank_name: bank_name,
-                account_name: account_name,
-                account_number: accountNumber,
-                bank_code: bankCode,
-                recipient_code: recipient_code,
-            })
-            .eq('id', user.id);
-
-        if (profileUpdateError) {
-            console.error('Supabase profile update error:', profileUpdateError);
-            throw new Error(`Database update failed: ${profileUpdateError.message}`);
-        }
-
-        return NextResponse.json({ message: `Your payment details have been saved for: ${account_name}.` });
+        
+        return NextResponse.json({ account_name, recipient_code });
 
     } catch (error: any) {
         console.error("Error in POST /api/payment:", error);
+        const errorMessage = error.response?.data?.message || error.message || 'An internal server error occurred.';
+        const statusCode = error.response?.status || 500;
+        
         return new NextResponse(
-            JSON.stringify({ error: error.message || 'An internal server error occurred.' }),
-            { status: 500, headers: { 'Content-Type': 'application/json' } }
+            JSON.stringify({ error: errorMessage }),
+            { status: statusCode, headers: { 'Content-Type': 'application/json' } }
         );
     }
 }

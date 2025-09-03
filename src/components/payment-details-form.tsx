@@ -23,7 +23,7 @@ type Bank = {
 };
 
 export default function PaymentDetailsForm() {
-  const { user, profile, refetchProfile, supabase } = useAuth();
+  const { profile, refetchProfile, supabase } = useAuth();
   const { toast } = useToast();
   
   const [banks, setBanks] = useState<Bank[]>([]);
@@ -33,16 +33,19 @@ export default function PaymentDetailsForm() {
   
   const [isVerifying, setIsVerifying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isFetchingBanks, setIsFetchingBanks] = useState(true);
 
   // Fetch the list of banks on component mount
   useEffect(() => {
     async function fetchBanks() {
+      setIsFetchingBanks(true);
       const result = await getBankListAction();
       if (result.success && result.data) {
         setBanks(result.data);
       } else {
         toast({ title: "Could not load banks", description: result.error, variant: 'destructive' });
       }
+      setIsFetchingBanks(false);
     }
     fetchBanks();
   }, [toast]);
@@ -62,61 +65,59 @@ export default function PaymentDetailsForm() {
           toast({ title: "Missing fields", description: "Please provide an account number and select a bank.", variant: "destructive" });
           return;
       }
-
-      if (!user) {
-          toast({ title: "Not logged in", description: "You must be logged in to perform this action.", variant: "destructive" });
-          return;
-      }
       
       setIsVerifying(true);
       
       try {
-          // Step 1: Call our secure API route to verify the account
-          const verifyResponse = await fetch('/api/profile/payment-details', {
+          // Step 1: Call our own API route to securely verify the bank account
+          const response = await fetch('/api/payment', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accountNumber, bankCode })
           });
 
-          const verifyResult = await verifyResponse.json();
+          const result = await response.json();
 
-          if (!verifyResponse.ok) {
-              throw new Error(verifyResult.error || 'Verification failed.');
+          if (!response.ok) {
+              throw new Error(result.error || 'Verification failed.');
           }
 
-          const verifiedAccountName = verifyResult.account_name;
+          const verifiedAccountName = result.account_name;
           const selectedBank = banks.find(b => b.code === bankCode);
           setAccountName(verifiedAccountName);
-          toast({ title: "Account Verified!", description: `Name: ${verifiedAccountName}` });
-
-          // Step 2: On successful verification, save details to Supabase
+          setIsVerifying(false);
           setIsSaving(true);
+          
+          // Step 2: On successful verification, update the profile in Supabase
           const { error: updateError } = await supabase
             .from('profiles')
             .update({
-                bank_name: selectedBank?.name || '',
+                bank_name: selectedBank?.name,
                 account_name: verifiedAccountName,
                 account_number: accountNumber,
                 bank_code: bankCode,
+                recipient_code: result.recipient_code,
             })
-            .eq('id', user.id);
-
+            .eq('id', profile!.id);
+          
           if (updateError) {
             throw new Error(`Database update failed: ${updateError.message}`);
           }
           
-          toast({ title: "Success!", description: "Your payment details have been saved." });
-          await refetchProfile();
+          toast({ title: "Success!", description: `Payment details saved for ${verifiedAccountName}.` });
+          await refetchProfile(); // Re-fetch profile to update the UI with latest data
 
       } catch (error: any) {
           toast({ title: 'An Error Occurred', description: error.message, variant: 'destructive' });
+          setAccountName(''); // Clear account name on error
       } finally {
           setIsVerifying(false);
           setIsSaving(false);
       }
   }
 
-  const isLoading = isVerifying || isSaving;
+  const isLoading = isVerifying || isSaving || isFetchingBanks;
+  const loadingMessage = isFetchingBanks ? 'Loading Banks...' : isVerifying ? 'Verifying...' : 'Saving...';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -131,7 +132,7 @@ export default function PaymentDetailsForm() {
             disabled={isLoading}
             >
                 <SelectTrigger id="bankCode">
-                    <SelectValue placeholder="Select a bank" />
+                    <SelectValue placeholder={isFetchingBanks ? "Loading banks..." : "Select a bank"} />
                 </SelectTrigger>
                 <SelectContent>
                     {banks.map((bank) => (
@@ -156,12 +157,12 @@ export default function PaymentDetailsForm() {
           />
         </div>
         <div>
-          <Label htmlFor="accountName">Account Name</Label>
+          <Label htmlFor="accountName">Account Name (Auto-verified)</Label>
            <div className="relative">
               <Input
                 id="accountName"
                 name="accountName"
-                value={accountName || (isVerifying ? 'Verifying...' : 'Verified name appears after saving')}
+                value={accountName || (isLoading ? '...' : 'Verified name appears after saving')}
                 readOnly
                 className="bg-secondary"
               />
@@ -171,7 +172,7 @@ export default function PaymentDetailsForm() {
 
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isVerifying ? 'Verifying Account...' : isSaving ? 'Saving...' : 'Verify and Save Details'}
+        {isLoading ? loadingMessage : 'Verify & Save'}
       </Button>
     </form>
   );
