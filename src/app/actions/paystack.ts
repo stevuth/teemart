@@ -130,34 +130,38 @@ export async function verifyTransactionAction(reference: string) {
     }
 }
 
-
 /**
- * Fetches the list of Nigerian banks from Paystack.
- * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ * Creates a Paystack transfer recipient for a seller.
+ * @param name - The seller's full name.
+ * @param accountNumber - The seller's account number.
+ * @param bankCode - The seller's bank code.
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
-export async function getBankListAction() {
-    if (!PAYSTACK_SECRET_KEY) {
-        console.error("Paystack secret key is not set.");
-        return { success: false, error: 'Server configuration error.' };
-    }
+async function createTransferRecipient(name: string, accountNumber: string, bankCode: string) {
+    if (!PAYSTACK_SECRET_KEY) throw new Error('Paystack secret key is not configured.');
 
-    try {
-        const response = await axios.get(`${PAYSTACK_API_URL}/bank?country=nigeria`, {
-            headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
-            timeout: 10000
-        });
-
-        if (response.data.status) {
-            const uniqueBanks = Array.from(new Map(response.data.data.map((bank: any) => [bank.code, bank])).values());
-            return { success: true, data: uniqueBanks as any[] };
-        } else {
-            return { success: false, error: response.data.message };
+    const response = await axios.post(
+        `${PAYSTACK_API_URL}/transferrecipient`,
+        {
+            type: "nuban",
+            name,
+            account_number: accountNumber,
+            bank_code: bankCode,
+            currency: "NGN"
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+                "Content-Type": "application/json",
+            }
         }
+    );
 
-    } catch (error: any) {
-        console.error("Error fetching bank list:", error.response?.data || error.message);
-        return { success: false, error: error.response?.data?.message || 'An unexpected error occurred.' };
+    if (!response.data.status) {
+        throw new Error(response.data.message || 'Failed to create transfer recipient with Paystack.');
     }
+    
+    return response.data.data;
 }
 
 
@@ -225,24 +229,56 @@ export async function releaseEscrowAction(transactionId: string) {
     return { success: false, error: `Transaction is already ${transaction.status}.` };
   }
 
-  // 2. Fetch the seller's profile to get their recipient code.
+  // 2. Fetch the seller's profile to get their bank details.
   const { data: sellerProfile, error: profileError } = await supabase
     .from('profiles')
-    .select('recipient_code')
+    .select('full_name, account_number, bank_code, recipient_code')
     .eq('id', transaction.seller_id)
     .single();
 
-  if (profileError || !sellerProfile || !sellerProfile.recipient_code) {
-    return { success: false, error: "Could not find seller's payment details. The seller may need to set up their bank account." };
+  if (profileError || !sellerProfile) {
+    return { success: false, error: "Could not find seller's payment details." };
+  }
+  
+  if (!sellerProfile.account_number || !sellerProfile.bank_code || !sellerProfile.full_name) {
+    return { success: false, error: "Seller has not completed their bank account setup." };
   }
 
-  // 3. Calculate the payout amount.
+  let recipientCode = sellerProfile.recipient_code;
+
+  // 3. If seller does not have a recipient_code, create one.
+  if (!recipientCode) {
+    try {
+        const recipientData = await createTransferRecipient(
+            sellerProfile.full_name,
+            sellerProfile.account_number,
+            sellerProfile.bank_code
+        );
+        recipientCode = recipientData.recipient_code;
+
+        // Save the new recipient_code to the seller's profile for future use
+        const { error: updateProfileError } = await supabase
+            .from('profiles')
+            .update({ recipient_code: recipientCode })
+            .eq('id', transaction.seller_id);
+
+        if (updateProfileError) {
+            console.error("Failed to save new recipient code for seller:", updateProfileError);
+            // Non-fatal, we can still proceed with the transfer
+        }
+    } catch(e: any) {
+        return { success: false, error: `Could not create payment recipient for seller: ${e.message}`};
+    }
+  }
+
+
+  // 4. Calculate the payout amount.
   const payoutAmount = (transaction.product_price - transaction.seller_fee) + transaction.shipping_fee;
 
-  // 4. Initiate the transfer to the seller.
+  // 5. Initiate the transfer to the seller.
   const transferResult = await initiateTransferAction(
     payoutAmount,
-    sellerProfile.recipient_code,
+    recipientCode,
     `Payment for order: ${transaction.product_details.name}`
   );
 
@@ -252,7 +288,7 @@ export async function releaseEscrowAction(transactionId: string) {
     return { success: false, error: `Paystack transfer failed: ${transferResult.error}` };
   }
 
-  // 5. Update the transaction status in the database to 'released'.
+  // 6. Update the transaction status in the database to 'released'.
   const { error: updateError } = await supabase
     .from('transactions')
     .update({ status: 'released' })

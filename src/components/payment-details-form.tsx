@@ -15,165 +15,129 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { getBankListAction } from '@/app/actions/paystack';
-
-type Bank = {
-  code: string;
-  name: string;
-};
+import { nigerianBanks } from '@/lib/banks';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 
 export default function PaymentDetailsForm() {
   const { profile, refetchProfile, supabase } = useAuth();
   const { toast } = useToast();
   
-  const [banks, setBanks] = useState<Bank[]>([]);
+  const [bankName, setBankName] = useState(profile?.bank_name || '');
   const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
-  const [bankCode, setBankCode] = useState(profile?.bank_code || '');
   const [accountName, setAccountName] = useState(profile?.account_name || '');
   
-  const [isVerifying, setIsVerifying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isFetchingBanks, setIsFetchingBanks] = useState(true);
 
-  // Fetch the list of banks on component mount
-  useEffect(() => {
-    async function fetchBanks() {
-      setIsFetchingBanks(true);
-      const result = await getBankListAction();
-      if (result.success && result.data) {
-        setBanks(result.data);
-      } else {
-        toast({ title: "Could not load banks", description: result.error, variant: 'destructive' });
-      }
-      setIsFetchingBanks(false);
-    }
-    fetchBanks();
-  }, [toast]);
-  
-  // Update local state when profile changes
   useEffect(() => {
     if (profile) {
+      setBankName(profile.bank_name || '');
       setAccountNumber(profile.account_number || '');
-      setBankCode(profile.bank_code || '');
       setAccountName(profile.account_name || '');
     }
   }, [profile]);
   
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!accountNumber || !bankCode) {
-          toast({ title: "Missing fields", description: "Please provide an account number and select a bank.", variant: "destructive" });
+      if (!bankName || !accountNumber || !accountName) {
+          toast({ title: "Missing fields", description: "Please fill in all the details.", variant: "destructive" });
           return;
       }
       
-      setIsVerifying(true);
+      setIsSaving(true);
       
       try {
-          // Step 1: Call our own API route to securely verify the bank account
-          const response = await fetch('/api/payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accountNumber, bankCode })
-          });
+          const selectedBank = nigerianBanks.find(b => b.name === bankName);
 
-          const result = await response.json();
-
-          if (!response.ok) {
-              throw new Error(result.error || 'Verification failed.');
-          }
-
-          const verifiedAccountName = result.account_name;
-          const selectedBank = banks.find(b => b.code === bankCode);
-          setAccountName(verifiedAccountName);
-          setIsVerifying(false);
-          setIsSaving(true);
-          
-          // Step 2: On successful verification, update the profile in Supabase
-          const { error: updateError } = await supabase
+          const { error } = await supabase
             .from('profiles')
             .update({
-                bank_name: selectedBank?.name,
-                account_name: verifiedAccountName,
+                bank_name: bankName,
+                account_name: accountName,
                 account_number: accountNumber,
-                bank_code: bankCode,
-                recipient_code: result.recipient_code,
+                bank_code: selectedBank?.code, // Save bank code for future use
+                recipient_code: null, // Clear any old recipient code
             })
             .eq('id', profile!.id);
           
-          if (updateError) {
-            throw new Error(`Database update failed: ${updateError.message}`);
+          if (error) {
+            throw new Error(`Database update failed: ${error.message}`);
           }
           
-          toast({ title: "Success!", description: `Payment details saved for ${verifiedAccountName}.` });
-          await refetchProfile(); // Re-fetch profile to update the UI with latest data
+          toast({ title: "Success!", description: `Your payment details have been saved.` });
+          await refetchProfile();
 
       } catch (error: any) {
           toast({ title: 'An Error Occurred', description: error.message, variant: 'destructive' });
-          setAccountName(''); // Clear account name on error
       } finally {
-          setIsVerifying(false);
           setIsSaving(false);
       }
   }
 
-  const isLoading = isVerifying || isSaving || isFetchingBanks;
-  const loadingMessage = isFetchingBanks ? 'Loading Banks...' : isVerifying ? 'Verifying...' : 'Saving...';
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="bankCode">Bank</Label>
-           <Select
-            name="bankCode"
-            value={bankCode}
-            onValueChange={setBankCode}
-            required
-            disabled={isLoading}
-            >
-                <SelectTrigger id="bankCode">
-                    <SelectValue placeholder={isFetchingBanks ? "Loading banks..." : "Select a bank"} />
-                </SelectTrigger>
-                <SelectContent>
-                    {banks.map((bank) => (
-                    <SelectItem key={bank.code} value={bank.code}>
-                        {bank.name}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        </div>
-        <div>
-          <Label htmlFor="accountNumber">Account Number</Label>
-          <Input
-            id="accountNumber"
-            name="accountNumber"
-            value={accountNumber}
-            onChange={(e) => setAccountNumber(e.target.value)}
-            maxLength={10}
-            placeholder="Enter 10-digit account number"
-            required
-            disabled={isLoading}
-          />
-        </div>
-        <div>
-          <Label htmlFor="accountName">Account Name (Auto-verified)</Label>
-           <div className="relative">
-              <Input
-                id="accountName"
-                name="accountName"
-                value={accountName || (isLoading ? '...' : 'Verified name appears after saving')}
-                readOnly
-                className="bg-secondary"
-              />
-           </div>
-        </div>
-      </div>
+    <Card>
+        <CardHeader>
+            <CardTitle>Bank Account Details</CardTitle>
+            <CardDescription>
+                This is the account where you will receive payments for your sales. Please ensure the details are correct.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="bankName">Bank Name</Label>
+                   <Select
+                    name="bankName"
+                    value={bankName}
+                    onValueChange={setBankName}
+                    required
+                    disabled={isSaving}
+                    >
+                        <SelectTrigger id="bankName">
+                            <SelectValue placeholder={"Select a bank"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {nigerianBanks.map((bank) => (
+                            <SelectItem key={bank.code} value={bank.name}>
+                                {bank.name}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div>
+                  <Label htmlFor="accountNumber">Account Number</Label>
+                  <Input
+                    id="accountNumber"
+                    name="accountNumber"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    maxLength={10}
+                    placeholder="Enter 10-digit account number"
+                    required
+                    disabled={isSaving}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="accountName">Account Name</Label>
+                   <Input
+                        id="accountName"
+                        name="accountName"
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        placeholder="Enter your full account name"
+                        required
+                        disabled={isSaving}
+                    />
+                </div>
+              </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isLoading ? loadingMessage : 'Verify & Save'}
-      </Button>
-    </form>
+              <Button type="submit" className="w-full" disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving ? 'Saving...' : 'Save Details'}
+              </Button>
+            </form>
+        </CardContent>
+    </Card>
   );
 }
