@@ -25,7 +25,7 @@ export async function updatePaymentDetailsAction(
 ): Promise<FormState> {
     const supabase = createSupabaseServerClient();
     
-    // 1. Get User
+    // 1. Get User - This is the critical step that was failing.
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         return {
