@@ -38,6 +38,10 @@ export default function PaymentDetailsForm() {
   
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      if (!profile) {
+          toast({ title: "Error", description: "You must be logged in to save details.", variant: "destructive" });
+          return;
+      }
       if (!bankName || !accountNumber || !accountName) {
           toast({ title: "Missing fields", description: "Please fill in all the details.", variant: "destructive" });
           return;
@@ -60,19 +64,20 @@ export default function PaymentDetailsForm() {
                 account_name: accountName,
                 account_number: accountNumber,
                 bank_code: selectedBank.code,
-                recipient_code: null, // Clear recipient code to force re-creation on next payout
+                recipient_code: null,
             })
-            .eq('id', profile!.id);
+            .eq('id', profile.id);
           
           if (error) {
-            throw new Error(`Database update failed: ${error.message}`);
+            throw error; // This will be caught by the catch block
           }
           
           toast({ title: "Success!", description: `Your payment details have been saved.` });
           await refetchProfile();
 
       } catch (error: any) {
-          toast({ title: 'An Error Occurred', description: error.message, variant: 'destructive' });
+          console.error("Error saving payment details:", error);
+          toast({ title: 'An Error Occurred', description: error.message || "Could not save your details.", variant: 'destructive' });
       } finally {
           setIsSaving(false);
       }
