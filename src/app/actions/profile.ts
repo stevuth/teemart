@@ -7,39 +7,39 @@ import { createTransferRecipientAction } from '@/app/actions/paystack';
 type UpdateDetailsInput = {
     bankCode: string;
     accountNumber: string;
-    accountName: string;
     bankName: string;
 };
 
 export async function updatePaymentDetailsAction(input: UpdateDetailsInput) {
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: 'Authentication failed: You must be logged in.' };
+    }
+        
     try {
-        const supabase = createSupabaseServerClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-        if (authError || !user) {
-            throw new Error('Authentication failed: You must be logged in.');
-        }
-
-        const { bankCode, accountNumber, accountName, bankName } = input;
+        const { bankCode, accountNumber, bankName } = input;
 
         const recipientResult = await createTransferRecipientAction(
-            accountName,
             accountNumber,
             bankCode
         );
 
-        if (!recipientResult.success || !recipientResult.recipient_code) {
+        if (!recipientResult.success || !recipientResult.data) {
             throw new Error(recipientResult.error || 'Failed to create payment recipient with Paystack.');
         }
+
+        const { account_name, recipient_code } = recipientResult.data;
 
         const { error: profileUpdateError } = await supabase
             .from('profiles')
             .update({
                 bank_name: bankName,
-                account_name: accountName,
+                account_name: account_name,
                 account_number: accountNumber,
                 bank_code: bankCode,
-                recipient_code: recipientResult.recipient_code,
+                recipient_code: recipient_code,
             })
             .eq('id', user.id);
 
@@ -51,10 +51,6 @@ export async function updatePaymentDetailsAction(input: UpdateDetailsInput) {
         return { success: true, message: 'Your payment details have been saved.' };
 
     } catch (error: any) {
-        console.error("--- DETAILED SAVE ERROR ---");
-        console.error("Timestamp:", new Date().toISOString());
-        console.error("Error Message:", error.message);
-        console.error("---------------------------");
         return { success: false, error: error.message };
     }
 }

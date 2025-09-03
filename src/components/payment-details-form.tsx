@@ -2,12 +2,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBankListAction, resolveBankAccount } from '@/app/actions/paystack';
+import { getBankListAction } from '@/app/actions/paystack';
 import { updatePaymentDetailsAction } from '@/app/actions/profile';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Loader2, CheckCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -30,13 +30,7 @@ export function PaymentDetailsForm() {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [selectedBankCode, setSelectedBankCode] = useState(profile?.bank_code || '');
   const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
-  const [accountName, setAccountName] = useState(profile?.account_name || '');
-  
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
-  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchBanks() {
@@ -49,50 +43,17 @@ export function PaymentDetailsForm() {
   }, []);
 
   useEffect(() => {
-    if (profile?.account_name && profile?.account_number && profile?.bank_code) {
-      setIsVerified(true);
-      setAccountName(profile.account_name);
-      setAccountNumber(profile.account_number);
-      setSelectedBankCode(profile.bank_code);
+    if (profile) {
+        setSelectedBankCode(profile.bank_code || '');
+        setAccountNumber(profile.account_number || '');
     }
   }, [profile]);
-  
-  useEffect(() => {
-    setVerificationError(null);
-    setIsVerified(false);
-    setAccountName('');
-    
-    if (accountNumber.length === 10 && selectedBankCode) {
-        const handler = setTimeout(() => {
-            handleVerifyAccount();
-        }, 500);
-
-        return () => clearTimeout(handler);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountNumber, selectedBankCode]);
-
-  const handleVerifyAccount = async () => {
-    if (accountNumber.length !== 10 || !selectedBankCode) return;
-    
-    setIsVerifying(true);
-    setVerificationError(null);
-    const result = await resolveBankAccount(accountNumber, selectedBankCode);
-    if (result.success) {
-      setAccountName(result.data.account_name);
-      setIsVerified(true);
-    } else {
-      setVerificationError(result.error || "Could not verify account.");
-      setAccountName('');
-      setIsVerified(false);
-    }
-    setIsVerifying(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isVerified) {
-        toast({ title: "Verification needed", description: "Please ensure your account details are verified.", variant: "destructive" });
+    
+    if (!selectedBankCode || accountNumber.length !== 10) {
+        toast({ title: "Invalid Input", description: "Please select a bank and enter a valid 10-digit account number.", variant: "destructive" });
         return;
     }
     
@@ -109,7 +70,6 @@ export function PaymentDetailsForm() {
         const result = await updatePaymentDetailsAction({
             bankCode: selectedBankCode,
             accountNumber,
-            accountName,
             bankName: selectedBank.name,
         });
 
@@ -123,11 +83,6 @@ export function PaymentDetailsForm() {
             throw new Error(result.error);
         }
     } catch (error: any) {
-        console.error("--- DETAILED SAVE ERROR ---");
-        console.error("Timestamp:", new Date().toISOString());
-        console.error("Error Message:", error.message);
-        console.error("---------------------------");
-
         toast({
             title: "Error Saving Details",
             description: error.message || "An unexpected error occurred.",
@@ -179,21 +134,18 @@ export function PaymentDetailsForm() {
               <Input
                 id="accountName"
                 name="accountName"
-                value={accountName}
+                value={profile?.account_name || ''}
                 readOnly
-                placeholder="Account name will appear here"
+                placeholder="Verified name will appear here after saving"
                 className="bg-secondary"
               />
-              {isVerifying && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
            </div>
-           {verificationError && <p className="text-sm text-destructive mt-1">{verificationError}</p>}
-           {isVerified && !isVerifying && <p className="text-sm text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Account verified</p>}
         </div>
       </div>
       
-      <Button type="submit" className="w-full" disabled={isSaving || !isVerified}>
-        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Save Details
+      <Button type="submit" className="w-full" disabled={isSaving}>
+        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Verify and Save Details
       </Button>
     </form>
   );

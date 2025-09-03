@@ -161,64 +161,40 @@ export async function getBankListAction() {
     }
 }
 
-
 /**
- * Resolves a bank account number to get the account name.
- * @param {string} accountNumber - The 10-digit account number.
- * @param {string} bankCode - The bank code from Paystack.
- * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ * Creates a Paystack Transfer Recipient for a seller. This action resolves the account name first.
+ * @param accountNumber - The seller's account number.
+ * @param bankCode - The seller's bank code.
+ * @returns {Promise<{success: boolean, data?: { account_name: string, recipient_code: string }, error?: string}>}
  */
-export async function resolveBankAccount(accountNumber: string, bankCode: string) {
+export async function createTransferRecipientAction(accountNumber: string, bankCode: string) {
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+        return { success: false, error: 'Authentication failed. You must be logged in.' };
+    }
+
     if (!PAYSTACK_SECRET_KEY) {
-        console.error("Paystack secret key is not set.");
         return { success: false, error: 'Server configuration error.' };
     }
-    if (!accountNumber || !bankCode || accountNumber.length !== 10) {
-        return { success: false, error: 'Invalid account number or bank code.' };
-    }
+
     try {
-        const response = await axios.get(`${PAYSTACK_API_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
+        // 1. Resolve bank account first
+        const resolveResponse = await axios.get(`${PAYSTACK_API_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
             headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
         });
 
-        if (response.data.status) {
-            return { success: true, data: response.data.data };
+        if (!resolveResponse.data.status) {
+            throw new Error(resolveResponse.data.message || 'Could not verify account details.');
         }
-        return { success: false, error: response.data.message || 'Could not verify account details.' };
+        
+        const account_name = resolveResponse.data.data.account_name;
 
-    } catch (error: any) {
-        console.error("Error resolving bank account:", error.response?.data || error.message);
-        return { success: false, error: error.response?.data?.message || 'An error occurred during verification.' };
-    }
-}
-
-
-/**
- * Creates a Paystack Transfer Recipient for a seller. This action is self-contained and does not update the database.
- * The calling action is responsible for saving the returned recipient code.
- * @param name - The seller's account name.
- * @param accountNumber - The seller's account number.
- * @param bankCode - The seller's bank code.
- * @returns {Promise<{success: boolean, recipient_code?: string, error?: string}>}
- */
-export async function createTransferRecipientAction(name: string, accountNumber: string, bankCode: string) {
-    // This action MUST be authenticated, as it's a prerequisite for a profile update.
-    const supabase = createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        return { success: false, error: 'Authentication failed. You must be logged in to create a transfer recipient.' };
-    }
-
-    if (!PAYSTACK_SECRET_KEY) {
-        console.error("Paystack secret key is not set.");
-        return { success: false, error: 'Server configuration error.' };
-    }
-    
-    try {
-        const response = await axios.post(`${PAYSTACK_API_URL}/transferrecipient`, {
+        // 2. Create transfer recipient with the resolved name
+        const recipientResponse = await axios.post(`${PAYSTACK_API_URL}/transferrecipient`, {
             type: "nuban",
-            name,
+            name: account_name,
             account_number: accountNumber,
             bank_code: bankCode,
             currency: "NGN"
@@ -226,15 +202,17 @@ export async function createTransferRecipientAction(name: string, accountNumber:
             headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
         });
 
-        if (response.data.status) {
-            const recipient_code = response.data.data.recipient_code;
-            return { success: true, recipient_code };
+        if (recipientResponse.data.status) {
+            const recipient_code = recipientResponse.data.data.recipient_code;
+            return { success: true, data: { account_name, recipient_code } };
         } else {
-            return { success: false, error: response.data.message };
+            throw new Error(recipientResponse.data.message);
         }
+
     } catch (error: any) {
-        console.error("Error creating transfer recipient:", error.response?.data || error.message);
-        return { success: false, error: error.response?.data?.message || 'An error occurred.' };
+        const errorMessage = error.response?.data?.message || error.message || 'An error occurred during Paystack operation.';
+        console.error("Error in createTransferRecipientAction:", errorMessage);
+        return { success: false, error: errorMessage };
     }
 }
 
