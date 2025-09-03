@@ -22,7 +22,6 @@ export async function updatePaymentDetailsAction(input: UpdateDetailsInput) {
 
         const { bankCode, accountNumber, accountName, bankName } = input;
 
-        // This action now implicitly checks for authentication first
         const recipientResult = await createTransferRecipientAction(
             accountName,
             accountNumber,
