@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -16,17 +16,10 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { getBankListAction } from '@/app/actions/paystack';
-import { updatePaymentDetailsAction } from '@/app/actions/profile';
-import { useFormState } from 'react-dom';
 
 type Bank = {
   code: string;
   name: string;
-};
-
-const initialState = {
-  message: '',
-  error: false,
 };
 
 export default function PaymentDetailsForm() {
@@ -34,11 +27,12 @@ export default function PaymentDetailsForm() {
   const { toast } = useToast();
   
   const [banks, setBanks] = useState<Bank[]>([]);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
   const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
   const [bankCode, setBankCode] = useState(profile?.bank_code || '');
+  const [accountName, setAccountName] = useState(profile?.account_name || '');
+  
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch the list of banks on component mount
   useEffect(() => {
@@ -53,12 +47,27 @@ export default function PaymentDetailsForm() {
     fetchBanks();
   }, [toast]);
   
+  // Update local state when profile changes
+  useEffect(() => {
+    if (profile) {
+      setAccountNumber(profile.account_number || '');
+      setBankCode(profile.bank_code || '');
+      setAccountName(profile.account_name || '');
+    }
+  }, [profile]);
+  
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (!accountNumber || !bankCode) {
           toast({ title: "Missing fields", description: "Please provide an account number and select a bank.", variant: "destructive" });
           return;
       }
+
+      if (!user) {
+          toast({ title: "Not logged in", description: "You must be logged in to perform this action.", variant: "destructive" });
+          return;
+      }
+      
       setIsVerifying(true);
       
       try {
@@ -75,32 +84,39 @@ export default function PaymentDetailsForm() {
               throw new Error(verifyResult.error || 'Verification failed.');
           }
 
-          const { account_name } = verifyResult;
+          const verifiedAccountName = verifyResult.account_name;
           const selectedBank = banks.find(b => b.code === bankCode);
+          setAccountName(verifiedAccountName);
+          toast({ title: "Account Verified!", description: `Name: ${verifiedAccountName}` });
 
-          // Step 2: On successful verification, create the Paystack recipient and update the profile
-          startTransition(async () => {
-              const updateResult = await updatePaymentDetailsAction(null, {
-                  accountNumber,
-                  bankCode,
-                  bankName: selectedBank?.name || '',
-                  accountName: account_name,
-              });
+          // Step 2: On successful verification, save details to Supabase
+          setIsSaving(true);
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+                bank_name: selectedBank?.name || '',
+                account_name: verifiedAccountName,
+                account_number: accountNumber,
+                bank_code: bankCode,
+            })
+            .eq('id', user.id);
 
-              if (updateResult?.error) {
-                  toast({ title: 'Save Failed', description: updateResult.message, variant: 'destructive' });
-              } else {
-                  toast({ title: 'Success!', description: updateResult.message });
-                  await refetchProfile();
-              }
-          });
+          if (updateError) {
+            throw new Error(`Database update failed: ${updateError.message}`);
+          }
+          
+          toast({ title: "Success!", description: "Your payment details have been saved." });
+          await refetchProfile();
 
       } catch (error: any) {
-          toast({ title: 'Verification Error', description: error.message, variant: 'destructive' });
+          toast({ title: 'An Error Occurred', description: error.message, variant: 'destructive' });
       } finally {
           setIsVerifying(false);
+          setIsSaving(false);
       }
   }
+
+  const isLoading = isVerifying || isSaving;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -112,6 +128,7 @@ export default function PaymentDetailsForm() {
             value={bankCode}
             onValueChange={setBankCode}
             required
+            disabled={isLoading}
             >
                 <SelectTrigger id="bankCode">
                     <SelectValue placeholder="Select a bank" />
@@ -135,6 +152,7 @@ export default function PaymentDetailsForm() {
             maxLength={10}
             placeholder="Enter 10-digit account number"
             required
+            disabled={isLoading}
           />
         </div>
         <div>
@@ -143,7 +161,7 @@ export default function PaymentDetailsForm() {
               <Input
                 id="accountName"
                 name="accountName"
-                value={profile?.account_name || 'Verified name will appear after saving'}
+                value={accountName || (isVerifying ? 'Verifying...' : 'Verified name appears after saving')}
                 readOnly
                 className="bg-secondary"
               />
@@ -151,9 +169,9 @@ export default function PaymentDetailsForm() {
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isVerifying || isPending}>
-        {(isVerifying || isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Verify and Save Details
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isVerifying ? 'Verifying Account...' : isSaving ? 'Saving...' : 'Verify and Save Details'}
       </Button>
     </form>
   );
