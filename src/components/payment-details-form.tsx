@@ -1,258 +1,157 @@
 
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useActionState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, BadgeCheck, Search, ShieldCheck, Edit } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { getBankListAction, resolveBankAccount } from "@/app/actions/paystack";
-import { saveBankDetails, type State } from "@/app/actions/bank-details";
+import { useActionState, useEffect, useState, useTransition } from 'react';
+import { getBankListAction, resolveBankAccount } from '@/app/actions/paystack';
+import { saveBankDetails, type State } from '@/app/actions/bank-details';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { CheckCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 type Bank = {
-    id: number;
-    name: string;
-    slug: string;
-    code: string;
-    longcode: string;
-    country: string;
-    currency: string;
-    type: string;
-    active: boolean;
+  code: string;
+  name: string;
 };
 
-export const paymentDetailsSchema = z.object({
-  bankCode: z.string().min(1, "Please select a bank."),
-  accountNumber: z.string().length(10, "Account number must be 10 digits."),
-  accountName: z.string(),
-  bankName: z.string(),
-});
+export default function PaymentDetailsForm() {
+  const { profile } = useAuth();
+  const initialState: State = { success: false, message: null };
+  const [state, formAction] = useActionState(saveBankDetails, initialState);
 
-const formSchema = paymentDetailsSchema.omit({ accountName: true, bankName: true });
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [selectedBankCode, setSelectedBankCode] = useState(profile?.bank_code || '');
+  const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
+  const [accountName, setAccountName] = useState(profile?.account_name || '');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-type PaymentFormValues = z.infer<typeof formSchema>;
-type ResolvedAccount = { account_name: string; bank_name: string };
 
-const initialState: State = {
-    message: null,
-    success: false,
-};
-
-export function PaymentDetailsForm() {
-    const { toast } = useToast();
-    const { profile, refetchProfile } = useAuth();
-    const [formState, formAction] = useActionState(saveBankDetails, initialState);
-    
-    const [banks, setBanks] = useState<Bank[]>([]);
-    const [loadingBanks, setLoadingBanks] = useState(true);
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [resolvedAccount, setResolvedAccount] = useState<ResolvedAccount | null>(null);
-
-    const isVerified = !!(profile?.account_name && profile?.bank_name && profile?.recipient_code);
-
-    const form = useForm<PaymentFormValues>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            bankCode: "",
-            accountNumber: "",
-        },
-    });
-
-    useEffect(() => {
-        if (formState.success) {
-            toast({ title: "Success", description: formState.message });
-            refetchProfile();
-            setIsEditing(false);
-            setResolvedAccount(null);
-            form.reset();
-        } else if (formState.message) {
-            toast({ title: "Error", description: formState.message, variant: "destructive" });
-        }
-    }, [formState, toast, refetchProfile, form]);
-    
-    useEffect(() => {
-        if (profile?.recipient_code) {
-          setIsEditing(false);
-          form.reset({
-            bankCode: profile.bank_code || "",
-            accountNumber: profile.account_number || "",
-          });
-        } else {
-          setIsEditing(true);
-        }
-    }, [profile, form]);
-
-    useEffect(() => {
-        async function fetchBanks() {
-            setLoadingBanks(true);
-            const result = await getBankListAction();
-            if (result.success && result.data) {
-                setBanks(result.data);
-            } else {
-                 toast({ title: "Error", description: result.error || "Could not fetch list of banks.", variant: "destructive" });
-            }
-            setLoadingBanks(false);
-        }
-        fetchBanks();
-    }, [toast]);
-    
-    const handleVerification = useCallback(async () => {
-        const { accountNumber, bankCode } = form.getValues();
-        if (accountNumber.length !== 10 || !bankCode) {
-            toast({title: "Info", description: "Please select a bank and enter a 10-digit account number."})
-            return;
-        };
-        
-        setIsVerifying(true);
-        setResolvedAccount(null);
-        const result = await resolveBankAccount(accountNumber, bankCode);
-        if (result.success && result.data) {
-            const selectedBank = banks.find(b => b.code === bankCode);
-            setResolvedAccount({
-                account_name: result.data.account_name,
-                bank_name: selectedBank?.name || ''
-            });
-            toast({ title: "Account Verified", description: `Account Name: ${result.data.account_name}`});
-        } else {
-             toast({ title: "Verification Failed", description: result.error || "Could not verify account details.", variant: "destructive" });
-        }
-        setIsVerifying(false);
-    }, [banks, toast, form]);
-
-    const handleEditClick = () => {
-        setIsEditing(true);
-        setResolvedAccount(null);
-        form.reset({
-            bankCode: profile?.bank_code || "",
-            accountNumber: profile?.account_number || "",
-        });
+  useEffect(() => {
+    async function fetchBanks() {
+      const result = await getBankListAction();
+      if (result.success && result.data) {
+        setBanks(result.data);
+      }
     }
+    fetchBanks();
+  }, []);
 
-    return (
-        <Card className="max-w-2xl mx-auto">
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle>Your Payment Details</CardTitle>
-                        <CardDescription>
-                            {isVerified && !isEditing 
-                                ? "Your verified account for receiving payments." 
-                                : "Verify your bank account with Paystack to receive payments for your sales."
-                            }
-                        </CardDescription>
-                    </div>
-                    {isVerified && !isEditing && (
-                        <Button variant="outline" size="sm" onClick={handleEditClick}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                        </Button>
-                    )}
-                </div>
-            </CardHeader>
-            <CardContent>
-                {!isEditing && isVerified ? (
-                     <Alert variant="default" className="bg-green-100 border-green-200 text-green-800">
-                        <BadgeCheck className="h-4 w-4 !text-green-800" />
-                        <AlertTitle>Your account is verified!</AlertTitle>
-                        <AlertDescription>
-                            Payments will be sent to: <strong>{profile?.account_name}</strong> - {profile?.bank_name} ({profile?.account_number})
-                        </AlertDescription>
-                    </Alert>
-                ) : (
-                    <form action={(formData) => {
-                        if (!resolvedAccount) {
-                            toast({ title: "Verification needed", description: "Please verify account details first.", variant: "destructive" });
-                            return;
-                        }
-                        formData.append('accountName', resolvedAccount.account_name);
-                        formData.append('bankName', resolvedAccount.bank_name);
-                        formAction(formData);
-                    }}>
-                        <Form {...form}>
-                            <div className="space-y-6">
-                                <FormField
-                                    control={form.control}
-                                    name="bankCode"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Bank</FormLabel>
-                                            <Select onValueChange={(value) => { field.onChange(value); setResolvedAccount(null); }} defaultValue={field.value} value={field.value} name={field.name}>
-                                                <FormControl>
-                                                    <SelectTrigger disabled={loadingBanks || isVerifying}>
-                                                        <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select your bank"} />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {banks.map((bank, index) => (
-                                                        <SelectItem key={`${bank.code}-${index}`} value={bank.code}>{bank.name}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="accountNumber"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Account Number</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                     <Input type="text" maxLength={10} placeholder="Your 10-digit account number" {...field} onChange={(e) => {field.onChange(e); setResolvedAccount(null);}} />
-                                                     <Button 
-                                                        type="button"
-                                                        size="sm"
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8"
-                                                        onClick={handleVerification}
-                                                        disabled={isVerifying || field.value.length !== 10 || !form.getValues().bankCode}
-                                                     >
-                                                        {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                                                        Verify
-                                                     </Button>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                
-                                {resolvedAccount && (
-                                    <Alert variant="default" className="bg-blue-100 border-blue-200 text-blue-800">
-                                        <ShieldCheck className="h-4 w-4 !text-blue-800" />
-                                        <AlertTitle>Account Ready to Save</AlertTitle>
-                                        <AlertDescription>
-                                            Verified Account Name: <strong>{resolvedAccount.account_name}</strong>
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                                
-                                <div className="flex gap-2 justify-end">
-                                    {isEditing && isVerified && (
-                                         <Button type="button" variant="ghost" onClick={() => { setIsEditing(false); setResolvedAccount(null); }}>Cancel</Button>
-                                    )}
-                                    <Button 
-                                        type="submit"
-                                        disabled={!resolvedAccount}
-                                    >
-                                        Save Details
-                                    </Button>
-                                </div>
-                            </div>
-                        </Form>
-                    </form>
-                )}
-            </CardContent>
-        </Card>
-    );
+  useEffect(() => {
+    // If there are existing details, assume they are verified.
+    if (profile?.account_name && profile?.account_number && profile?.bank_code) {
+      setIsVerified(true);
+    }
+  }, [profile]);
+  
+  useEffect(() => {
+    setVerificationError(null);
+    setIsVerified(false);
+    if (accountNumber.length === 10 && selectedBankCode) {
+      handleVerifyAccount();
+    }
+  }, [accountNumber, selectedBankCode]);
+
+  const handleVerifyAccount = async () => {
+    setIsVerifying(true);
+    setVerificationError(null);
+    const result = await resolveBankAccount(accountNumber, selectedBankCode);
+    if (result.success) {
+      setAccountName(result.data.account_name);
+      setIsVerified(true);
+    } else {
+      setVerificationError(result.error || "Could not verify account.");
+      setAccountName('');
+      setIsVerified(false);
+    }
+    setIsVerifying(false);
+  };
+  
+   const handleSubmit = (formData: FormData) => {
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
+
+  const selectedBankName = banks.find(b => b.code === selectedBankCode)?.name || profile?.bank_name;
+
+  return (
+    <form action={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <Label htmlFor="bankCode">Bank</Label>
+           <Select
+            name="bankCode"
+            value={selectedBankCode}
+            onValueChange={setSelectedBankCode}
+            required
+            >
+                <SelectTrigger id="bankCode">
+                    <SelectValue placeholder="Select a bank" />
+                </SelectTrigger>
+                <SelectContent>
+                    {banks.map((bank) => (
+                    <SelectItem key={bank.code} value={bank.code}>
+                        {bank.name}
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+             <input type="hidden" name="bankName" value={selectedBankName || ''} />
+        </div>
+        <div>
+          <Label htmlFor="accountNumber">Account Number</Label>
+          <Input
+            id="accountNumber"
+            name="accountNumber"
+            value={accountNumber}
+            onChange={(e) => setAccountNumber(e.target.value)}
+            maxLength={10}
+            placeholder="Enter 10-digit account number"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="accountName">Account Name</Label>
+           <div className="relative">
+              <Input
+                id="accountName"
+                name="accountName"
+                value={accountName}
+                readOnly
+                placeholder="Account name will appear here"
+                className="bg-secondary"
+              />
+              {isVerifying && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin" />}
+           </div>
+           {verificationError && <p className="text-sm text-destructive mt-1">{verificationError}</p>}
+           {isVerified && <p className="text-sm text-green-600 mt-1 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Account verified</p>}
+        </div>
+      </div>
+      
+      {state.message && (
+        <Alert variant={state.success ? 'default' : 'destructive'} className={state.success ? 'bg-green-100 border-green-300' : ''}>
+          <AlertTitle>{state.success ? 'Success!' : 'Error'}</AlertTitle>
+          <AlertDescription>{state.message}</AlertDescription>
+        </Alert>
+      )}
+      
+      <Button type="submit" className="w-full" disabled={isPending || !isVerified}>
+        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Save Details
+      </Button>
+    </form>
+  );
 }
