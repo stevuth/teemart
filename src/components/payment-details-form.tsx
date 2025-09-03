@@ -3,10 +3,11 @@
 
 import { useEffect, useState } from 'react';
 import { getBankListAction, resolveBankAccount } from '@/app/actions/paystack';
+import { updatePaymentDetailsAction } from '@/app/actions/profile';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -14,10 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { revalidatePath } from 'next/cache';
 
 type Bank = {
   code: string;
@@ -50,12 +49,29 @@ export function PaymentDetailsForm() {
   }, []);
 
   useEffect(() => {
-    // If there are existing details, assume they are verified.
     if (profile?.account_name && profile?.account_number && profile?.bank_code) {
       setIsVerified(true);
+      setAccountName(profile.account_name);
+      setAccountNumber(profile.account_number);
+      setSelectedBankCode(profile.bank_code);
     }
   }, [profile]);
   
+  useEffect(() => {
+    setVerificationError(null);
+    setIsVerified(false);
+    setAccountName('');
+    
+    if (accountNumber.length === 10 && selectedBankCode) {
+        const handler = setTimeout(() => {
+            handleVerifyAccount();
+        }, 500);
+
+        return () => clearTimeout(handler);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountNumber, selectedBankCode]);
+
   const handleVerifyAccount = async () => {
     if (accountNumber.length !== 10 || !selectedBankCode) return;
     
@@ -72,60 +88,45 @@ export function PaymentDetailsForm() {
     }
     setIsVerifying(false);
   };
-  
-  useEffect(() => {
-    setVerificationError(null);
-    setIsVerified(false);
-    setAccountName(''); // Clear account name on change
-    
-    if (accountNumber.length === 10 && selectedBankCode) {
-        const handler = setTimeout(() => {
-            handleVerifyAccount();
-        }, 500); // Debounce API call
-
-        return () => clearTimeout(handler);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountNumber, selectedBankCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isVerified) {
+        toast({ title: "Verification needed", description: "Please ensure your account details are verified.", variant: "destructive" });
+        return;
+    }
+    
     setIsSaving(true);
     
-    const selectedBankName = banks.find(b => b.code === selectedBankCode)?.name || profile?.bank_name;
+    const selectedBank = banks.find(b => b.code === selectedBankCode);
+    if (!selectedBank) {
+        toast({ title: "Error", description: "Selected bank not found.", variant: "destructive" });
+        setIsSaving(false);
+        return;
+    }
 
     try {
-        const response = await fetch('/api/profile/bank-details', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                bankCode: selectedBankCode,
-                accountNumber,
-                accountName,
-                bankName: selectedBankName
-            })
+        const result = await updatePaymentDetailsAction({
+            bankCode: selectedBankCode,
+            accountNumber,
+            accountName,
+            bankName: selectedBank.name,
         });
 
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || `Request failed with status ${response.status}`);
+        if (result.success) {
+            toast({
+                title: 'Success!',
+                description: result.message,
+            });
+            await refetchProfile();
+        } else {
+            throw new Error(result.error);
         }
-
-        toast({
-            title: 'Success!',
-            description: result.message,
-        });
-        
-        await refetchProfile();
-
     } catch (error: any) {
-         console.error("--- DETAILED SAVE ERROR ---");
-         console.error("Timestamp:", new Date().toISOString());
-         console.error("Error Name:", error.name);
-         console.error("Error Message:", error.message);
-         console.error("Full Error Object:", error);
-         console.error("---------------------------");
+        console.error("--- DETAILED SAVE ERROR ---");
+        console.error("Timestamp:", new Date().toISOString());
+        console.error("Error Message:", error.message);
+        console.error("---------------------------");
 
         toast({
             title: "Error Saving Details",
@@ -136,8 +137,6 @@ export function PaymentDetailsForm() {
         setIsSaving(false);
     }
   }
-
-  const selectedBankName = banks.find(b => b.code === selectedBankCode)?.name || profile?.bank_name;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -193,9 +192,11 @@ export function PaymentDetailsForm() {
       </div>
       
       <Button type="submit" className="w-full" disabled={isSaving || !isVerified}>
-        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save Details
       </Button>
     </form>
   );
 }
+
+export default PaymentDetailsForm;

@@ -43,7 +43,7 @@ const VerificationForm = dynamic(() => import('@/components/verification-form').
     ssr: false,
 });
 
-const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form').then(mod => mod.PaymentDetailsForm), {
+const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form'), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
     ssr: false,
 });
