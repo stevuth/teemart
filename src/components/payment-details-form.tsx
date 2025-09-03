@@ -17,7 +17,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from './ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 type Bank = {
   code: string;
@@ -175,3 +175,5 @@ export function PaymentDetailsForm() {
     </form>
   );
 }
+
+export default PaymentDetailsForm;
