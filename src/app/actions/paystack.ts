@@ -162,10 +162,10 @@ export async function getBankListAction() {
 }
 
 /**
- * Creates a Paystack Transfer Recipient for a seller. This action resolves the account name first.
+ * Creates a Paystack Transfer Recipient for a seller. This action is self-contained and authenticated.
  * @param accountNumber - The seller's account number.
  * @param bankCode - The seller's bank code.
- * @returns {Promise<{success: boolean, data?: { account_name: string, recipient_code: string }, error?: string}>}
+ * @returns {Promise<{success: boolean, data?: { account_name: string, recipient_code: string, bank_name: string }, error?: string}>}
  */
 export async function createTransferRecipientAction(accountNumber: string, bankCode: string) {
     const supabase = createSupabaseServerClient();
@@ -190,6 +190,7 @@ export async function createTransferRecipientAction(accountNumber: string, bankC
         }
         
         const account_name = resolveResponse.data.data.account_name;
+        const resolved_bank_name = resolveResponse.data.data.bank_name;
 
         // 2. Create transfer recipient with the resolved name
         const recipientResponse = await axios.post(`${PAYSTACK_API_URL}/transferrecipient`, {
@@ -204,7 +205,7 @@ export async function createTransferRecipientAction(accountNumber: string, bankC
 
         if (recipientResponse.data.status) {
             const recipient_code = recipientResponse.data.data.recipient_code;
-            return { success: true, data: { account_name, recipient_code } };
+            return { success: true, data: { account_name, recipient_code, bank_name: resolved_bank_name } };
         } else {
             throw new Error(recipientResponse.data.message);
         }
