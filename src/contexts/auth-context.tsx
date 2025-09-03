@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient } from '@/utils/supabase/client';
 import type { Profile } from '@/lib/types';
 import { LoginModal } from '@/components/auth/login-modal';
 import { SignupModal } from '@/components/auth/signup-modal';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -70,6 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const [isLoginModalOpen, setLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setSignupModalOpen] = useState(false);
@@ -125,23 +127,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [supabase, fetchProfile]);
 
   useEffect(() => {
-    const syncSession = async (event: string, session: Session | null) => {
-      await fetch('/auth/callback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ event, session }),
-      });
-    };
-
-    // Initial session sync
+    // Initial session load
     supabase.auth.getSession().then(async ({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
         await fetchProfile(session?.user ?? null);
         setLoading(false);
-        syncSession(session ? 'SIGNED_IN' : 'SIGNED_OUT', session);
     });
 
     // Listen for auth state changes
@@ -150,14 +141,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         await fetchProfile(session?.user ?? null, event === 'SIGNED_IN');
-        syncSession(event, session);
+        
+        // This is the key fix: router.refresh() forces a server-side re-render,
+        // which makes the server aware of the new session cookies.
+        router.refresh();
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile]);
+  }, [supabase, fetchProfile, router]);
 
   const authValue = { user, session, loading, profile, setProfile, supabase, refetchProfile };
   const modalValue = { openLoginModal, openSignupModal };

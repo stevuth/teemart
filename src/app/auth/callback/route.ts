@@ -44,35 +44,3 @@ export async function GET(request: Request) {
   // return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }
-
-
-export async function POST(req: NextRequest) {
-  const { event, session } = await req.json()
-  const res = NextResponse.json({ ok: true })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          res.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: any) {
-          res.cookies.set({ name, value: '', ...options, maxAge: 0 })
-        },
-      },
-    }
-  )
-
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    await supabase.auth.setSession(session)
-  } else if (event === 'SIGNED_OUT') {
-    await supabase.auth.signOut()
-  }
-
-  return res
-}
