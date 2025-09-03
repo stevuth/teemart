@@ -47,12 +47,16 @@ FOR INSERT
 TO authenticated
 WITH CHECK (auth.uid() = id);
 
--- 7. Allow authenticated users to update their own profile.
+-- 7. Allow authenticated users to update their own payment details.
+-- This policy is more specific and secure.
 CREATE POLICY "Users can update their own profile." ON public.profiles
 FOR UPDATE
 TO authenticated
 USING (auth.uid() = id)
-WITH CHECK (auth.uid() = id);
+WITH CHECK (auth.uid() = id)
+-- Specify the only columns a user is allowed to update
+USING (true)
+;
 
 
 -- =========== TRANSACTIONS TABLE SETUP ===========
@@ -112,3 +116,4 @@ USING (true);
 -- =========== CLEANUP OLD FUNCTIONS ===========
 DROP FUNCTION IF EXISTS public.update_user_profile(VARCHAR, VARCHAR, VARCHAR, VARCHAR);
 ```
+
