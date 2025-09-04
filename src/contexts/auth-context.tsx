@@ -134,12 +134,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         await fetchProfile(session?.user ?? null, event === 'SIGNED_IN');
         
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
              router.refresh();
         }
         setLoading(false);
       }
     );
+    
+    // Get initial session
+    const getInitialSession = async () => {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        await fetchProfile(initialSession?.user ?? null);
+        setLoading(false);
+    }
+    
+    getInitialSession();
 
     return () => {
       subscription.unsubscribe();
