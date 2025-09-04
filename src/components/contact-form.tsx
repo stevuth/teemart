@@ -1,65 +1,15 @@
 
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  message: z.string().min(10, { message: "Message must be at least 10 characters." }),
-});
-
-type ContactFormValues = z.infer<typeof formSchema>;
+import { Label } from "./ui/label";
 
 export function ContactForm() {
-  const { toast } = useToast();
-  const { supabase } = useAuth();
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: "",
-    },
-  });
-
-  const { isSubmitting } = form.formState;
-
-  const onSubmit = async (data: ContactFormValues) => {
-    try {
-      const { error } = await supabase.from('contact_messages').insert({
-        name: data.name,
-        email: data.email,
-        message: data.message,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Message Sent!",
-        description: "Thanks for reaching out. We'll get back to you soon.",
-      });
-      form.reset();
-
-    } catch (error: any) {
-      console.error("Contact form submission error:", error);
-      toast({
-        title: "Submission Failed",
-        description: error.message || "Could not send your message. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  const formSubmitUrl = "https://formsubmit.co/support@teemart.ng";
+  const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/contact` : '';
 
   return (
     <Card>
@@ -70,54 +20,32 @@ export function ContactForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Your Name</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Adewunmi James" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Your Email</FormLabel>
-                    <FormControl>
-                        <Input placeholder="you@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
+        <form action={formSubmitUrl} method="POST" className="space-y-6">
+           {/* FormSubmit Hidden Inputs */}
+           <input type="hidden" name="_next" value={redirectUrl} />
+           <input type="hidden" name="_captcha" value="false" />
+           <input type="hidden" name="_template" value="table" />
+
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="name">Your Name</Label>
+                    <Input id="name" name="name" placeholder="Adewunmi James" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="email">Your Email</Label>
+                    <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+                </div>
             </div>
-            <FormField
-              control={form.control}
-              name="message"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Message</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Please describe your issue or question here..." {...field} rows={5} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Send Message"}
+            
+            <div className="space-y-2">
+                <Label htmlFor="message">Your Message</Label>
+                <Textarea id="message" name="message" placeholder="Please describe your issue or question here..." required rows={5} />
+            </div>
+
+            <Button type="submit">
+                Send Message
             </Button>
-          </form>
-        </Form>
+        </form>
       </CardContent>
     </Card>
   );
