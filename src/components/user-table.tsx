@@ -55,10 +55,19 @@ export function UserTable() {
   const fetchUsers = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
-    const { data, error } = await supabase.rpc('get_all_users');
-    
-    if (error) {
-      console.error("Error fetching users:", error);
+
+    const { data: usersData, error: usersError } = await supabase.from('profiles').select(`
+        id,
+        full_name,
+        phone,
+        role,
+        is_verified,
+        banned_until,
+        user:user_id(email, created_at)
+    `);
+
+    if (usersError) {
+      console.error("Error fetching users:", usersError);
       toast({
         title: "Error",
         description: "Could not fetch the list of users.",
@@ -66,7 +75,17 @@ export function UserTable() {
       });
       setUsers([]);
     } else {
-      setUsers(data as UserProfile[]);
+      const formattedData = usersData.map((profile: any) => ({
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.user?.email,
+        created_at: profile.user?.created_at,
+        phone: profile.phone,
+        role: profile.role,
+        is_verified: profile.is_verified,
+        banned_until: profile.banned_until,
+      }));
+      setUsers(formattedData as UserProfile[]);
     }
     setLoading(false);
   }, [supabase, toast]);
@@ -207,7 +226,7 @@ export function UserTable() {
                             <Badge variant="outline">Unverified</Badge>
                         )}
                     </TableCell>
-                    <TableCell>{format(new Date(user.created_at), 'PPP')}</TableCell>
+                    <TableCell>{user.created_at ? format(new Date(user.created_at), 'PPP') : 'N/A'}</TableCell>
                      <TableCell className="text-right">
                         {user.id !== adminUser?.id && <BanUserDialog user={user} />}
                     </TableCell>
