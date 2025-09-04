@@ -48,6 +48,7 @@ export function SellerTable() {
     const { supabase } = useAuth();
 
     const fetchSellers = useCallback(async () => {
+        if (!supabase) return;
         setLoading(true);
 
         const { data, error } = await supabase.rpc('get_sellers_with_products');

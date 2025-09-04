@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -24,7 +24,8 @@ export function VerificationQueue() {
   const { toast } = useToast();
   const { supabase } = useAuth();
 
-  const fetchVerificationRequests = async () => {
+  const fetchVerificationRequests = useCallback(async () => {
+    if (!supabase) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
@@ -40,11 +41,11 @@ export function VerificationQueue() {
       setProfiles(data as ProfileForVerification[]);
     }
     setLoading(false);
-  };
+  }, [supabase, toast]);
 
   useEffect(() => {
     fetchVerificationRequests();
-  }, []);
+  }, [fetchVerificationRequests]);
 
   const handleVerification = async (userId: string, isVerified: boolean) => {
     setUpdatingId(userId);
