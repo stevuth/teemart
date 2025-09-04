@@ -72,7 +72,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
           <div className="flex justify-center mb-4">
              <Image src="https://i.postimg.cc/y8LPCHdG/Tee-Mart-Logo-No-BG-1.png" alt="TeeMart Logo" width={64} height={64} />
           </div>
-          <DialogTitle>Welcome back</DialogTitle>
+          <DialogTitle>Welcome Back</DialogTitle>
            <DialogDescription>
             Enter your credentials to access your account.
           </DialogDescription>
