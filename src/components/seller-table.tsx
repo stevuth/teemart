@@ -155,8 +155,8 @@ export function SellerTable() {
                             </TableHeader>
                             <TableBody>
                                 {filteredSellers.map((seller) => (
-                                    <>
-                                        <TableRow key={seller.seller_id} className="cursor-pointer" onClick={() => toggleRow(seller.seller_id)}>
+                                    <React.Fragment key={seller.seller_id}>
+                                        <TableRow className="cursor-pointer" onClick={() => toggleRow(seller.seller_id)}>
                                             <TableCell>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8">
                                                     {expandedRows.has(seller.seller_id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -202,7 +202,7 @@ export function SellerTable() {
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                    </>
+                                    </React.Fragment>
                                 ))}
                             </TableBody>
                         </Table>
