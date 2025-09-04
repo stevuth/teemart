@@ -342,3 +342,32 @@ export async function resolveAccountNumberAction(accountNumber: string, bankCode
         return { success: false, error: error.response?.data?.message || 'Could not verify account details.' };
     }
 }
+
+
+/**
+ * Fetches the list of all supported banks from Paystack.
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getBankListAction() {
+    if (!PAYSTACK_SECRET_KEY) {
+        console.error("Paystack secret key is not set.");
+        return { success: false, error: 'Server configuration error.' };
+    }
+
+    try {
+        const response = await axios.get(`${PAYSTACK_API_URL}/bank?country=nigeria&perPage=100`, {
+            headers: {
+                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+            }
+        });
+
+        if (response.data.status) {
+            return { success: true, data: response.data.data };
+        } else {
+            return { success: false, error: response.data.message };
+        }
+    } catch (error: any) {
+        console.error('Error fetching bank list:', error.response?.data || error.message);
+        return { success: false, error: error.response?.data?.message || 'Could not fetch bank list.' };
+    }
+}

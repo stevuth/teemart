@@ -15,15 +15,23 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { nigerianBanks } from '@/lib/banks';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { resolveAccountNumberAction } from '@/app/actions/paystack';
+import { resolveAccountNumberAction, getBankListAction } from '@/app/actions/paystack';
+
+type Bank = {
+  id: number;
+  name: string;
+  code: string;
+};
 
 export default function PaymentDetailsForm() {
   const { profile, refetchProfile, supabase } = useAuth();
   const { toast } = useToast();
+
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [loadingBanks, setLoadingBanks] = useState(true);
   
-  const [bankName, setBankName] = useState(profile?.bank_name || '');
+  const [selectedBankCode, setSelectedBankCode] = useState(profile?.bank_code || '');
   const [accountNumber, setAccountNumber] = useState(profile?.account_number || '');
   const [accountName, setAccountName] = useState(profile?.account_name || '');
   
@@ -32,15 +40,34 @@ export default function PaymentDetailsForm() {
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchBanks = async () => {
+      setLoadingBanks(true);
+      const result = await getBankListAction();
+      if (result.success && result.data) {
+        setBanks(result.data);
+      } else {
+        toast({
+          title: "Error fetching banks",
+          description: "Could not load the list of banks. Please refresh.",
+          variant: "destructive"
+        });
+      }
+      setLoadingBanks(false);
+    };
+
+    fetchBanks();
+  }, [toast]);
+
+  useEffect(() => {
     if (profile) {
-      setBankName(profile.bank_name || '');
+      setSelectedBankCode(profile.bank_code || '');
       setAccountNumber(profile.account_number || '');
       setAccountName(profile.account_name || '');
     }
   }, [profile]);
   
   const verifyAccount = useCallback(async () => {
-    if (accountNumber.length !== 10 || !bankName) {
+    if (accountNumber.length !== 10 || !selectedBankCode) {
       setAccountName('');
       setVerificationError(null);
       return;
@@ -49,10 +76,7 @@ export default function PaymentDetailsForm() {
     setIsVerifying(true);
     setVerificationError(null);
 
-    const selectedBank = nigerianBanks.find(b => b.name === bankName);
-    if (!selectedBank) return;
-
-    const result = await resolveAccountNumberAction(accountNumber, selectedBank.code);
+    const result = await resolveAccountNumberAction(accountNumber, selectedBankCode);
 
     if (result.success && result.data) {
         setAccountName(result.data.account_name);
@@ -61,7 +85,7 @@ export default function PaymentDetailsForm() {
         setVerificationError(result.error || 'Could not verify account name.');
     }
     setIsVerifying(false);
-  }, [accountNumber, bankName]);
+  }, [accountNumber, selectedBankCode]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -71,7 +95,7 @@ export default function PaymentDetailsForm() {
     return () => {
       clearTimeout(handler);
     };
-  }, [accountNumber, bankName, verifyAccount]);
+  }, [accountNumber, selectedBankCode, verifyAccount]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -79,7 +103,7 @@ export default function PaymentDetailsForm() {
           toast({ title: "Error", description: "You must be logged in to save details.", variant: "destructive" });
           return;
       }
-      if (!bankName || !accountNumber || !accountName) {
+      if (!selectedBankCode || !accountNumber || !accountName) {
           toast({ title: "Missing fields", description: "Please fill in all the details.", variant: "destructive" });
           return;
       }
@@ -87,7 +111,7 @@ export default function PaymentDetailsForm() {
       setIsSaving(true);
       
       try {
-          const selectedBank = nigerianBanks.find(b => b.name === bankName);
+          const selectedBank = banks.find(b => b.code === selectedBankCode);
           if (!selectedBank) {
               toast({ title: "Invalid Bank", description: "Please select a valid bank from the list.", variant: "destructive" });
               setIsSaving(false);
@@ -97,7 +121,7 @@ export default function PaymentDetailsForm() {
           const { error } = await supabase
             .from('profiles')
             .update({
-                bank_name: bankName,
+                bank_name: selectedBank.name,
                 account_name: accountName,
                 account_number: accountNumber,
                 bank_code: selectedBank.code,
@@ -134,22 +158,21 @@ export default function PaymentDetailsForm() {
                 <div>
                   <Label htmlFor="bankName">Bank Name</Label>
                    <Select
-                    name="bankName"
-                    value={bankName}
+                    value={selectedBankCode}
                     onValueChange={(value) => {
-                      setBankName(value);
+                      setSelectedBankCode(value);
                       setAccountName('');
                       setVerificationError(null);
                     }}
                     required
-                    disabled={isSaving}
+                    disabled={isSaving || loadingBanks}
                     >
                         <SelectTrigger id="bankName">
-                            <SelectValue placeholder={"Select a bank"} />
+                            <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select a bank"} />
                         </SelectTrigger>
                         <SelectContent>
-                            {nigerianBanks.map((bank) => (
-                            <SelectItem key={bank.code} value={bank.name}>
+                            {banks.map((bank) => (
+                            <SelectItem key={bank.code} value={bank.code}>
                                 {bank.name}
                             </SelectItem>
                             ))}
@@ -191,7 +214,7 @@ export default function PaymentDetailsForm() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isSaving || isVerifying || !accountName}>
+              <Button type="submit" className="w-full" disabled={isSaving || isVerifying || !accountName || loadingBanks}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving ? 'Saving...' : 'Save Details'}
               </Button>
