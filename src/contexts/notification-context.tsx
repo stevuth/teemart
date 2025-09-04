@@ -19,7 +19,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notificationCount, setNotificationCount] = useState(0);
 
   const fetchUnreadCount = useCallback(async () => {
-    if (!user) {
+    if (!user || !supabase) {
       setNotificationCount(0);
       return;
     }
@@ -37,11 +37,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
-  useEffect(() => {
-    if (!user) return;
+  const setupSubscription = useCallback(() => {
+    if (!user || !supabase) return;
 
     const channel = supabase
-      .channel('public:messages:new')
+      .channel(`realtime-notifications:${user.id}`)
       .on(
         'postgres_changes',
         { 
@@ -51,18 +51,29 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
           filter: `recipient_id=eq.${user.id}` 
         },
         (payload) => {
-          setNotificationCount(currentCount => currentCount + 1);
+          fetchUnreadCount();
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Real-time notifications connected!');
+        }
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('Real-time notification error:', err);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, supabase]);
+  }, [user, supabase, fetchUnreadCount]);
+
+  useEffect(() => {
+    const cleanup = setupSubscription();
+    return cleanup;
+  }, [setupSubscription]);
 
   const decrementCount = useCallback((amount: number) => {
-    // A simple way to trigger a refetch after marking messages as read
     if (amount === 0) {
         fetchUnreadCount();
     } else {
