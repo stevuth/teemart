@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { uploadImagesAction } from "@/app/actions/upload";
 
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
@@ -52,10 +53,6 @@ const formSchema = z.object({
     .refine(
         (files) => Array.from(files).every((file: any) => file.size <= MAX_FILE_SIZE),
         `Each file size must be less than 3MB.`
-    )
-    .refine(
-        (files) => Array.from(files).every((file: any) => ALLOWED_FILE_TYPES.includes(file.type)),
-        "Only .jpg, .jpeg, .png and .webp formats are supported."
     ).optional(), // Optional for edit mode where images might exist
 });
 
@@ -129,18 +126,20 @@ export function SellForm({ existingProduct }: SellFormProps) {
   
   const removeImage = (index: number) => {
     const newPreviews = [...imagePreviews];
-    const newFiles = [...imageFiles];
     
     const removedPreview = newPreviews.splice(index, 1)[0];
+    // If the removed preview is a blob URL, it means it's a new file.
+    // We need to find and remove the corresponding file from the imageFiles array.
     if (removedPreview.startsWith('blob:')) {
       const fileIndex = imageFiles.findIndex(file => URL.createObjectURL(file) === removedPreview);
       if(fileIndex > -1) {
+        const newFiles = [...imageFiles];
         newFiles.splice(fileIndex, 1);
+        setImageFiles(newFiles);
       }
     }
     
     setImagePreviews(newPreviews);
-    setImageFiles(newFiles);
   }
 
   const onSubmit = async (data: ProductFormValues) => {
@@ -149,31 +148,38 @@ export function SellForm({ existingProduct }: SellFormProps) {
         return;
     }
 
+    // Combine existing image URLs with newly uploaded file URLs
+    const existingImageUrls = imagePreviews.filter(p => !p.startsWith('blob:'));
     if (!isEditMode && imageFiles.length === 0) {
         form.setError("images", { type: "manual", message: "At least one image is required." });
         return;
     }
 
+    if ((existingImageUrls.length + imageFiles.length) === 0) {
+      form.setError("images", { type: "manual", message: "At least one image is required." });
+      return;
+    }
+
     try {
-        let imageUrls: string[] = isEditMode ? imagePreviews.filter(p => !p.startsWith('blob:')) : [];
+        let newImageUrls: string[] = [];
         
         if (imageFiles.length > 0) {
-            for (const imageFile of imageFiles) {
-                const fileName = `${user.id}/${Date.now()}-${imageFile.name.replace(/\s+/g, '-')}`;
-                const { data: uploadData, error: uploadError } = await supabase
-                    .storage.from('product-images').upload(fileName, imageFile);
+            const formData = new FormData();
+            imageFiles.forEach(file => {
+                formData.append('images', file);
+            });
+            
+            const result = await uploadImagesAction(formData);
 
-                if (uploadError) throw uploadError;
-
-                const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
-                imageUrls.push(publicUrl);
+            if (result.error) {
+              throw new Error(result.error);
+            }
+            if(result.urls) {
+                newImageUrls = result.urls;
             }
         }
         
-        if (imageUrls.length === 0) {
-            form.setError("images", { type: "manual", message: "At least one image is required." });
-            return;
-        }
+        const finalImageUrls = [...existingImageUrls, ...newImageUrls];
 
         const productData = {
             user_id: user.id,
@@ -184,7 +190,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             condition: data.condition,
             location: data.location,
             city: data.city,
-            image_url: imageUrls,
+            image_url: finalImageUrls,
             delivery_fee: data.deliveryFee,
         };
 
@@ -192,9 +198,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             const { error } = await supabase
                 .from('products')
                 .update(productData)
-                .eq('id', existingProduct.id)
-                .select()
-                .single();
+                .eq('id', existingProduct.id);
 
             if (error) throw error;
         } else {
