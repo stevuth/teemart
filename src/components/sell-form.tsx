@@ -285,7 +285,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Delivery Fee (₦) <span className="text-muted-foreground">(Optional)</span></FormLabel>
                         <FormControl>
-                          <Input type="number" step="any" placeholder="Enter delivery fee" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)} value={field.value ?? ''} />
+                          <Input type="number" step="any" placeholder="Enter delivery fee" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
