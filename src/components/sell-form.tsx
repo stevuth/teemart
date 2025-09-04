@@ -223,7 +223,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             variant: "destructive"
         });
     }
-  };
+  }
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -271,12 +271,11 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Price (₦)</FormLabel>
                         <FormControl>
-                        <Input 
-                            type="number" 
-                            step="any" 
+                        <Input
+                            type="number"
+                            step="any"
                             placeholder="Enter price"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             value={field.value ?? ''}
                         />
                         </FormControl>
@@ -291,12 +290,11 @@ export function SellForm({ existingProduct }: SellFormProps) {
                     <FormItem>
                         <FormLabel>Delivery Fee (₦) <span className="text-muted-foreground">(Optional)</span></FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            step="any" 
-                            placeholder="Enter delivery fee" 
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="Enter delivery fee"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
                             value={field.value ?? ''}
                           />
                         </FormControl>
