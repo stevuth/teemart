@@ -80,7 +80,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
           <div className="flex justify-center mb-4">
             <Image src="https://i.postimg.cc/y8LPCHdG/Tee-Mart-Logo-No-BG-1.png" alt="TeeMart Logo" width={64} height={64} />
           </div>
-          <DialogTitle>Create an Account</DialogTitle>
+          <DialogTitle>Join TeeMart</DialogTitle>
           <DialogDescription>
             Fill in the details below to create your TeeMart account.
           </DialogDescription>
