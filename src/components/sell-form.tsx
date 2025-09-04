@@ -57,10 +57,6 @@ const formSchema = z.object({
         (files) => Array.from(files).every((file: any) => ALLOWED_FILE_TYPES.includes(file.type)),
         "Only .jpg, .jpeg, .png and .webp formats are supported."
     ).optional(), // Optional for edit mode where images might exist
-}).refine(data => {
-    // If in create mode (no existing product), images are required.
-    // This logic is a bit complex for Zod, handled in component logic.
-    return true;
 });
 
 
@@ -163,7 +159,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
         
         if (imageFiles.length > 0) {
             for (const imageFile of imageFiles) {
-                const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
+                const fileName = `${user.id}/${Date.now()}-${imageFile.name.replace(/\s+/g, '-')}`;
                 const { data: uploadData, error: uploadError } = await supabase
                     .storage.from('product-images').upload(fileName, imageFile);
 
@@ -275,7 +271,6 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             step="any"
                             placeholder="Enter price"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
                             value={field.value ?? ''}
                         />
                         </FormControl>
@@ -435,4 +430,5 @@ export function SellForm({ existingProduct }: SellFormProps) {
     </div>
   );
 }
+
     
