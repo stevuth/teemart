@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useForm } from "react-hook-form";
@@ -276,6 +275,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             step="any"
                             placeholder="Enter price"
                             {...field}
+                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
                             value={field.value ?? ''}
                         />
                         </FormControl>
@@ -335,7 +335,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select condition" />
-                            </Trigger>
+                            </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                                 {conditions.map(con => <SelectItem key={con} value={con}>{con}</SelectItem>)}
@@ -435,3 +435,4 @@ export function SellForm({ existingProduct }: SellFormProps) {
     </div>
   );
 }
+    
