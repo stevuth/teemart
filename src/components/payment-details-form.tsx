@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { nigerianBanks } from '@/lib/banks';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { resolveAccountNumberAction } from '@/app/actions/paystack';
 
 export default function PaymentDetailsForm() {
   const { profile, refetchProfile, supabase } = useAuth();
@@ -27,6 +28,8 @@ export default function PaymentDetailsForm() {
   const [accountName, setAccountName] = useState(profile?.account_name || '');
   
   const [isSaving, setIsSaving] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -36,6 +39,40 @@ export default function PaymentDetailsForm() {
     }
   }, [profile]);
   
+  const verifyAccount = useCallback(async () => {
+    if (accountNumber.length !== 10 || !bankName) {
+      setAccountName('');
+      setVerificationError(null);
+      return;
+    }
+    
+    setIsVerifying(true);
+    setVerificationError(null);
+
+    const selectedBank = nigerianBanks.find(b => b.name === bankName);
+    if (!selectedBank) return;
+
+    const result = await resolveAccountNumberAction(accountNumber, selectedBank.code);
+
+    if (result.success && result.data) {
+        setAccountName(result.data.account_name);
+    } else {
+        setAccountName('');
+        setVerificationError(result.error || 'Could not verify account name.');
+    }
+    setIsVerifying(false);
+  }, [accountNumber, bankName]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      verifyAccount();
+    }, 1000);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [accountNumber, bankName, verifyAccount]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (!profile) {
@@ -64,12 +101,12 @@ export default function PaymentDetailsForm() {
                 account_name: accountName,
                 account_number: accountNumber,
                 bank_code: selectedBank.code,
-                recipient_code: null,
+                recipient_code: null, // Reset recipient code on detail change
             })
             .eq('id', profile.id);
           
           if (error) {
-            throw error; // This will be caught by the catch block
+            throw error;
           }
           
           toast({ title: "Success!", description: `Your payment details have been saved.` });
@@ -99,7 +136,11 @@ export default function PaymentDetailsForm() {
                    <Select
                     name="bankName"
                     value={bankName}
-                    onValueChange={setBankName}
+                    onValueChange={(value) => {
+                      setBankName(value);
+                      setAccountName('');
+                      setVerificationError(null);
+                    }}
                     required
                     disabled={isSaving}
                     >
@@ -130,19 +171,27 @@ export default function PaymentDetailsForm() {
                 </div>
                 <div>
                   <Label htmlFor="accountName">Account Name</Label>
-                   <Input
-                        id="accountName"
-                        name="accountName"
-                        value={accountName}
-                        onChange={(e) => setAccountName(e.target.value)}
-                        placeholder="Enter your full account name"
-                        required
-                        disabled={isSaving}
-                    />
+                   <div className="relative">
+                        <Input
+                            id="accountName"
+                            name="accountName"
+                            value={accountName}
+                            readOnly
+                            placeholder="Account name will appear here"
+                            required
+                            className="bg-secondary/50"
+                        />
+                        {isVerifying && (
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                        )}
+                   </div>
+                   {verificationError && <p className="text-sm text-destructive mt-2">{verificationError}</p>}
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isSaving}>
+              <Button type="submit" className="w-full" disabled={isSaving || isVerifying || !accountName}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving ? 'Saving...' : 'Save Details'}
               </Button>

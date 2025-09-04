@@ -303,3 +303,42 @@ export async function releaseEscrowAction(transactionId: string) {
 
   return { success: true };
 }
+
+
+/**
+ * Resolves a bank account number to get the account name.
+ * @param accountNumber - The 10-digit NUBAN account number.
+ * @param bankCode - The Paystack code for the bank.
+ * @returns {Promise<{success: boolean, data?: {account_name: string}, error?: string}>}
+ */
+export async function resolveAccountNumberAction(accountNumber: string, bankCode: string) {
+    if (!PAYSTACK_SECRET_KEY) {
+        console.error("Paystack secret key is not set.");
+        return { success: false, error: 'Server configuration error.' };
+    }
+
+    if (!accountNumber || !bankCode) {
+        return { success: false, error: "Account number and bank code are required." };
+    }
+    
+    try {
+        const response = await axios.get(`${PAYSTACK_API_URL}/bank/resolve`, {
+            params: {
+                account_number: accountNumber,
+                bank_code: bankCode
+            },
+            headers: {
+                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+            }
+        });
+
+        if (response.data.status) {
+            return { success: true, data: { account_name: response.data.data.account_name } };
+        } else {
+            return { success: false, error: response.data.message };
+        }
+    } catch (error: any) {
+        console.error('Error resolving account:', error.response?.data || error.message);
+        return { success: false, error: error.response?.data?.message || 'Could not verify account details.' };
+    }
+}
