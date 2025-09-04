@@ -72,12 +72,16 @@ export function UserTable() {
   }, [supabase, toast]);
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (supabase) {
+      fetchUsers();
+    }
+  }, [fetchUsers, supabase]);
 
   const handleBanUser = async (userId: string, durationDays: number | null) => {
+    console.log(`[Client] handleBanUser called for userId: ${userId} with duration: ${durationDays}`);
     setUpdatingId(userId);
     const result = await updateUserBanAction(userId, durationDays);
+    console.log(`[Client] Ban action result for ${userId}:`, result);
     if (result.success) {
         toast({ title: 'Success', description: `User status has been updated.` });
         await fetchUsers(); // Refresh the user list
