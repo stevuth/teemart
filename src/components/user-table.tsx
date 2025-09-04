@@ -56,51 +56,23 @@ export function UserTable() {
     if (!supabase) return;
     setLoading(true);
 
-    // Fetch all profiles first
-    const { data: profilesData, error: profilesError } = await supabase.from('profiles').select('*');
+    const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
     if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        toast({
-            title: "Error",
-            description: "Could not fetch the list of profiles.",
-            variant: "destructive"
-        });
-        setUsers([]);
-        setLoading(false);
-        return;
-    }
-    
-    // Then, fetch all auth users
-    // Note: In a production app with many users, you'd want to paginate this.
-    const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
-    
-    if (authError) {
-        console.error("Error fetching auth users:", authError);
+        console.error("Error fetching users:", profilesError);
         toast({
             title: "Error",
             description: "Could not fetch the list of users.",
             variant: "destructive"
         });
         setUsers([]);
-        setLoading(false);
-        return;
+    } else {
+        setUsers(profilesData as UserProfile[]);
     }
-
-    // Create a map of auth users by ID for quick lookup
-    const authUsersMap = new Map(authUsers.map(u => [u.id, u]));
-
-    // Combine the data
-    const formattedData = profilesData.map((profile: any) => {
-        const authUser = authUsersMap.get(profile.id);
-        return {
-            ...profile,
-            email: authUser?.email || 'N/A',
-            created_at: authUser?.created_at || new Date().toISOString(),
-        } as UserProfile;
-    });
-
-    setUsers(formattedData);
+    
     setLoading(false);
   }, [supabase, toast]);
 
@@ -225,7 +197,7 @@ export function UserTable() {
                 return (
                     <TableRow key={user.id} className={isBanned ? 'bg-destructive/10' : ''}>
                     <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.email || 'N/A'}</TableCell>
                     <TableCell>{user.phone || 'N/A'}</TableCell>
                     <TableCell>
                       {isBanned ? (
@@ -255,3 +227,5 @@ export function UserTable() {
     </Card>
   );
 }
+
+    
