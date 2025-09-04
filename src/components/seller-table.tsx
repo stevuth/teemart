@@ -65,7 +65,7 @@ export function SellerTable() {
             setSellers(data as SellerWithProducts[]);
         }
         setLoading(false);
-    }, [toast, supabase]);
+    }, [supabase]);
 
     useEffect(() => {
         fetchSellers();

@@ -69,13 +69,11 @@ export function UserTable() {
       setUsers(data as UserProfile[]);
     }
     setLoading(false);
-  }, [supabase, toast]);
+  }, [supabase]);
 
   useEffect(() => {
-    if (supabase) {
-      fetchUsers();
-    }
-  }, [fetchUsers, supabase]);
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleBanUser = async (userId: string, durationDays: number | null) => {
     console.log(`[Client] handleBanUser called for userId: ${userId} with duration: ${durationDays}`);
