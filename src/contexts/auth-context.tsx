@@ -134,9 +134,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         await fetchProfile(session?.user ?? null, event === 'SIGNED_IN');
         
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-             router.refresh();
-        }
+        // This is crucial for Server Actions to get the updated session
+        router.refresh();
+
         setLoading(false);
       }
     );

@@ -1,7 +1,6 @@
 
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
 
 /**
@@ -23,22 +22,13 @@ export async function uploadImagesAction(formData: FormData) {
     return { error: 'No files were provided for upload.' };
   }
 
-  // Use the service role key here to create a client with admin privileges.
-  // This client will bypass any RLS policies on the storage bucket.
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  );
-
+  // Use the standard authenticated client which respects RLS policies.
+  // The user's session from cookies allows this to work.
   const uploadPromises = files.map(file => {
+    // The file path format MUST match the RLS policy.
+    // e.g., <user_id>/<timestamp>-<filename>
     const fileName = `${user.id}/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-    return supabaseAdmin.storage.from('product-images').upload(fileName, file);
+    return supabase.storage.from('product-images').upload(fileName, file);
   });
 
   const uploadResults = await Promise.all(uploadPromises);
@@ -47,9 +37,10 @@ export async function uploadImagesAction(formData: FormData) {
   for (const result of uploadResults) {
     if (result.error) {
       console.error('Upload Error:', result.error);
-      return { error: `Failed to upload one or more images: ${result.error.message}` };
+      // Return the specific error from Supabase
+      return { error: result.error.message };
     }
-    const { data: { publicUrl } } = supabaseAdmin.storage.from('product-images').getPublicUrl(result.data.path);
+    const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(result.data.path);
     urls.push(publicUrl);
   }
 
