@@ -249,10 +249,10 @@ export default function SellerProfilePage() {
                             <div className="flex items-center gap-3">
                                 <Star className="h-4 w-4 text-primary" />
                                 {averageRating ? (
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                                         <span className="font-bold">{averageRating}</span>
                                         <StarRatingDisplay rating={parseFloat(averageRating)} starClassName="h-4 w-4" />
-                                        <span>({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
+                                        <span className="whitespace-nowrap">({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
                                     </div>
                                 ) : (
                                     <span>No ratings yet</span>
