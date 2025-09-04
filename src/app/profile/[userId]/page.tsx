@@ -46,7 +46,7 @@ export default function SellerProfilePage() {
     const [reviewSubmittedToggle, setReviewSubmittedToggle] = useState(false);
 
     const fetchAllData = useCallback(async () => {
-        if (!userId) return;
+        if (!userId || !supabase) return;
         setLoading(true);
 
         try {
@@ -58,7 +58,7 @@ export default function SellerProfilePage() {
                 .single();
 
             if (sellerError) {
-                console.error("Error fetching seller profile:", sellerError);
+                console.error("Error fetching seller profile:", JSON.stringify(sellerError, null, 2));
                 throw new Error("Could not fetch seller profile.");
             }
             setSeller(sellerData as Seller);
@@ -71,7 +71,7 @@ export default function SellerProfilePage() {
                 .order('created_at', { ascending: false });
 
             if (listingsError) {
-                console.error("Error fetching listings data:", listingsError);
+                console.error("Error fetching listings data:", JSON.stringify(listingsError, null, 2));
                 throw new Error("Could not fetch seller's listings.");
             }
             
@@ -94,7 +94,7 @@ export default function SellerProfilePage() {
                     .order('created_at', { ascending: false });
 
                 if (reviewsError) {
-                    console.error("Error fetching reviews:", reviewsError);
+                    console.error("Error fetching reviews:", JSON.stringify(reviewsError, null, 2));
                     setReviews([]);
                 } else {
                     setReviews(reviewsData as ReviewWithUser[]);
