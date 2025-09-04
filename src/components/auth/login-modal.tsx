@@ -14,6 +14,7 @@ import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from "@/hooks/use-auth";
 import Link from 'next/link';
 import Image from "next/image";
+import { formatDistanceToNow } from "date-fns";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -43,21 +44,50 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: LoginFormValues) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
     });
 
-    if (error) {
+    if (signInError) {
       toast({
         title: "Login Failed",
-        description: error.message,
+        description: signInError.message,
         variant: "destructive",
       });
-    } else {
-      toast({ title: "Login Successful", description: "Welcome back!" });
-      onClose();
+      return;
     }
+    
+    // After successful auth, check for ban status before finalizing login.
+    if (signInData.user) {
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('banned_until')
+            .eq('id', signInData.user.id)
+            .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+             await supabase.auth.signOut(); // Log out user if profile check fails
+             toast({ title: "Login Error", description: "Could not verify your account status.", variant: "destructive" });
+             return;
+        }
+
+        if (profile?.banned_until && new Date(profile.banned_until) > new Date()) {
+            const banExpires = formatDistanceToNow(new Date(profile.banned_until), { addSuffix: true });
+            await supabase.auth.signOut(); // Log out the banned user
+            toast({
+                title: "Account Suspended",
+                description: `Your account is suspended. Access will be restored ${banExpires}.`,
+                variant: "destructive",
+                duration: 10000,
+            });
+            return;
+        }
+    }
+
+
+    toast({ title: "Login Successful", description: "Welcome back!" });
+    onClose();
   };
   
   const handleForgotPasswordClick = () => {

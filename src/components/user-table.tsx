@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import {
   Table,
@@ -18,6 +18,18 @@ import { Loader2, Ban, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
+import { updateUserBanAction } from '@/app/actions/user';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type UserProfile = {
   id: string;
@@ -36,31 +48,45 @@ export function UserTable() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<VerificationFilter>('all');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { supabase } = useAuth();
+  const { supabase, user: adminUser } = useAuth();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      if (!supabase) return;
-      setLoading(true);
-      const { data, error } = await supabase.rpc('get_all_users');
-      
-      if (error) {
-        console.error("Error fetching users:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch the list of users.",
-          variant: "destructive"
-        });
-        setUsers([]);
-      } else {
-        setUsers(data as UserProfile[]);
-      }
-      setLoading(false);
-    };
-    fetchUsers();
+  const fetchUsers = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    const { data, error } = await supabase.rpc('get_all_users');
+    
+    if (error) {
+      console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch the list of users.",
+        variant: "destructive"
+      });
+      setUsers([]);
+    } else {
+      setUsers(data as UserProfile[]);
+    }
+    setLoading(false);
   }, [supabase, toast]);
 
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const handleBanUser = async (userId: string, durationDays: number | null) => {
+    setUpdatingId(userId);
+    const result = await updateUserBanAction(userId, durationDays);
+    if (result.success) {
+        toast({ title: 'Success', description: `User status has been updated.` });
+        await fetchUsers(); // Refresh the user list
+    } else {
+        toast({ title: 'Error', description: result.error, variant: 'destructive' });
+    }
+    setUpdatingId(null);
+  };
+  
   const filteredUsers = useMemo(() => {
     if (filter === 'all') {
       return users;
@@ -71,6 +97,42 @@ export function UserTable() {
       return true;
     });
   }, [users, filter]);
+
+  const BanUserDialog = ({ user }: { user: UserProfile }) => {
+    const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
+    return (
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={updatingId === user.id || user.id === adminUser?.id}>
+                    {updatingId === user.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{isBanned ? 'Unban' : 'Ban'} User: {user.full_name}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {isBanned
+                        ? 'This will immediately restore the user\'s access to their account.'
+                        : 'Select a ban duration. The user will be unable to log in until the duration expires or they are manually unbanned.'
+                      }
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                 <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    {isBanned ? (
+                         <AlertDialogAction onClick={() => handleBanUser(user.id, null)}>Unban User</AlertDialogAction>
+                    ) : (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                             <AlertDialogAction onClick={() => handleBanUser(user.id, 7)}>Ban for 7 Days</AlertDialogAction>
+                             <AlertDialogAction onClick={() => handleBanUser(user.id, 30)}>Ban for 30 Days</AlertDialogAction>
+                             <AlertDialogAction onClick={() => handleBanUser(user.id, 36500)}>Ban Permanently</AlertDialogAction>
+                        </div>
+                    )}
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+  };
 
   return (
     <Card>
@@ -101,6 +163,7 @@ export function UserTable() {
                 <TableHead>Status</TableHead>
                 <TableHead>Verification</TableHead>
                 <TableHead>Joined On</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -126,6 +189,9 @@ export function UserTable() {
                         )}
                     </TableCell>
                     <TableCell>{format(new Date(user.created_at), 'PPP')}</TableCell>
+                     <TableCell className="text-right">
+                        {user.id !== adminUser?.id && <BanUserDialog user={user} />}
+                    </TableCell>
                     </TableRow>
                 )
               })}
