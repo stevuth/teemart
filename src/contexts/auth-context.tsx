@@ -142,9 +142,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         await fetchProfile(session?.user ?? null, event === 'SIGNED_IN');
         
-        // This is the key fix: router.refresh() forces a server-side re-render,
-        // which makes the server aware of the new session cookies.
-        router.refresh();
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+             router.refresh();
+        }
       }
     );
 
