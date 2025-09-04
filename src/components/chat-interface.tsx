@@ -92,7 +92,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
     useEffect(() => {
         if (!user?.id || !conversationId) return;
         const channel = supabase
-            .channel(`realtime-messages:${conversationId}`)
+            .channel(`messages-convo-${conversationId}`)
             .on(
                 'postgres_changes',
                 { 
