@@ -84,8 +84,8 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price,
-      deliveryFee: existingProduct?.deliveryFee,
+      price: existingProduct?.price || undefined,
+      deliveryFee: existingProduct?.deliveryFee || undefined,
       category: existingProduct?.category,
       condition: existingProduct?.condition,
       location: existingProduct?.location || '',
@@ -164,7 +164,6 @@ export function SellForm({ existingProduct }: SellFormProps) {
         
         if (imageFiles.length > 0) {
             for (const imageFile of imageFiles) {
-                // Correct file path generation
                 const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
                 const { data: uploadData, error: uploadError } = await supabase
                     .storage.from('product-images').upload(fileName, imageFile);
@@ -278,7 +277,6 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             placeholder="Enter price" 
                             {...field}
                             value={field.value ?? ''}
-                            onChange={e => field.onChange(e.target.valueAsNumber)}
                         />
                         </FormControl>
                         <FormMessage />
@@ -297,8 +295,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             step="any" 
                             placeholder="Enter delivery fee" 
                             {...field} 
-                            value={field.value ?? ''} 
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)} 
+                            value={field.value ?? ''}
                           />
                         </FormControl>
                         <FormMessage />
