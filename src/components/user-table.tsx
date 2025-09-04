@@ -69,7 +69,7 @@ export function UserTable() {
       setUsers(data as UserProfile[]);
     }
     setLoading(false);
-  }, [supabase]);
+  }, [supabase, toast]);
 
   useEffect(() => {
     fetchUsers();
