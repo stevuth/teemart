@@ -75,7 +75,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex justify-center mb-4">
             <Image src="https://i.postimg.cc/y8LPCHdG/Tee-Mart-Logo-No-BG-1.png" alt="TeeMart Logo" width={64} height={64} />
@@ -86,7 +86,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="displayName"
