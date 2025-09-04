@@ -36,11 +36,11 @@ const formSchema = z.object({
   name: z.string().min(5, { message: "Product name must be at least 5 characters." }),
   description: z.string().min(20, { message: "Description must be at least 20 characters." }),
   price: z.preprocess(
-    (val) => (typeof val === 'string' ? parseFloat(val) : val),
+    (val) => (typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : val),
     z.number({ invalid_type_error: "Price must be a number." }).positive({ message: "Price must be a positive number." })
   ),
   deliveryFee: z.preprocess(
-    (val) => (val === '' || val === undefined || val === null ? undefined : (typeof val === 'string' ? parseFloat(val) : val)),
+    (val) => (val === '' || val === undefined || val === null ? undefined : (typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : val)),
     z.number({ invalid_type_error: "Delivery fee must be a number." }).positive().optional()
   ),
   category: z.enum(categories, { errorMap: () => ({ message: "Please select a category." }) }),
@@ -84,8 +84,8 @@ export function SellForm({ existingProduct }: SellFormProps) {
     defaultValues: {
       name: existingProduct?.name || "",
       description: existingProduct?.description || "",
-      price: existingProduct?.price || undefined,
-      deliveryFee: existingProduct?.deliveryFee || undefined,
+      price: existingProduct?.price,
+      deliveryFee: existingProduct?.deliveryFee,
       category: existingProduct?.category,
       condition: existingProduct?.condition,
       location: existingProduct?.location || '',
@@ -274,8 +274,9 @@ export function SellForm({ existingProduct }: SellFormProps) {
                         <Input 
                             type="number" 
                             step="any" 
-                            placeholder="Enter price" 
+                            placeholder="Enter price"
                             {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                             value={field.value ?? ''}
                         />
                         </FormControl>
@@ -294,7 +295,8 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             type="number" 
                             step="any" 
                             placeholder="Enter delivery fee" 
-                            {...field} 
+                            {...field}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
                             value={field.value ?? ''}
                           />
                         </FormControl>
