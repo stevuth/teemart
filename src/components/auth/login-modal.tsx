@@ -44,6 +44,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: LoginFormValues) => {
+    // 1. Sign in the user
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -58,7 +59,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
       return;
     }
     
-    // After successful auth, check for ban status before finalizing login.
+    // 2. Check for ban status immediately after successful authentication
     if (signInData.user) {
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -66,12 +67,14 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
             .eq('id', signInData.user.id)
             .single();
 
-        if (profileError && profileError.code !== 'PGRST116') {
-             await supabase.auth.signOut(); // Log out user if profile check fails
-             toast({ title: "Login Error", description: "Could not verify your account status.", variant: "destructive" });
+        // 3. Handle errors during profile fetch
+        if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+             await supabase.auth.signOut(); // Log out user if profile check fails for security
+             toast({ title: "Login Error", description: "Could not verify your account status. Please try again.", variant: "destructive" });
              return;
         }
 
+        // 4. Check if the user is currently banned
         if (profile?.banned_until && new Date(profile.banned_until) > new Date()) {
             const banExpires = formatDistanceToNow(new Date(profile.banned_until), { addSuffix: true });
             await supabase.auth.signOut(); // Log out the banned user
@@ -81,11 +84,11 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                 variant: "destructive",
                 duration: 10000,
             });
-            return;
+            return; // Stop the function here
         }
     }
 
-
+    // 5. If all checks pass, finalize the login
     toast({ title: "Login Successful", description: "Welcome back!" });
     onClose();
   };
