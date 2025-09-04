@@ -276,9 +276,9 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             type="number" 
                             step="any" 
                             placeholder="Enter price" 
-                            {...field} 
-                            value={field.value ?? ''} 
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={e => field.onChange(e.target.valueAsNumber)}
                         />
                         </FormControl>
                         <FormMessage />
@@ -298,7 +298,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             placeholder="Enter delivery fee" 
                             {...field} 
                             value={field.value ?? ''} 
-                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))} 
+                            onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.valueAsNumber)} 
                           />
                         </FormControl>
                         <FormMessage />
