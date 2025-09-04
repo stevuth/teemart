@@ -34,45 +34,38 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, [user, supabase]);
 
   useEffect(() => {
-    fetchUnreadCount();
-  }, [fetchUnreadCount]);
+    if (user && supabase) {
+      fetchUnreadCount();
 
-  const setupSubscription = useCallback(() => {
-    if (!user || !supabase) return;
+      const channel = supabase
+        .channel(`realtime-notifications:${user.id}`)
+        .on(
+          'postgres_changes',
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'messages', 
+            filter: `recipient_id=eq.${user.id}` 
+          },
+          (payload) => {
+            fetchUnreadCount();
+          }
+        )
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Real-time notifications connected!');
+          }
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('Real-time notification error:', err);
+          }
+        });
 
-    const channel = supabase
-      .channel(`realtime-notifications:${user.id}`)
-      .on(
-        'postgres_changes',
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'messages', 
-          filter: `recipient_id=eq.${user.id}` 
-        },
-        (payload) => {
-          fetchUnreadCount();
-        }
-      )
-      .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Real-time notifications connected!');
-        }
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('Real-time notification error:', err);
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user, supabase, fetchUnreadCount]);
-
-  useEffect(() => {
-    const cleanup = setupSubscription();
-    return cleanup;
-  }, [setupSubscription]);
-
+  
   const decrementCount = useCallback((amount: number) => {
     if (amount === 0) {
         fetchUnreadCount();
