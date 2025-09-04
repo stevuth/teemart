@@ -150,6 +150,10 @@ export default function PaymentDetailsForm() {
       }
   }
 
+  const hasChanges = profile?.bank_code !== selectedBankCode ||
+                     profile?.account_number !== accountNumber ||
+                     profile?.account_name !== accountName;
+
   return (
     <Card>
         <CardHeader>
@@ -220,7 +224,7 @@ export default function PaymentDetailsForm() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isSaving || isVerifying || !accountName || loadingBanks}>
+              <Button type="submit" className="w-full" disabled={isSaving || isVerifying || !accountName || loadingBanks || !hasChanges}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving ? 'Saving...' : 'Save Details'}
               </Button>
