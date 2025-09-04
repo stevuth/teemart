@@ -44,7 +44,13 @@ export default function PaymentDetailsForm() {
       setLoadingBanks(true);
       const result = await getBankListAction();
       if (result.success && result.data) {
-        setBanks(result.data);
+        // Filter out duplicates based on the 'code' property
+        const uniqueBanks = result.data.filter((bank, index, self) =>
+            index === self.findIndex((b) => (
+                b.code === bank.code
+            ))
+        );
+        setBanks(uniqueBanks);
       } else {
         toast({
           title: "Error fetching banks",
