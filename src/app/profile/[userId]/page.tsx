@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -21,6 +21,7 @@ import { useCart } from '@/hooks/use-cart';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { BackButton } from '@/components/back-button';
+import { StarRatingDisplay } from '@/components/star-rating-display';
 
 type Seller = {
     id: string;
@@ -152,6 +153,14 @@ export default function SellerProfilePage() {
         }
     }
 
+    const averageRating = useMemo(() => {
+        if (reviews.length === 0) {
+            return null;
+        }
+        const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+        return (totalRating / reviews.length).toFixed(1);
+    }, [reviews]);
+
 
     if (loading) {
         return (
@@ -239,7 +248,15 @@ export default function SellerProfilePage() {
                             </div>
                             <div className="flex items-center gap-3">
                                 <Star className="h-4 w-4 text-primary" />
-                                <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
+                                {averageRating ? (
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="font-bold">{averageRating}</span>
+                                        <StarRatingDisplay rating={parseFloat(averageRating)} starClassName="h-4 w-4" />
+                                        <span>({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
+                                    </div>
+                                ) : (
+                                    <span>No ratings yet</span>
+                                )}
                             </div>
                             {currentUser && currentUser.id !== seller.id && (
                                 <div className="col-span-2 lg:col-span-1">
@@ -305,3 +322,5 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
+    

@@ -30,3 +30,5 @@ export function StarRatingDisplay({ rating, maxRating = 5, className, starClassN
     </div>
   );
 }
+
+    
