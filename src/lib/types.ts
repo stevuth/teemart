@@ -124,7 +124,7 @@ export type OrderItem = {
 
 export type Review = {
   id: string;
-  product_id: string;
+  seller_id: string;
   user_id: string;
   rating: number;
   comment: string | null;

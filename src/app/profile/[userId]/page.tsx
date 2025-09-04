@@ -84,23 +84,18 @@ export default function SellerProfilePage() {
             })) as Product[];
             setListings(transformedListings);
 
-            // Step 3: Fetch reviews for those listings, only if there are listings
-            const productIds = transformedListings.map(p => p.id);
-            if (productIds.length > 0) {
-                 const { data: reviewsData, error: reviewsError } = await supabase
-                    .from('reviews')
-                    .select('*, user:profiles(id, full_name, avatar_url)')
-                    .in('product_id', productIds)
-                    .order('created_at', { ascending: false });
-
-                if (reviewsError) {
-                    console.error("Error fetching reviews:", JSON.stringify(reviewsError, null, 2));
-                    setReviews([]);
-                } else {
-                    setReviews(reviewsData as ReviewWithUser[]);
-                }
+            // Step 3: Fetch reviews for the seller
+            const { data: reviewsData, error: reviewsError } = await supabase
+                .from('reviews')
+                .select('*, user:profiles(id, full_name, avatar_url)')
+                .eq('seller_id', userId)
+                .order('created_at', { ascending: false });
+            
+            if (reviewsError) {
+                console.error("Error fetching reviews:", JSON.stringify(reviewsError, null, 2));
+                setReviews([]);
             } else {
-                setReviews([]); // Explicitly set reviews to empty if no products
+                setReviews(reviewsData as ReviewWithUser[]);
             }
 
         } catch (error: any) {
@@ -294,10 +289,9 @@ export default function SellerProfilePage() {
 
                         <TabsContent value="reviews" className="mt-6">
                              <div className="space-y-8">
-                                <ReviewList reviews={reviews} listings={listings} />
-                                {currentUser && currentUser.id !== seller.id && listings.length > 0 && (
+                                <ReviewList reviews={reviews} />
+                                {currentUser && currentUser.id !== seller.id && (
                                     <ReviewForm 
-                                        listings={listings}
                                         sellerId={seller.id}
                                         onReviewSubmitted={handleReviewSubmitted} 
                                     />
@@ -311,5 +305,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    

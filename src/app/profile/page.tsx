@@ -91,18 +91,13 @@ export default function ProfilePage() {
       })) as Product[];
       setActiveListings(transformedData);
 
-      // Fetch reviews for the listings
-      const productIds = transformedData.map(p => p.id);
-      if (productIds.length > 0) {
-        const { data: reviewsData, error: reviewsError } = await supabase
-          .from('reviews')
-          .select(`*, user:profiles(id, full_name, avatar_url)`)
-          .in('product_id', productIds);
-        if (reviewsError) console.error("Error fetching reviews:", reviewsError);
-        else setReviews((reviewsData as ReviewWithUser[]) || []);
-      } else {
-        setReviews([]);
-      }
+      // Fetch reviews received by the user
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('reviews')
+        .select(`*, user:profiles(id, full_name, avatar_url)`)
+        .eq('seller_id', user.id);
+      if (reviewsError) console.error("Error fetching reviews:", reviewsError);
+      else setReviews((reviewsData as ReviewWithUser[]) || []);
       
       // Fetch Sales and Purchases
       const { data: transactions, error: transError } = await supabase
@@ -369,7 +364,7 @@ export default function ProfilePage() {
                     </TabsContent>
                     
                     <TabsContent value="reviews" className="mt-0">
-                        {loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} listings={activeListings} />}
+                        {loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} />}
                     </TabsContent>
 
                     <TabsContent value="verification" className="mt-0">
@@ -388,5 +383,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    
