@@ -65,11 +65,13 @@ export function SellerTable() {
             setSellers(data as SellerWithProducts[]);
         }
         setLoading(false);
-    }, [supabase]);
+    }, [toast]);
 
     useEffect(() => {
-        fetchSellers();
-    }, [fetchSellers]);
+        if (supabase) {
+            fetchSellers();
+        }
+    }, [fetchSellers, supabase]);
     
     const filteredSellers = useMemo(() => {
         if (!searchTerm) {
