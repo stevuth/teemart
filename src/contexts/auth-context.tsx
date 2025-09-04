@@ -127,24 +127,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [supabase, fetchProfile]);
 
   useEffect(() => {
-    // Initial session load
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        await fetchProfile(session?.user ?? null);
-        setLoading(false);
-    });
-
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
         await fetchProfile(session?.user ?? null, event === 'SIGNED_IN');
         
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
              router.refresh();
         }
+        setLoading(false);
       }
     );
 
