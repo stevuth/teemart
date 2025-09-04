@@ -56,39 +56,54 @@ export function UserTable() {
     if (!supabase) return;
     setLoading(true);
 
-    const { data: usersData, error: usersError } = await supabase.from('profiles').select(`
-        id,
-        full_name,
-        phone,
-        role,
-        is_verified,
-        banned_until,
-        user:user_id(email, created_at)
-    `);
+    // Fetch all profiles first
+    const { data: profilesData, error: profilesError } = await supabase.from('profiles').select('*');
 
-    if (usersError) {
-      console.error("Error fetching users:", usersError);
-      toast({
-        title: "Error",
-        description: "Could not fetch the list of users.",
-        variant: "destructive"
-      });
-      setUsers([]);
-    } else {
-      const formattedData = usersData.map((profile: any) => ({
-        id: profile.id,
-        full_name: profile.full_name,
-        email: profile.user?.email,
-        created_at: profile.user?.created_at,
-        phone: profile.phone,
-        role: profile.role,
-        is_verified: profile.is_verified,
-        banned_until: profile.banned_until,
-      }));
-      setUsers(formattedData as UserProfile[]);
+    if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        toast({
+            title: "Error",
+            description: "Could not fetch the list of profiles.",
+            variant: "destructive"
+        });
+        setUsers([]);
+        setLoading(false);
+        return;
     }
+    
+    // Then, fetch all auth users
+    // Note: In a production app with many users, you'd want to paginate this.
+    const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
+    
+    if (authError) {
+        console.error("Error fetching auth users:", authError);
+        toast({
+            title: "Error",
+            description: "Could not fetch the list of users.",
+            variant: "destructive"
+        });
+        setUsers([]);
+        setLoading(false);
+        return;
+    }
+
+    // Create a map of auth users by ID for quick lookup
+    const authUsersMap = new Map(authUsers.map(u => [u.id, u]));
+
+    // Combine the data
+    const formattedData = profilesData.map((profile: any) => {
+        const authUser = authUsersMap.get(profile.id);
+        return {
+            ...profile,
+            email: authUser?.email || 'N/A',
+            created_at: authUser?.created_at || new Date().toISOString(),
+        } as UserProfile;
+    });
+
+    setUsers(formattedData);
     setLoading(false);
   }, [supabase, toast]);
+
 
   useEffect(() => {
     fetchUsers();
