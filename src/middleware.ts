@@ -18,7 +18,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          // If the cookie is updated, update the cookies for the request and response
           request.cookies.set({
             name,
             value,
@@ -36,7 +35,6 @@ export async function middleware(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
-          // If the cookie is removed, update the cookies for the request and response
           request.cookies.set({
             name,
             value: '',
@@ -57,8 +55,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired - important for server components
-  await supabase.auth.getSession()
+  // Refreshing the session will update the cookies.
+  await supabase.auth.getUser()
 
   return response
 }
