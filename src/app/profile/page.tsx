@@ -96,7 +96,7 @@ export default function ProfilePage() {
       if (productIds.length > 0) {
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select(`*, user:profiles (id, full_name, avatar_url)`)
+          .select(`*, user:profiles(id, full_name, avatar_url)`)
           .in('product_id', productIds);
         if (reviewsError) console.error("Error fetching reviews:", reviewsError);
         else setReviews((reviewsData as ReviewWithUser[]) || []);
@@ -388,3 +388,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
