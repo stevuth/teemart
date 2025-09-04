@@ -6,10 +6,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -56,23 +54,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
+    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+      <div className="flex items-center justify-center py-12">
+        <div className="mx-auto grid w-[350px] gap-6">
+          <div className="grid gap-2 text-center">
             <Link href="/" className="flex justify-center mb-4">
-               <Image src="https://i.postimg.cc/y8LPCHdG/Tee-Mart-Logo-No-BG-1.png" alt="TeeMart Logo" width={48} height={48} />
+               <Image src="https://i.postimg.cc/y8LPCHdG/Tee-Mart-Logo-No-BG-1.png" alt="TeeMart Logo" width={64} height={64} />
             </Link>
-          <CardTitle className="text-2xl">Admin Login</CardTitle>
-          <CardDescription>Enter your credentials to access the admin portal.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Access Restricted</AlertTitle>
-            <AlertDescription>
-              This page is for administrators only. All activities are monitored.
-            </AlertDescription>
-          </Alert>
+            <h1 className="text-3xl font-bold">Admin Login</h1>
+            <p className="text-balance text-muted-foreground">
+              Enter your credentials to access the admin portal.
+            </p>
+          </div>
           <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -86,13 +79,16 @@ export default function LoginPage() {
               />
             </div>
             <div className="grid gap-2">
-               <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
-                        Forgot password?
-                    </Link>
-                </div>
-              <div className="relative">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/forgot-password"
+                  className="ml-auto inline-block text-sm underline"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -114,14 +110,28 @@ export default function LoginPage() {
             </div>
             <Button type="submit" className="w-full" disabled={loading || !supabase}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
-            <Button variant="link" asChild>
-                <Link href="/">Back</Link>
+              Login
             </Button>
           </form>
-        </CardContent>
-      </Card>
+           <div className="mt-4 text-center text-sm">
+            <Link href="/" className="underline">
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+      <div className="hidden bg-muted lg:block relative">
+        <Image
+          src="https://placehold.co/1200x1800.png"
+          alt="Abstract geometric pattern"
+          data-ai-hint="geometric pattern"
+          fill
+          className="object-cover"
+        />
+         <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent"></div>
+      </div>
     </div>
-  );
+  )
 }
+
+    
