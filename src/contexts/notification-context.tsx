@@ -34,36 +34,38 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, [user, supabase]);
 
   useEffect(() => {
-    if (user && supabase) {
-      fetchUnreadCount();
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
 
-      const channel = supabase
-        .channel(`realtime-notifications:${user.id}`)
-        .on(
-          'postgres_changes',
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'messages', 
-            filter: `recipient_id=eq.${user.id}` 
-          },
-          (payload) => {
-            fetchUnreadCount();
-          }
-        )
-        .subscribe((status, err) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('Real-time notifications connected!');
-          }
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.error('Real-time notification error:', err);
-          }
-        });
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
+  useEffect(() => {
+    if (!user || !supabase) {
+      return;
     }
+
+    const channel = supabase
+      .channel(`realtime-notifications:${user.id}`)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'messages', 
+          filter: `recipient_id=eq.${user.id}` 
+        },
+        (payload) => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('Real-time notification error:', err);
+        }
+      });
+
+    // Cleanup function to remove the channel subscription when the component unmounts or dependencies change
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, supabase, fetchUnreadCount]);
   
   const decrementCount = useCallback((amount: number) => {
