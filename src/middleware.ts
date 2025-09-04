@@ -1,3 +1,4 @@
+
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -17,6 +18,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is updated, update the cookies for the request and response
           request.cookies.set({
             name,
             value,
@@ -34,6 +36,7 @@ export async function middleware(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the cookies for the request and response
           request.cookies.set({
             name,
             value: '',
@@ -67,8 +70,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - api/ (API routes)
-     * - auth/ (auth routes)
+     * Feel free to modify this pattern to include more paths.
      */
     '/((?!_next/static|_next/image|favicon.ico|api/|auth/).*)',
   ],

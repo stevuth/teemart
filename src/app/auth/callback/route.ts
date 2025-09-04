@@ -1,7 +1,7 @@
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
             cookieStore.set({ name, value, ...options })
           },
           remove(name: string, options: CookieOptions) {
-            cookieStore.set({ name, value: '', ...options })
+            cookieStore.delete({ name, ...options })
           },
         },
       }
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
         const redirectTo = searchParams.get('redirect_to') || '/reset-password';
         return NextResponse.redirect(`${origin}${redirectTo}`);
     }
-
+    
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)
     }
