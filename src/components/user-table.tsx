@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Ban, ShieldCheck } from 'lucide-react';
+import { Loader2, Ban, ShieldCheck, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
@@ -105,8 +105,25 @@ export function UserTable() {
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" disabled={updatingId === user.id || user.id === adminUser?.id}>
-                    {updatingId === user.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                <Button 
+                    variant={isBanned ? "outline" : "destructive"} 
+                    size="sm" 
+                    disabled={updatingId === user.id || user.id === adminUser?.id}
+                    className="w-24"
+                >
+                    {updatingId === user.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isBanned ? (
+                        <>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Unban
+                        </>
+                    ) : (
+                        <>
+                            <Ban className="mr-2 h-4 w-4" />
+                            Ban
+                        </>
+                    )}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
