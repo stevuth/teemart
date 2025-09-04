@@ -324,7 +324,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select condition" />
-                            </SelectTrigger>
+                            </Trigger>
                             </FormControl>
                             <SelectContent>
                                 {conditions.map(con => <SelectItem key={con} value={con}>{con}</SelectItem>)}
