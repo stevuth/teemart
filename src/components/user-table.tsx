@@ -72,8 +72,10 @@ export function UserTable() {
   }, [supabase, toast]);
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (supabase) {
+        fetchUsers();
+    }
+  }, [fetchUsers, supabase]);
 
   const handleBanUser = async (userId: string, durationDays: number | null) => {
     setUpdatingId(userId);
