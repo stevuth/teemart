@@ -24,6 +24,11 @@ export async function initializeTransactionAction(email: string, amount: number,
         return { success: false, error: 'Server configuration error. Payment provider not set up.' };
     }
 
+    // Security check for test/live keys
+    if (!PAYSTACK_SECRET_KEY.startsWith('sk_test_')) {
+        console.warn("WARNING: You are using a LIVE Paystack secret key. Ensure this is intentional for production transactions.");
+    }
+
     let callbackUrl: string;
     if (metadata.type === 'verification_payment') {
         callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-verification-payment`;
