@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { resolveAccountNumberAction, getBankListAction } from '@/app/actions/paystack';
+import { resolveAccountNumberAction, getBankListAction } from '@/actions/paystack';
 
 type Bank = {
   id: number;
