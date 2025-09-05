@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
         hostname: 'sdmntpritalynorth.oaiusercontent.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.postimg.cc',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
