@@ -87,7 +87,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                 quantity: item.quantity,
                 user_id: item.user_id,
                 image: Array.isArray(item.image) ? item.image : [item.image],
-                deliveryFee: item.deliveryFee
+                deliveryFee: item.deliveryFee,
+                seller: item.seller, // Pass the entire seller object
             })),
             shipping_fee: calculations.shippingFeeNum,
         };
@@ -208,3 +209,6 @@ const InfoRow = ({ label, value, className, isTotal = false }: { label: string, 
     </div>
 );
 
+
+
+    

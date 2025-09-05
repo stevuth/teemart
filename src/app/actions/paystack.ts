@@ -107,19 +107,14 @@ export async function verifyTransactionAction(reference: string) {
                 // It's an order payment
                 const { cartItems, buyer_id, customer_name } = metadata;
 
-                const transactionRecords = await Promise.all(cartItems.map(async (item: CartItem & {image: string[]}) => {
+                const transactionRecords = cartItems.map((item: CartItem & { image: string[] }) => {
                     const productPrice = item.price * item.quantity;
-                    // FIX: Ensure all fee calculations are rounded to avoid floating point issues.
                     const buyerFee = Math.round(productPrice * 0.03); 
                     const sellerFee = Math.round(productPrice * 0.02);
 
-                    const { data: sellerProfile, error: sellerError } = await supabase
-                        .from('profiles')
-                        .select('full_name')
-                        .eq('id', item.user_id)
-                        .single();
-                    
-                    if (sellerError) throw new Error(`Could not find seller profile for user ID: ${item.user_id}`);
+                    if (!item.seller || !item.seller.full_name) {
+                        throw new Error(`Seller information is missing for product ID: ${item.id}`);
+                    }
 
                     return {
                         buyer_id,
@@ -135,10 +130,10 @@ export async function verifyTransactionAction(reference: string) {
                             name: item.name,
                             image: Array.isArray(item.image) ? item.image : [item.image],
                             buyer_name: customer_name,
-                            seller_name: sellerProfile.full_name,
+                            seller_name: item.seller.full_name,
                         }
                     };
-                }));
+                });
                 
                 const { error } = await supabase.from('transactions').insert(transactionRecords);
 
@@ -400,5 +395,7 @@ export async function getBankListAction() {
         return { success: false, error: error.response?.data?.message || 'Could not fetch bank list.' };
     }
 }
+
+    
 
     
