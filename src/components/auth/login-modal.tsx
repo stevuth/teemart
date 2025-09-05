@@ -103,7 +103,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-             <Image src="https://i.postimg.cc/y8LPCHdG/Tee-Mart-Logo-No-BG-1.png" alt="TeeMart Logo" width={64} height={64} />
+             <Image src="/logo.png" alt="TeeMart Logo" width={64} height={64} />
           </div>
           <DialogTitle>Welcome Back</DialogTitle>
            <DialogDescription>
