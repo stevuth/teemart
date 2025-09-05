@@ -20,7 +20,7 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
-import { usePaystack } from '@/hooks/use-paystack';
+import { initializeTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -41,7 +41,6 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
-    const { clearCart } = useCart();
     
     const form = useForm<CheckoutFormValues>({
         resolver: zodResolver(formSchema),
@@ -68,28 +67,6 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const onSuccess = () => {
-        // Verification will now happen on the /verify-payment page via a server action.
-        // This makes the flow more robust. The cart will be cleared on that page upon success.
-        setIsProcessing(false);
-    };
-
-    const onClose = () => {
-        toast({
-            title: "Payment Cancelled",
-            description: "You have cancelled the payment process.",
-            variant: "destructive"
-        });
-        setIsProcessing(false);
-    };
-    
-    const { initializePayment } = usePaystack({
-        amount: Math.round(calculations.totalPayable * 100), // convert to kobo
-        email: user?.email || '',
-        onSuccess,
-        onClose,
-    });
-    
     const onSubmit = async (data: CheckoutFormValues) => {
         if (!user || !user.email) {
             toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
@@ -100,7 +77,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         
         const metadata = {
             buyer_id: user?.id,
-            customer_name: data.name, // Pass the customer name
+            customer_name: data.name,
             customer_phone: data.phone,
             delivery_address: data.address,
             cartItems: cartItems.map(item => ({ 
@@ -114,9 +91,19 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             })),
             shipping_fee: calculations.shippingFeeNum,
         };
+        
+        const result = await initializeTransactionAction(user.email, calculations.totalPayable, metadata);
 
-        // The hook handles the rest
-        initializePayment({ metadata });
+        if (result.success && result.data?.authorization_url) {
+            router.push(result.data.authorization_url);
+        } else {
+             toast({
+                title: "Payment Initialization Failed",
+                description: result.error || "An unexpected error occurred.",
+                variant: "destructive"
+            });
+            setIsProcessing(false);
+        }
     };
 
     const formatCurrency = (amount: number) => {

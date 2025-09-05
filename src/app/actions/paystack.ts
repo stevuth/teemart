@@ -105,7 +105,7 @@ export async function verifyTransactionAction(reference: string) {
 
             } else {
                 // It's an order payment
-                const { cartItems, buyer_id } = metadata;
+                const { cartItems, buyer_id, customer_name } = metadata;
 
                 const transactionRecords = await Promise.all(cartItems.map(async (item: CartItem & {image: string[]}) => {
                     const productPrice = item.price * item.quantity;
@@ -133,7 +133,7 @@ export async function verifyTransactionAction(reference: string) {
                         product_details: {
                             name: item.name,
                             image: Array.isArray(item.image) ? item.image : [item.image],
-                            buyer_name: metadata.customer_name,
+                            buyer_name: customer_name,
                             seller_name: sellerProfile.full_name,
                         }
                     };
