@@ -20,6 +20,7 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
+import { initializeTransactionAction } from '@/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -67,17 +68,13 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const onSubmit = (data: CheckoutFormValues) => {
+    const onSubmit = async (data: CheckoutFormValues) => {
         if (!user || !user.email) {
             toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
             return;
         }
 
-        if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
-            console.error("Paystack public key is not set.");
-            toast({ title: "Configuration Error", description: "Payment provider is not set up correctly.", variant: "destructive" });
-            return;
-        }
+        setIsProcessing(true);
 
         const metadata = {
             buyer_id: user?.id,
@@ -97,47 +94,19 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             shipping_fee: calculations.shippingFeeNum,
         };
 
-        // @ts-ignore
-        const handler = PaystackPop.setup({
-            key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
-            email: user.email,
-            amount: Math.round(calculations.totalPayable * 100), // in kobo
-            currency: 'NGN',
-            metadata: metadata,
-            callback: async function(response: any) {
-                setIsProcessing(true);
-                toast({ title: 'Payment Complete', description: 'Verifying transaction...' });
+        const result = await initializeTransactionAction(user.email, calculations.totalPayable, metadata);
 
-                const res = await fetch("/api/verify?reference=" + response.reference);
-                const verificationData = await res.json();
-                
-                if (verificationData.success) {
-                    toast({
-                        title: 'Verification Successful!',
-                        description: 'Your order has been placed successfully.',
-                    });
-                    clearCart();
-                    router.push('/profile');
-                } else {
-                     toast({
-                        title: 'Verification Failed',
-                        description: verificationData.message || 'There was an issue verifying your payment.',
-                        variant: 'destructive',
-                    });
-                }
-                setIsProcessing(false);
-            },
-            onClose: function() {
-                setIsProcessing(false);
-                toast({
-                    title: 'Payment Canceled',
-                    description: 'You have canceled the payment process.',
-                    variant: 'destructive',
-                });
-            }
-        });
-
-        handler.openIframe();
+        if (result.success && result.data?.authorization_url) {
+            // Redirect user to Paystack's payment page
+            router.push(result.data.authorization_url);
+        } else {
+            toast({
+                title: "Payment Initialization Failed",
+                description: result.error || "Could not connect to payment provider. Please try again.",
+                variant: "destructive",
+            });
+            setIsProcessing(false);
+        }
     };
 
     const formatCurrency = (amount: number) => {
