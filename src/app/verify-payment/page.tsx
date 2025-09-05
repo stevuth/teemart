@@ -21,30 +21,31 @@ function VerificationContent() {
 
     useEffect(() => {
         const reference = searchParams.get('reference');
+        console.log(`[Client] Verification page loaded. Paystack reference from URL: ${reference}`);
         
         if (!reference) {
+            console.error("[Client] No payment reference found in URL.");
             setError("No payment reference found.");
             setStatus('failed');
             return;
         }
 
-        async function verify() {
-            console.log(`[VerificationContent] Verifying with reference: ${reference}`);
-            const result = await verifyTransactionAction(reference!);
-            console.log(`[VerificationContent] Verification result:`, result);
-
-            if (result.success) {
-                setStatus('success');
-                clearCart();
-            } else {
-                setError(result.error || "An unknown verification error occurred.");
-                setStatus('failed');
-            }
-        }
-        
-        // Ensure this runs only once
+        // Use a state to ensure verification only runs once
         if (status === 'verifying') {
-             verify();
+            const verify = async () => {
+                console.log(`[Client] Calling verifyTransactionAction with reference: ${reference}`);
+                const result = await verifyTransactionAction(reference!);
+                console.log(`[Client] Verification result received from server:`, result);
+
+                if (result.success) {
+                    setStatus('success');
+                    clearCart();
+                } else {
+                    setError(result.error || "An unknown verification error occurred.");
+                    setStatus('failed');
+                }
+            }
+            verify();
         }
 
     }, [searchParams, clearCart, status]);
