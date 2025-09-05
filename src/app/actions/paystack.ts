@@ -68,24 +68,30 @@ export async function initializeTransactionAction(email: string, amount: number,
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export async function verifyTransactionAction(reference: string) {
+    console.log(`[verifyTransactionAction] Called with reference: ${reference}`);
+
     if (!PAYSTACK_SECRET_KEY) {
-        console.error("Paystack secret key is not set.");
+        console.error("[verifyTransactionAction] Paystack secret key is not set.");
         return { success: false, error: 'Server configuration error.' };
     }
     const supabase = createSupabaseServerClient();
     
     try {
+        console.log(`[verifyTransactionAction] Verifying transaction with Paystack for ref: ${reference}`);
         const response = await axios.get(`${PAYSTACK_API_URL}/transaction/verify/${reference}`, {
             headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
         });
 
         const { status, data } = response.data;
+        console.log(`[verifyTransactionAction] Paystack verification response status: ${status}, data status: ${data.status}`);
+
         if (status && data.status === 'success') {
             const { metadata } = data;
+            console.log("[verifyTransactionAction] Paystack metadata received:", JSON.stringify(metadata, null, 2));
 
             // Check payment type from metadata
             if (metadata.type === 'verification_payment') {
-                // It's a verification payment
+                console.log("[verifyTransactionAction] Processing verification payment.");
                 const { error: profileUpdateError } = await supabase
                     .from('profiles')
                     .update({ verification_payment_status: 'paid' })
@@ -104,8 +110,14 @@ export async function verifyTransactionAction(reference: string) {
                 if (logPaymentError) console.error("Failed to log verification payment:", logPaymentError);
 
             } else {
+                console.log("[verifyTransactionAction] Processing order payment.");
                 // It's an order payment
                 const { cartItems, buyer_id, customer_name } = metadata;
+                
+                if (!cartItems || !buyer_id || !customer_name) {
+                    console.error("[verifyTransactionAction] Critical metadata missing for order payment.", metadata);
+                    throw new Error("Essential payment metadata is missing.");
+                }
 
                 const transactionRecords = cartItems.map((item: CartItem & { image: string[] }) => {
                     const productPrice = item.price * item.quantity;
@@ -113,6 +125,7 @@ export async function verifyTransactionAction(reference: string) {
                     const sellerFee = Math.round(productPrice * 0.02);
 
                     if (!item.seller || !item.seller.full_name) {
+                        console.error(`[verifyTransactionAction] Seller information is missing for product ID: ${item.id}`, item);
                         throw new Error(`Seller information is missing for product ID: ${item.id}`);
                     }
 
@@ -135,21 +148,26 @@ export async function verifyTransactionAction(reference: string) {
                     };
                 });
                 
+                console.log('[verifyTransactionAction] Preparing to insert transaction records:', JSON.stringify(transactionRecords, null, 2));
+
                 const { error } = await supabase.from('transactions').insert(transactionRecords);
 
                 if (error) {
-                    console.error('Supabase insert error:', error);
+                    console.error('[verifyTransactionAction] Supabase insert error:', error);
                     return { success: false, error: 'Failed to save transaction details. Please contact support.' };
                 }
+                
+                console.log(`[verifyTransactionAction] Successfully inserted ${transactionRecords.length} transaction record(s).`);
             }
             
             return { success: true };
         } else {
+            console.error(`[verifyTransactionAction] Payment verification failed with Paystack. Response data:`, data);
             return { success: false, error: 'Payment verification failed.' };
         }
 
     } catch (error: any) {
-        console.error("Error verifying transaction:", error.response?.data || error.message);
+        console.error("[verifyTransactionAction] CRITICAL: An error occurred in the try-catch block:", error.response?.data || error.message);
         return { success: false, error: 'An unexpected error occurred during verification.' };
     }
 }
