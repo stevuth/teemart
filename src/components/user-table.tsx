@@ -34,7 +34,7 @@ import {
 type UserProfile = {
   id: string;
   full_name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: string | null;
   is_verified: boolean;
@@ -74,7 +74,7 @@ export function UserTable() {
     }
     
     setLoading(false);
-  }, [supabase, toast]);
+  }, [toast, supabase]);
 
 
   useEffect(() => {
@@ -227,5 +227,3 @@ export function UserTable() {
     </Card>
   );
 }
-
-    

@@ -41,7 +41,7 @@ export function VerificationQueue() {
       setProfiles(data as ProfileForVerification[]);
     }
     setLoading(false);
-  }, [supabase]);
+  }, [toast, supabase]);
 
   useEffect(() => {
     fetchVerificationRequests();
