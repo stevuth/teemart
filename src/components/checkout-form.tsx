@@ -20,7 +20,6 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
-import { initializeTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -41,6 +40,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     const { toast } = useToast();
     const router = useRouter();
     const { user } = useAuth();
+    const { clearCart } = useCart();
     
     const form = useForm<CheckoutFormValues>({
         resolver: zodResolver(formSchema),
@@ -67,14 +67,18 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const onSubmit = async (data: CheckoutFormValues) => {
+    const onSubmit = (data: CheckoutFormValues) => {
         if (!user || !user.email) {
             toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
             return;
         }
 
-        setIsProcessing(true);
-        
+        if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
+            console.error("Paystack public key is not set.");
+            toast({ title: "Configuration Error", description: "Payment provider is not set up correctly.", variant: "destructive" });
+            return;
+        }
+
         const metadata = {
             buyer_id: user?.id,
             customer_name: data.name,
@@ -88,23 +92,52 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                 user_id: item.user_id,
                 image: Array.isArray(item.image) ? item.image : [item.image],
                 deliveryFee: item.deliveryFee,
-                seller: item.seller, // Pass the entire seller object
+                seller: item.seller,
             })),
             shipping_fee: calculations.shippingFeeNum,
         };
-        
-        const result = await initializeTransactionAction(user.email, calculations.totalPayable, metadata);
 
-        if (result.success && result.data?.authorization_url) {
-            router.push(result.data.authorization_url);
-        } else {
-             toast({
-                title: "Payment Initialization Failed",
-                description: result.error || "An unexpected error occurred.",
-                variant: "destructive"
-            });
-            setIsProcessing(false);
-        }
+        // @ts-ignore
+        const handler = PaystackPop.setup({
+            key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
+            email: user.email,
+            amount: Math.round(calculations.totalPayable * 100), // in kobo
+            currency: 'NGN',
+            metadata: metadata,
+            callback: async function(response: any) {
+                setIsProcessing(true);
+                toast({ title: 'Payment Complete', description: 'Verifying transaction...' });
+
+                const res = await fetch("/api/verify?reference=" + response.reference);
+                const verificationData = await res.json();
+                
+                if (verificationData.success) {
+                    toast({
+                        title: 'Verification Successful!',
+                        description: 'Your order has been placed successfully.',
+                    });
+                    clearCart();
+                    router.push('/profile');
+                } else {
+                     toast({
+                        title: 'Verification Failed',
+                        description: verificationData.message || 'There was an issue verifying your payment.',
+                        variant: 'destructive',
+                    });
+                }
+                setIsProcessing(false);
+            },
+            onClose: function() {
+                setIsProcessing(false);
+                toast({
+                    title: 'Payment Canceled',
+                    description: 'You have canceled the payment process.',
+                    variant: 'destructive',
+                });
+            }
+        });
+
+        handler.openIframe();
     };
 
     const formatCurrency = (amount: number) => {
@@ -208,7 +241,3 @@ const InfoRow = ({ label, value, className, isTotal = false }: { label: string, 
         <p className={cn("font-medium", isTotal && "text-2xl font-bold")}>{value}</p>
     </div>
 );
-
-
-
-    
