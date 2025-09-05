@@ -18,20 +18,25 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "sk_test_dc2996e3
  * @param metadata - Additional data to be stored with the transaction.
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
-export async function initializeTransactionAction(email: string, amount: number, metadata: object) {
+export async function initializeTransactionAction(email: string, amount: number, metadata: any) {
     if (!PAYSTACK_SECRET_KEY) {
         console.error("Paystack secret key is not set.");
         return { success: false, error: 'Server configuration error.' };
     }
 
-    const callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-payment`;
+    let callbackUrl: string;
+    if (metadata.type === 'verification_payment') {
+        callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-verification-payment`;
+    } else {
+        callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-payment`;
+    }
 
     try {
         const response = await axios.post(`${PAYSTACK_API_URL}/transaction/initialize`, {
             email,
             amount: Math.round(amount * 100), // Convert to kobo
             metadata,
-             callback_url: callbackUrl
+            callback_url: callbackUrl
         }, {
             headers: {
                 Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
@@ -72,51 +77,69 @@ export async function verifyTransactionAction(reference: string) {
         const { status, data } = response.data;
         if (status && data.status === 'success') {
             const { metadata } = data;
-            const { cartItems, buyer_id } = metadata;
 
-            // Use a transaction to ensure all inserts succeed or none do.
-            const transactionRecords = await Promise.all(cartItems.map(async (item: CartItem & {image: string[]}) => {
-                const productPrice = item.price * item.quantity;
-                // These fees should be aligned with what's shown to the user at checkout
-                const buyerFee = productPrice * 0.03; 
-                const sellerFee = productPrice * 0.02;
-
-                // Fetch seller name for the snapshot
-                const { data: sellerProfile, error: sellerError } = await supabase
+            // Check payment type from metadata
+            if (metadata.type === 'verification_payment') {
+                // It's a verification payment
+                const { error: profileUpdateError } = await supabase
                     .from('profiles')
-                    .select('full_name')
-                    .eq('id', item.user_id)
-                    .single();
+                    .update({ verification_payment_status: 'paid' })
+                    .eq('id', metadata.user_id);
+
+                if (profileUpdateError) throw profileUpdateError;
+
+                const { error: logPaymentError } = await supabase
+                    .from('verification_payments')
+                    .insert({
+                        user_id: metadata.user_id,
+                        amount: data.amount / 100, // Convert from kobo
+                        paystack_ref: reference,
+                    });
                 
-                if (sellerError) throw new Error(`Could not find seller profile for user ID: ${item.user_id}`);
+                if (logPaymentError) console.error("Failed to log verification payment:", logPaymentError);
 
-                return {
-                    buyer_id,
-                    seller_id: item.user_id,
-                    product_id: item.id,
-                    product_price: productPrice,
-                    buyer_fee: buyerFee,
-                    seller_fee: sellerFee,
-                    shipping_fee: item.deliveryFee || 0,
-                    paystack_ref: reference,
-                    status: 'pending' as const,
-                    product_details: {
-                        name: item.name,
-                        image: Array.isArray(item.image) ? item.image : [item.image],
-                        buyer_name: metadata.customer_name,
-                        seller_name: sellerProfile.full_name,
-                    }
-                };
-            }));
-            
-            const { error } = await supabase.from('transactions').insert(transactionRecords);
+            } else {
+                // It's an order payment
+                const { cartItems, buyer_id } = metadata;
 
-            if (error) {
-                console.error('Supabase insert error:', error);
-                // In a real-world scenario, you might want to handle this more gracefully,
-                // e.g., by queueing a retry or logging for manual intervention,
-                // as the user has already paid.
-                return { success: false, error: 'Failed to save transaction details. Please contact support.' };
+                const transactionRecords = await Promise.all(cartItems.map(async (item: CartItem & {image: string[]}) => {
+                    const productPrice = item.price * item.quantity;
+                    const buyerFee = productPrice * 0.03; 
+                    const sellerFee = productPrice * 0.02;
+
+                    const { data: sellerProfile, error: sellerError } = await supabase
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('id', item.user_id)
+                        .single();
+                    
+                    if (sellerError) throw new Error(`Could not find seller profile for user ID: ${item.user_id}`);
+
+                    return {
+                        buyer_id,
+                        seller_id: item.user_id,
+                        product_id: item.id,
+                        product_price: productPrice,
+                        buyer_fee: buyerFee,
+                        seller_fee: sellerFee,
+                        shipping_fee: item.deliveryFee || 0,
+                        paystack_ref: reference,
+                        status: 'pending' as const,
+                        product_details: {
+                            name: item.name,
+                            image: Array.isArray(item.image) ? item.image : [item.image],
+                            buyer_name: metadata.customer_name,
+                            seller_name: sellerProfile.full_name,
+                        }
+                    };
+                }));
+                
+                const { error } = await supabase.from('transactions').insert(transactionRecords);
+
+                if (error) {
+                    console.error('Supabase insert error:', error);
+                    return { success: false, error: 'Failed to save transaction details. Please contact support.' };
+                }
             }
             
             return { success: true };

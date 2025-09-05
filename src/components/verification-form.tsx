@@ -13,12 +13,15 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { SelfieCapture } from './selfie-capture';
+import { useRouter } from 'next/navigation';
+import { initializeTransactionAction } from '@/app/actions/paystack';
 
 type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
 export function VerificationForm() {
     const { user, profile, refetchProfile, supabase } = useAuth();
     const { toast } = useToast();
+    const router = useRouter();
     
     const [status, setStatus] = useState<VerificationStatus>('unverified');
 
@@ -56,27 +59,28 @@ export function VerificationForm() {
     };
     
     const handlePayment = async () => {
-        if (!user) return;
+        if (!user || !user.email) {
+            toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
+            return;
+        }
+
         setIsPaying(true);
 
-        // This is a mock payment simulation.
-        // In a real app, you would integrate a payment gateway like Paystack or Flutterwave here.
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        const metadata = {
+            user_id: user.id,
+            type: 'verification_payment',
+        };
 
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({ verification_payment_status: 'paid' })
-                .eq('id', user.id);
+        const result = await initializeTransactionAction(user.email, 1000, metadata);
 
-            if (error) throw error;
-            
-            await refetchProfile(); // Refetch profile to get the new payment status
-            toast({ title: "Payment Successful!", description: "You can now proceed with verification." });
-
-        } catch (error: any) {
-            toast({ title: "Payment Failed", description: error.message, variant: "destructive"});
-        } finally {
+        if (result.success && result.data?.authorization_url) {
+            router.push(result.data.authorization_url);
+        } else {
+            toast({
+                title: "Payment Initialization Failed",
+                description: result.error || "Could not connect to payment provider.",
+                variant: "destructive",
+            });
             setIsPaying(false);
         }
     }

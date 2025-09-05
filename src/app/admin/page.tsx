@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, AlertCircle, PanelLeft } from 'lucide-react';
+import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, AlertCircle, PanelLeft, Banknote } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
 import { UserTable } from '@/components/user-table';
 import { SellerTable } from '@/components/seller-table';
@@ -23,15 +23,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { VerificationPaymentsTable } from '@/components/verification-payments-table';
 
 
-type AdminView = 'verification' | 'sellers' | 'users' | 'hero';
+type AdminView = 'verification' | 'sellers' | 'users' | 'hero' | 'verification_payments';
 
 const navItems = [
     { id: 'verification', label: 'Verification Queue', icon: UserCheck },
     { id: 'sellers', label: 'Sellers & Listings', icon: ShoppingBag },
     { id: 'users', label: 'Registered Users', icon: Users },
     { id: 'hero', label: 'Hero Section', icon: GalleryHorizontal },
+    { id: 'verification_payments', label: 'Verification Payments', icon: Banknote },
 ];
 
 function NavContent({ activeView, onLinkClick }: { activeView: AdminView, onLinkClick: (view: AdminView) => void }) {
@@ -109,6 +111,8 @@ export default function AdminDashboardPage() {
         return <UserTable />;
       case 'hero':
         return <HeroSectionManager />;
+      case 'verification_payments':
+        return <VerificationPaymentsTable />;
       default:
         return <VerificationQueue />;
     }
