@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Image from 'next/image';
-import { releaseEscrowAction } from '@/actions/paystack';
+import { releaseEscrowAction, markAsDeliveredAction } from '@/actions/paystack';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -58,7 +58,8 @@ export default function ProfilePage() {
   const [purchases, setPurchases] = useState<Transaction[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [confirmingTransaction, setConfirmingTransaction] = useState<string | null>(null);
+  const [isConfirmingDelivery, setIsConfirmingDelivery] = useState<string | null>(null);
+  const [isReleasingPayment, setIsReleasingPayment] = useState<string | null>(null);
   const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
 
@@ -102,7 +103,7 @@ export default function ProfilePage() {
       // Fetch Sales and Purchases
       const { data: transactions, error: transError } = await supabase
         .from('transactions')
-        .select('*') // Removed the join to profiles
+        .select('*') 
         .or(`seller_id.eq.${user.id},buyer_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
@@ -132,20 +133,32 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, router, fetchUserData, supabase]);
   
-  const handleConfirmDelivery = async () => {
+  const handleMarkAsDelivered = async (transactionId: string) => {
+    setIsConfirmingDelivery(transactionId);
+    const result = await markAsDeliveredAction(transactionId);
+    if (result.success) {
+      toast({ title: "Order Updated", description: "You have marked this order as delivered." });
+      fetchUserData(); // Refetch to update status
+    } else {
+      toast({ title: "Error", description: result.error, variant: "destructive" });
+    }
+    setIsConfirmingDelivery(null);
+  };
+  
+  const handleReleasePayment = async () => {
     if (!transactionToConfirm) return;
-    setConfirmingTransaction(transactionToConfirm.id);
+    setIsReleasingPayment(transactionToConfirm.id);
     
     const result = await releaseEscrowAction(transactionToConfirm.id);
 
     if (result.success) {
-        toast({ title: "Delivery Confirmed!", description: `Payment will be released to the seller for ${transactionToConfirm.product_details?.name}.` });
+        toast({ title: "Payment Released!", description: `Payment has been released to ${transactionToConfirm.product_details?.seller_name}.` });
         fetchUserData(); // Refetch all data to update the status
     } else {
         toast({ title: "Action Failed", description: result.error, variant: "destructive" });
     }
     
-    setConfirmingTransaction(null);
+    setIsReleasingPayment(null);
     setTransactionToConfirm(null);
     setConfirmDialogOpen(false);
   };
@@ -253,11 +266,12 @@ export default function ProfilePage() {
   const TransactionStatusBadge = ({ status }: { status: Transaction['status'] }) => {
     const statusStyles: { [key in Transaction['status']]: string } = {
         pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+        delivered: 'bg-blue-100 text-blue-800 border-blue-300',
         released: 'bg-green-100 text-green-800 border-green-300',
         disputed: 'bg-orange-100 text-orange-800 border-orange-300',
         refunded: 'bg-gray-100 text-gray-800 border-gray-300',
     };
-    return <Badge variant="outline" className={cn("capitalize", statusStyles[status])}>{status}</Badge>;
+    return <Badge variant="outline" className={cn("capitalize", statusStyles[status])}>{status.replace(/_/g, ' ')}</Badge>;
   }
 
   return (
@@ -271,16 +285,16 @@ export default function ProfilePage() {
       <AlertDialog open={isConfirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Item Receipt</AlertDialogTitle>
+            <AlertDialogTitle>Confirm & Release Payment</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you have received "{transactionToConfirm?.product_details?.name}" and it is as described? This action cannot be undone and will release the payment to the seller.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelivery} disabled={confirmingTransaction === transactionToConfirm?.id}>
-              {confirmingTransaction === transactionToConfirm?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Yes, I've Received It
+            <AlertDialogAction onClick={handleReleasePayment} disabled={isReleasingPayment === transactionToConfirm?.id}>
+              {isReleasingPayment === transactionToConfirm?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Yes, Release Payment
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -373,9 +387,9 @@ export default function ProfilePage() {
                                                 <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
                                             </div>
                                         </CardContent>
-                                        <CardFooter className="p-4 border-t flex flex-col items-start gap-3 bg-secondary/30">
-                                            <h4 className="font-semibold text-sm">Buyer &amp; Delivery Information</h4>
+                                        <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
                                             <div className="text-sm text-muted-foreground space-y-2">
+                                                 <h4 className="font-semibold text-sm text-foreground">Buyer &amp; Delivery Information</h4>
                                                 <div className="flex items-center gap-2">
                                                     <User className="h-4 w-4 text-primary" />
                                                     <span>{t.product_details.buyer_name}</span>
@@ -389,6 +403,12 @@ export default function ProfilePage() {
                                                     <p>{t.product_details.delivery_address}</p>
                                                 </div>
                                             </div>
+                                            {t.status === 'pending' && (
+                                                <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm">
+                                                    {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                                    Confirm Delivery
+                                                </Button>
+                                            )}
                                         </CardFooter>
                                     </Card>
                                 ))}
@@ -397,7 +417,7 @@ export default function ProfilePage() {
                     </TabsContent>
 
                     <TabsContent value="my-purchases" className="mt-0">
-                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product_details?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'pending' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={confirmingTransaction === t.id}>{confirmingTransaction === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}Confirm Delivery</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
+                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product_details?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'delivered' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>{isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}Confirm & Release Payment</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
                     </TabsContent>
                     
                     <TabsContent value="reviews" className="mt-0">

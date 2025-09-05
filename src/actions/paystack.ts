@@ -136,6 +136,8 @@ export async function verifyTransactionAction(reference: string) {
                         image: Array.isArray(item.image) ? item.image : [item.image],
                         buyer_name: customer_name,
                         seller_name: item.seller.full_name,
+                        customer_phone: customer_phone,
+                        delivery_address: delivery_address,
                     }
                 };
             });
@@ -160,6 +162,48 @@ export async function verifyTransactionAction(reference: string) {
         console.error('[Action CRITICAL] Verification error:', error.response?.data || error.message, error.stack);
         return { success: false, error: error.message || 'An unexpected error occurred during verification.' };
     }
+}
+
+/**
+ * Updates a transaction's status to 'delivered'. This should be called by the seller.
+ * @param transactionId - The ID of the transaction to update.
+ * @returns An object with either a success status or an error message.
+ */
+export async function markAsDeliveredAction(transactionId: string) {
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: 'You must be logged in to perform this action.' };
+    }
+
+    // First, verify the user is the seller for this transaction
+    const { data: transaction, error: fetchError } = await supabase
+        .from('transactions')
+        .select('seller_id')
+        .eq('id', transactionId)
+        .single();
+    
+    if (fetchError || !transaction) {
+        return { success: false, error: 'Transaction not found.' };
+    }
+
+    if (transaction.seller_id !== user.id) {
+        return { success: false, error: 'You do not have permission to modify this transaction.' };
+    }
+    
+    // If authenticated and authorized, update the status
+    const { error: updateError } = await supabase
+        .from('transactions')
+        .update({ status: 'delivered' })
+        .eq('id', transactionId);
+
+    if (updateError) {
+        console.error("Error marking as delivered:", updateError);
+        return { success: false, error: 'Failed to update order status.' };
+    }
+
+    return { success: true };
 }
 
 
@@ -225,8 +269,9 @@ export async function releaseEscrowAction(transactionId: string) {
         return { success: false, error: "Transaction not found." };
     }
     
-    if (transaction.status !== 'pending') {
-        return { success: false, error: `Cannot release funds. Transaction status is '${transaction.status}'.` };
+    // Only allow release if the status is 'delivered'
+    if (transaction.status !== 'delivered') {
+        return { success: false, error: `Cannot release funds. Order must be marked as delivered first. Current status is '${transaction.status}'.` };
     }
 
     // 2. Get seller's bank details

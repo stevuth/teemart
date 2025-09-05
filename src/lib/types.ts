@@ -88,7 +88,7 @@ export type Order = {
   status: OrderStatus;
 };
 
-export type TransactionStatus = 'pending' | 'released' | 'disputed' | 'refunded';
+export type TransactionStatus = 'pending' | 'delivered' | 'released' | 'disputed' | 'refunded';
 
 export type ProductSnapshot = {
   name: string;
