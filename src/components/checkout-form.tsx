@@ -235,5 +235,3 @@ const InfoRow = ({ label, value, className, isTotal = false }: { label: string, 
         <p className={cn("font-medium", isTotal && "text-2xl font-bold")}>{value}</p>
     </div>
 );
-
-    

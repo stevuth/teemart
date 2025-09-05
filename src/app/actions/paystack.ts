@@ -399,5 +399,3 @@ export async function getBankListAction() {
         return { success: false, error: error.response?.data?.message || 'Could not fetch bank list.' };
     }
 }
-
-    
