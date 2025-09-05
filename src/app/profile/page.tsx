@@ -275,7 +275,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-background">
       <DeleteProductDialog 
           product={productToDelete}
           isOpen={!!productToDelete}
@@ -299,144 +299,143 @@ export default function ProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="flex flex-col min-h-screen bg-background">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <BackButton />
-          <div className="flex flex-col md:flex-row items-start gap-8 mt-8">
-              <div className="flex-shrink-0 flex flex-col items-center md:items-start">
-                  <Avatar className="h-32 w-32 mb-4 border-4 border-background ring-2 ring-primary">
-                      <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
-                      <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-center md:text-left">
-                      <h1 className="text-3xl font-bold">{displayName}</h1>
-                      <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
-                          <p className="text-muted-foreground">TeeMart Seller</p>
-                           {profile?.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
-                      </div>
-                  </div>
-              </div>
-              <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8">
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground pt-8 md:pt-0">
-                      <div className="flex items-center gap-3">
-                          <CalendarDays className="h-4 w-4 text-primary" />
-                          <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : ''}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                          <Star className="h-4 w-4 text-primary" />
-                          <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
-                      </div>
-                  </div>
-                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                      <Button asChild variant="outline" className="w-full sm:w-auto">
-                          <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help & Support</Link>
-                      </Button>
-                  </div>
-              </div>
-          </div>
-
-          <Separator className="my-12" />
-
-          <Tabs defaultValue="active-listings" className="w-full">
-            <div className="flex flex-col md:flex-row gap-8">
-                <div className="w-full md:w-64 flex-shrink-0">
-                    <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
-                        {activityTabs.map(tab => (
-                            <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
-                                <tab.icon className="h-5 w-5" />
-                                <span>{tab.label}</span>
-                                <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
-                            </TabsTrigger>
-                        ))}
-
-                        <Separator className="my-2" />
-
-                        <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">Account Settings</p>
-                        {settingsTabs.map(tab => (
-                            <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
-                                <tab.icon className="h-5 w-5" />
-                                <span>{tab.label}</span>
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <TabsContent value="active-listings" className="mt-0">
-                      {loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>))}</div> : 
-                       activeListings.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{activeListings.map(product => <ProductCard key={product.id} product={product} isClickable={false} actions={<><Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button><Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></>}/>)}</div> : 
-                       <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>}
-                    </TabsContent>
-                    
-                    <TabsContent value="my-sales" className="mt-0">
-                        {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
-                            <div className="space-y-4">
-                                {sales.map(t => (
-                                    <Card key={t.id}>
-                                        <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
-                                            <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                                                <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                                                <div className="flex-1">
-                                                    <p className="font-bold">{t.product_details?.name}</p>
-                                                    <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto">
-                                                <TransactionStatusBadge status={t.status} />
-                                                <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
-                                            </div>
-                                        </CardContent>
-                                        <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
-                                            <div className="text-sm text-muted-foreground space-y-2">
-                                                 <h4 className="font-semibold text-sm text-foreground">Buyer &amp; Delivery Information</h4>
-                                                <div className="flex items-center gap-2">
-                                                    <User className="h-4 w-4 text-primary" />
-                                                    <span>{t.product_details.buyer_name}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Phone className="h-4 w-4 text-primary" />
-                                                    <span>{t.product_details.customer_phone}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Home className="h-4 w-4 text-primary" />
-                                                    <p>{t.product_details.delivery_address}</p>
-                                                </div>
-                                            </div>
-                                            {t.status === 'pending' && (
-                                                <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm">
-                                                    {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                                    Confirm Delivery
-                                                </Button>
-                                            )}
-                                        </CardFooter>
-                                    </Card>
-                                ))}
-                            </div> 
-                            : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>}
-                    </TabsContent>
-
-                    <TabsContent value="my-purchases" className="mt-0">
-                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product_details?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'delivered' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>{isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}Confirm & Release Payment</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
-                    </TabsContent>
-                    
-                    <TabsContent value="reviews" className="mt-0">
-                        {loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} />}
-                    </TabsContent>
-
-                    <TabsContent value="verification" className="mt-0">
-                        {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")}
-                    </TabsContent>
-
-                    <TabsContent value="payment-details" className="mt-0">
-                        {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : renderProfileError("Payment Details")}
-                    </TabsContent>
+      
+      <Header />
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BackButton />
+        <div className="flex flex-col md:flex-row items-start gap-8 mt-8">
+            <div className="flex-shrink-0 flex flex-col items-center md:items-start">
+                <Avatar className="h-32 w-32 mb-4 border-4 border-background ring-2 ring-primary">
+                    <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
+                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+                </Avatar>
+                <div className="text-center md:text-left">
+                    <h1 className="text-3xl font-bold">{displayName}</h1>
+                    <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
+                        <p className="text-muted-foreground">TeeMart Seller</p>
+                         {profile?.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
+                    </div>
                 </div>
             </div>
-          </Tabs>
-        </main>
-        <Footer />
-      </div>
-    </>
+            <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground pt-8 md:pt-0">
+                    <div className="flex items-center gap-3">
+                        <CalendarDays className="h-4 w-4 text-primary" />
+                        <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Star className="h-4 w-4 text-primary" />
+                        <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
+                    </div>
+                </div>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                    <Button asChild variant="outline" className="w-full sm:w-auto">
+                        <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help & Support</Link>
+                    </Button>
+                </div>
+            </div>
+        </div>
+
+        <Separator className="my-12" />
+
+        <Tabs defaultValue="active-listings" className="w-full">
+          <div className="flex flex-col md:flex-row gap-8">
+              <div className="w-full md:w-64 flex-shrink-0">
+                  <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
+                      {activityTabs.map(tab => (
+                          <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                              <tab.icon className="h-5 w-5" />
+                              <span>{tab.label}</span>
+                              <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
+                          </TabsTrigger>
+                      ))}
+
+                      <Separator className="my-2" />
+
+                      <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">Account Settings</p>
+                      {settingsTabs.map(tab => (
+                          <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                              <tab.icon className="h-5 w-5" />
+                              <span>{tab.label}</span>
+                          </TabsTrigger>
+                      ))}
+                  </TabsList>
+              </div>
+              <div className="flex-1 min-w-0">
+                  <TabsContent value="active-listings" className="mt-0">
+                    {loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div> : 
+                     activeListings.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{activeListings.map(product => <ProductCard key={product.id} product={product} isClickable={false} actions={<><Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button><Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></>}/>)}</div> : 
+                     <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>}
+                  </TabsContent>
+                  
+                  <TabsContent value="my-sales" className="mt-0">
+                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
+                          <div className="space-y-4">
+                              {sales.map(t => (
+                                  <Card key={t.id}>
+                                      <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
+                                          <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
+                                              <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
+                                              <div className="flex-1">
+                                                  <p className="font-bold">{t.product_details?.name}</p>
+                                                  <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
+                                              </div>
+                                          </div>
+                                          <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto">
+                                              <TransactionStatusBadge status={t.status} />
+                                              <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
+                                          </div>
+                                      </CardContent>
+                                      <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
+                                          <div className="text-sm text-muted-foreground space-y-2">
+                                               <h4 className="font-semibold text-sm text-foreground">Buyer &amp; Delivery Information</h4>
+                                              <div className="flex items-center gap-2">
+                                                  <User className="h-4 w-4 text-primary" />
+                                                  <span>{t.product_details.buyer_name}</span>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                  <Phone className="h-4 w-4 text-primary" />
+                                                  <span>{t.product_details.customer_phone}</span>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                  <Home className="h-4 w-4 text-primary" />
+                                                  <p>{t.product_details.delivery_address}</p>
+                                              </div>
+                                          </div>
+                                          {t.status === 'pending' && (
+                                              <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm">
+                                                  {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                                  Confirm Delivery
+                                              </Button>
+                                          )}
+                                      </CardFooter>
+                                  </Card>
+                              ))}
+                          </div> 
+                          : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>}
+                  </TabsContent>
+
+                  <TabsContent value="my-purchases" className="mt-0">
+                    {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product_details?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'delivered' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>{isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}Confirm & Release Payment</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
+                  </TabsContent>
+                  
+                  <TabsContent value="reviews" className="mt-0">
+                      {loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} />}
+                  </TabsContent>
+
+                  <TabsContent value="verification" className="mt-0">
+                      {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")}
+                  </TabsContent>
+
+                  <TabsContent value="payment-details" className="mt-0">
+                      {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : renderProfileError("Payment Details")}
+                  </TabsContent>
+              </div>
+          </div>
+        </Tabs>
+      </main>
+      <Footer />
+    </div>
   );
 }
