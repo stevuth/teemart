@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { verifyTransactionAction } from '@/app/actions/paystack';
+import { verifyTransactionAction } from '@/actions/paystack';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
 

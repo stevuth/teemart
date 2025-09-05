@@ -244,5 +244,3 @@ export function VerificationForm() {
         </Card>
     );
 }
-
-    

@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import Image from 'next/image';
-import { releaseEscrowAction } from '../../actions/paystack';
+import { releaseEscrowAction } from '@/actions/paystack';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -383,5 +383,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    
