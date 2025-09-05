@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="grid gap-2 text-center">
             <Link href="/" className="flex justify-center mb-4">
-               <Image src="/logo.png" alt="TeeMart Logo" width={64} height={64} />
+               <Image src="/public/logo.png" alt="TeeMart Logo" width={64} height={64} />
             </Link>
             <h1 className="text-3xl font-bold">Admin Login</h1>
             <p className="text-balance text-muted-foreground">
