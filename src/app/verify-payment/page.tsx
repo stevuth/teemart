@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
@@ -30,7 +29,10 @@ function VerificationContent() {
         }
 
         async function verify() {
+            console.log(`[VerificationContent] Verifying with reference: ${reference}`);
             const result = await verifyTransactionAction(reference!);
+            console.log(`[VerificationContent] Verification result:`, result);
+
             if (result.success) {
                 setStatus('success');
                 clearCart();
@@ -40,9 +42,12 @@ function VerificationContent() {
             }
         }
         
-        verify();
+        // Ensure this runs only once
+        if (status === 'verifying') {
+             verify();
+        }
 
-    }, [searchParams, clearCart]);
+    }, [searchParams, clearCart, status]);
 
 
     return (
@@ -87,7 +92,7 @@ export default function VerifyPaymentPage() {
         <div className="flex flex-col min-h-screen bg-background">
             <Header />
             <main className="flex-grow flex items-center justify-center p-4">
-                <Suspense fallback={<Loader2 className="h-12 w-12 animate-spin" />}>
+                <Suspense fallback={<div className="flex justify-center items-center h-full"><Loader2 className="h-12 w-12 animate-spin" /></div>}>
                     <VerificationContent />
                 </Suspense>
             </main>
