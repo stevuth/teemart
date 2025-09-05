@@ -95,6 +95,8 @@ export type ProductSnapshot = {
   image: string[];
   buyer_name: string;
   seller_name: string;
+  customer_phone?: string;
+  delivery_address?: string;
 };
 
 export type Transaction = {

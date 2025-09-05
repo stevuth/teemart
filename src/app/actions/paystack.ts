@@ -136,6 +136,9 @@ export async function verifyTransactionAction(reference: string) {
                         image: Array.isArray(item.image) ? item.image : [item.image],
                         buyer_name: customer_name,
                         seller_name: item.seller.full_name,
+                        // Add delivery info here
+                        customer_phone: customer_phone,
+                        delivery_address: delivery_address,
                     }
                 };
             });
