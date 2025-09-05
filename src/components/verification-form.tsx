@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { SelfieCapture } from './selfie-capture';
 import { useRouter } from 'next/navigation';
-import { initializeTransactionAction } from '@/app/actions/paystack';
+import { initializeTransactionAction } from '@/actions/paystack';
 
 type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
@@ -244,3 +244,5 @@ export function VerificationForm() {
         </Card>
     );
 }
+
+    
