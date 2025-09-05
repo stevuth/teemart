@@ -109,8 +109,9 @@ export async function verifyTransactionAction(reference: string) {
 
                 const transactionRecords = await Promise.all(cartItems.map(async (item: CartItem & {image: string[]}) => {
                     const productPrice = item.price * item.quantity;
-                    const buyerFee = productPrice * 0.03; 
-                    const sellerFee = productPrice * 0.02;
+                    // FIX: Ensure all fee calculations are rounded to avoid floating point issues.
+                    const buyerFee = Math.round(productPrice * 0.03); 
+                    const sellerFee = Math.round(productPrice * 0.02);
 
                     const { data: sellerProfile, error: sellerError } = await supabase
                         .from('profiles')
@@ -399,3 +400,5 @@ export async function getBankListAction() {
         return { success: false, error: error.response?.data?.message || 'Could not fetch bank list.' };
     }
 }
+
+    
