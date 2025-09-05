@@ -31,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type UserProfile = {
+type UserProfileWithStats = {
   id: string;
   full_name: string;
   email: string | null;
@@ -40,12 +40,14 @@ type UserProfile = {
   is_verified: boolean;
   created_at: string;
   banned_until: string | null;
+  sales_count: number;
+  purchases_count: number;
 };
 
 type VerificationFilter = 'all' | 'verified' | 'unverified';
 
 export function UserTable() {
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [users, setUsers] = useState<UserProfileWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<VerificationFilter>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -56,13 +58,10 @@ export function UserTable() {
     if (!supabase) return;
     setLoading(true);
 
-    const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase.rpc('get_users_with_stats');
 
-    if (profilesError) {
-        console.error("Error fetching users:", profilesError);
+    if (error) {
+        console.error("Error fetching users with stats:", error);
         toast({
             title: "Error",
             description: "Could not fetch the list of users.",
@@ -70,7 +69,7 @@ export function UserTable() {
         });
         setUsers([]);
     } else {
-        setUsers(profilesData as UserProfile[]);
+        setUsers(data as UserProfileWithStats[]);
     }
     
     setLoading(false);
@@ -78,8 +77,10 @@ export function UserTable() {
 
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (supabase) {
+      fetchUsers();
+    }
+  }, [fetchUsers, supabase]);
 
   const handleBanUser = async (userId: string, durationDays: number | null) => {
     console.log(`[Client] handleBanUser called for userId: ${userId} with duration: ${durationDays}`);
@@ -106,7 +107,7 @@ export function UserTable() {
     });
   }, [users, filter]);
 
-  const BanUserDialog = ({ user }: { user: UserProfile }) => {
+  const BanUserDialog = ({ user }: { user: UserProfileWithStats }) => {
     const isBanned = user.banned_until && new Date(user.banned_until) > new Date();
     return (
         <AlertDialog>
@@ -185,6 +186,8 @@ export function UserTable() {
                 <TableHead>Full Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead className="text-center">Sales</TableHead>
+                <TableHead className="text-center">Purchases</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Verification</TableHead>
                 <TableHead>Joined On</TableHead>
@@ -199,6 +202,12 @@ export function UserTable() {
                     <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                     <TableCell>{user.email || 'N/A'}</TableCell>
                     <TableCell>{user.phone || 'N/A'}</TableCell>
+                    <TableCell className="text-center">
+                        <Badge variant="secondary">{user.sales_count}</Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                        <Badge variant="secondary">{user.purchases_count}</Badge>
+                    </TableCell>
                     <TableCell>
                       {isBanned ? (
                         <Badge variant="destructive">Banned</Badge>
