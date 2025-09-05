@@ -25,7 +25,7 @@ export async function initializeTransactionAction(email: string, amount: number,
     }
 
     // Security check for test/live keys
-    if (!PAYSTACK_SECRET_KEY.startsWith('sk_test_')) {
+    if (PAYSTACK_SECRET_KEY.startsWith('sk_live_')) {
         console.warn("WARNING: You are using a LIVE Paystack secret key. Ensure this is intentional for production transactions.");
     }
 
@@ -399,3 +399,5 @@ export async function getBankListAction() {
         return { success: false, error: error.response?.data?.message || 'Could not fetch bank list.' };
     }
 }
+
+    

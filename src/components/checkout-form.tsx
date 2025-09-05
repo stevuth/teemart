@@ -20,7 +20,8 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
-import { initializeTransactionAction } from '@/app/actions/paystack';
+import { usePaystack } from '@/hooks/use-paystack';
+import { verifyTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -68,6 +69,42 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
+    const onSuccess = async (reference: string) => {
+        setIsProcessing(true);
+        const result = await verifyTransactionAction(reference);
+        if (result.success) {
+            clearCart();
+            toast({
+                title: "Payment Successful!",
+                description: "Your order has been placed. You can view it in your profile.",
+            });
+            router.push('/profile');
+        } else {
+             toast({
+                title: "Verification Failed",
+                description: result.error || "We could not verify your payment. Please contact support.",
+                variant: "destructive"
+            });
+        }
+        setIsProcessing(false);
+    };
+
+    const onClose = () => {
+        toast({
+            title: "Payment Cancelled",
+            description: "You have cancelled the payment process.",
+            variant: "destructive"
+        });
+        setIsProcessing(false);
+    };
+    
+    const { initializePayment } = usePaystack({
+        amount: Math.round(calculations.totalPayable * 100), // convert to kobo
+        email: user?.email || '',
+        onSuccess: (res) => onSuccess(res.reference),
+        onClose: onClose,
+    });
+    
     const onSubmit = async (data: CheckoutFormValues) => {
         if (!user || !user.email) {
             toast({ title: "Error", description: "You must be logged in to proceed.", variant: "destructive" });
@@ -75,7 +112,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         }
 
         setIsProcessing(true);
-
+        
         const metadata = {
             buyer_id: user?.id,
             customer_name: data.name,
@@ -93,19 +130,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
             shipping_fee: calculations.shippingFeeNum,
         };
 
-        const result = await initializeTransactionAction(user.email, calculations.totalPayable, metadata);
-
-        if (result.success && result.data?.authorization_url) {
-            // Redirect to Paystack's payment page
-            router.push(result.data.authorization_url);
-        } else {
-            toast({
-                title: "Payment Initialization Failed",
-                description: result.error || "Could not connect to payment provider. Please try again.",
-                variant: "destructive"
-            });
-            setIsProcessing(false);
-        }
+        // The hook handles the rest
+        initializePayment({ metadata });
     };
 
     const formatCurrency = (amount: number) => {
@@ -209,3 +235,5 @@ const InfoRow = ({ label, value, className, isTotal = false }: { label: string, 
         <p className={cn("font-medium", isTotal && "text-2xl font-bold")}>{value}</p>
     </div>
 );
+
+    

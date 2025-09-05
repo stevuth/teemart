@@ -42,7 +42,7 @@ function VerificationContent() {
         
         verify();
 
-    }, [searchParams, router, clearCart]);
+    }, [searchParams, clearCart]);
 
 
     return (
@@ -95,3 +95,5 @@ export default function VerifyPaymentPage() {
         </div>
     );
 }
+
+    
