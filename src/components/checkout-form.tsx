@@ -21,7 +21,6 @@ import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
 import { usePaystack } from '@/hooks/use-paystack';
-import { verifyTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -69,23 +68,9 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         };
     }, [subtotal, shippingFee]);
     
-    const onSuccess = async (reference: string) => {
-        setIsProcessing(true);
-        const result = await verifyTransactionAction(reference);
-        if (result.success) {
-            clearCart();
-            toast({
-                title: "Payment Successful!",
-                description: "Your order has been placed. You can view it in your profile.",
-            });
-            router.push('/profile');
-        } else {
-             toast({
-                title: "Verification Failed",
-                description: result.error || "We could not verify your payment. Please contact support.",
-                variant: "destructive"
-            });
-        }
+    const onSuccess = () => {
+        // Verification will now happen on the /verify-payment page via a server action.
+        // This makes the flow more robust. The cart will be cleared on that page upon success.
         setIsProcessing(false);
     };
 
@@ -101,8 +86,8 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
     const { initializePayment } = usePaystack({
         amount: Math.round(calculations.totalPayable * 100), // convert to kobo
         email: user?.email || '',
-        onSuccess: (res) => onSuccess(res.reference),
-        onClose: onClose,
+        onSuccess,
+        onClose,
     });
     
     const onSubmit = async (data: CheckoutFormValues) => {
@@ -115,7 +100,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
         
         const metadata = {
             buyer_id: user?.id,
-            customer_name: data.name,
+            customer_name: data.name, // Pass the customer name
             customer_phone: data.phone,
             delivery_address: data.address,
             cartItems: cartItems.map(item => ({ 
