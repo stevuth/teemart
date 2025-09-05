@@ -8,7 +8,7 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Transaction } from '@/lib/types';
 
 const PAYSTACK_API_URL = 'https://api.paystack.co';
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "sk_test_dc2996e32f46e3b88e8e636b2122cba9914cac4d";
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
 
 /**
@@ -20,8 +20,8 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "sk_test_dc2996e3
  */
 export async function initializeTransactionAction(email: string, amount: number, metadata: any) {
     if (!PAYSTACK_SECRET_KEY) {
-        console.error("Paystack secret key is not set.");
-        return { success: false, error: 'Server configuration error.' };
+        console.error("Paystack secret key is not set. Please check your .env.local file.");
+        return { success: false, error: 'Server configuration error. Payment provider not set up.' };
     }
 
     let callbackUrl: string;
