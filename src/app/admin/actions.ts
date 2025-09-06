@@ -58,16 +58,20 @@ export type DisputeWithRelations = {
   status: 'open' | 'resolved';
   created_at: string;
   resolved_at: string | null;
-  paystack_ref: string | null;
-  product_details: {
-    name: string;
-    seller_name: string; // This might be stale, but good for a fallback
+  transactions: {
+    paystack_ref: string;
+    product_details: {
+      name: string;
+      seller_name: string;
+    };
+    profiles: {
+        email: string | null;
+    } | null;
   } | null;
-  seller_id: string | null;
-  buyer_name: string | null;
-  buyer_email: string | null;
-  seller_name: string | null;
-  seller_email: string | null;
+  buyer: {
+    full_name: string | null;
+    email: string | null;
+  } | null;
 };
 
 
@@ -112,16 +116,35 @@ export async function getDisputes() {
     }
 
     const supabase = createSupabaseServerClient();
-    // Query the new view instead of performing complex joins
+    
     const { data, error } = await supabase
-        .from('disputes_with_details')
-        .select('*')
+        .from('disputes')
+        .select(`
+            *,
+            buyer:profiles (full_name, email),
+            transaction:transactions (
+                paystack_ref,
+                product_details,
+                seller:profiles (email, full_name)
+            )
+        `)
         .order('created_at', { ascending: false });
 
     if (error) {
         console.error('Error in getDisputes server action:', error);
         return { success: false, error: error.message };
     }
+
+    // Transform the data to match the expected DisputeWithRelations type structure
+    const transformedData = data.map(d => ({
+        ...d,
+        buyer_name: d.buyer?.full_name,
+        buyer_email: d.buyer?.email,
+        seller_name: d.transaction?.seller?.full_name,
+        seller_email: d.transaction?.seller?.email,
+        paystack_ref: d.transaction?.paystack_ref,
+        product_details: d.transaction?.product_details,
+    }));
     
-    return { success: true, data: data as DisputeWithRelations[] };
+    return { success: true, data: transformedData as unknown as DisputeWithRelations[] };
 }
