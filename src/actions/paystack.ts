@@ -4,11 +4,12 @@
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import axios from "axios";
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+// Using a test secret key for development. Replace with your actual test key.
+const PAYSTACK_SECRET_KEY = "YOUR_PAYSTACK_TEST_SECRET_KEY"; // process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
-if (!PAYSTACK_SECRET_KEY) {
-    console.error("Paystack secret key is not set in environment variables.");
+if (!PAYSTACK_SECRET_KEY || PAYSTACK_SECRET_KEY === "YOUR_PAYSTACK_TEST_SECRET_KEY") {
+    console.error("Paystack secret key is not set or is using the placeholder test key.");
 }
 
 /**
@@ -21,8 +22,8 @@ if (!PAYSTACK_SECRET_KEY) {
 export async function initializeTransactionAction(email: string, amount: number, metadata: object = {}) {
     const callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-payment`;
 
-    if (!PAYSTACK_SECRET_KEY) {
-        return { success: false, error: 'Payment provider not configured.' };
+    if (!PAYSTACK_SECRET_KEY || PAYSTACK_SECRET_KEY === "YOUR_PAYSTACK_TEST_SECRET_KEY") {
+        return { success: false, error: 'Payment provider not configured. Please set a valid test key.' };
     }
     
     try {
@@ -56,8 +57,8 @@ export async function initializeTransactionAction(email: string, amount: number,
  */
 export async function verifyTransactionAction(reference: string) {
     console.log(`[Action] Verifying transaction with reference: ${reference}`);
-    if (!PAYSTACK_SECRET_KEY) {
-        console.error("[Action Error] Paystack secret key is not set.");
+    if (!PAYSTACK_SECRET_KEY || PAYSTACK_SECRET_KEY === "YOUR_PAYSTACK_TEST_SECRET_KEY") {
+        console.error("[Action Error] Paystack secret key is not set or is a placeholder.");
         return { success: false, error: 'Payment provider not configured.' };
     }
     
@@ -212,7 +213,7 @@ export async function markAsDeliveredAction(transactionId: string) {
  * @returns An object with either the bank list data or an error message.
  */
 export async function getBankListAction() {
-    if (!PAYSTACK_SECRET_KEY) {
+    if (!PAYSTACK_SECRET_KEY || PAYSTACK_SECRET_KEY === "YOUR_PAYSTACK_TEST_SECRET_KEY") {
         return { success: false, error: 'Payment provider not configured.' };
     }
     try {
@@ -233,7 +234,7 @@ export async function getBankListAction() {
  * @returns An object with either the resolved account data or an error message.
  */
 export async function resolveAccountNumberAction(accountNumber: string, bankCode: string) {
-     if (!PAYSTACK_SECRET_KEY) {
+     if (!PAYSTACK_SECRET_KEY || PAYSTACK_SECRET_KEY === "YOUR_PAYSTACK_TEST_SECRET_KEY") {
         return { success: false, error: 'Payment provider not configured.' };
     }
     try {
