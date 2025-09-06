@@ -29,20 +29,20 @@ type Dispute = {
   status: 'open' | 'resolved';
   created_at: string;
   resolved_at: string | null;
-  transaction: {
+  transactions: {
     paystack_ref: string;
     product_details: {
         name: string;
         seller_name: string;
-    },
+    };
     seller: {
         email: string;
-    },
-  },
+    };
+  } | null,
   buyer: {
     full_name: string;
     email: string;
-  }
+  } | null;
 };
 
 type StatusFilter = 'all' | 'open' | 'resolved';
@@ -62,8 +62,14 @@ export function DisputeTable() {
         const { data, error } = await supabase
             .from('disputes')
             .select(`
-                *,
-                transaction:transactions (
+                id,
+                transaction_id,
+                buyer_id,
+                message,
+                status,
+                created_at,
+                resolved_at,
+                transactions (
                     paystack_ref,
                     product_details,
                     seller:profiles (email)
@@ -142,16 +148,16 @@ export function DisputeTable() {
                             {filteredDisputes.map(dispute => (
                                 <TableRow key={dispute.id} className={dispute.status === 'open' ? 'bg-orange-50' : ''}>
                                     <TableCell>
-                                        <div className="font-medium">{dispute.buyer.full_name}</div>
-                                        <div className="text-xs text-muted-foreground">{dispute.buyer.email}</div>
+                                        <div className="font-medium">{dispute.buyer?.full_name}</div>
+                                        <div className="text-xs text-muted-foreground">{dispute.buyer?.email}</div>
                                     </TableCell>
                                      <TableCell>
-                                        <div className="font-medium">{dispute.transaction.product_details.seller_name}</div>
-                                        <div className="text-xs text-muted-foreground">{dispute.transaction.seller?.email || 'N/A'}</div>
+                                        <div className="font-medium">{dispute.transactions?.product_details.seller_name}</div>
+                                        <div className="text-xs text-muted-foreground">{dispute.transactions?.seller?.email || 'N/A'}</div>
                                     </TableCell>
                                      <TableCell>
-                                        <div className="font-medium max-w-xs truncate">{dispute.transaction.product_details.name}</div>
-                                         <Link href={`https://dashboard.paystack.com/#/transactions/${dispute.transaction.paystack_ref}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                                        <div className="font-medium max-w-xs truncate">{dispute.transactions?.product_details.name}</div>
+                                         <Link href={`https://dashboard.paystack.com/#/transactions/${dispute.transactions?.paystack_ref}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
                                            View on Paystack <ExternalLink className="h-3 w-3" />
                                         </Link>
                                     </TableCell>
@@ -167,7 +173,7 @@ export function DisputeTable() {
                                             </Button>
                                         ) : (
                                             <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                                Resolved on {format(new Date(dispute.resolved_at!), 'PPP')}
+                                                {dispute.resolved_at ? `Resolved on ${format(new Date(dispute.resolved_at), 'PPP')}` : 'Resolved'}
                                             </Badge>
                                         )}
                                     </TableCell>
