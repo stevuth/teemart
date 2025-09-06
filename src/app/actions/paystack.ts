@@ -2,7 +2,6 @@
 'use server';
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
-import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import axios from "axios";
 
 // This is the correct place to read the environment variable.
@@ -77,7 +76,6 @@ export async function verifyTransactionAction(reference: string) {
 
         if (data.data.status === 'success') {
             const supabase = createSupabaseServerClient();
-            const supabaseAdmin = createSupabaseAdminClient();
             const { metadata } = data.data;
             const { cartItems, buyer_id, customer_name, customer_phone, delivery_address, shipping_fee, type } = metadata;
             
@@ -89,7 +87,7 @@ export async function verifyTransactionAction(reference: string) {
                     throw new Error('User ID not found in transaction metadata for verification.');
                 }
 
-                 const { error: paymentError } = await supabaseAdmin
+                 const { error: paymentError } = await supabase
                     .from('verification_payments')
                     .insert({
                         user_id: userId,
@@ -102,7 +100,7 @@ export async function verifyTransactionAction(reference: string) {
                     throw new Error('Failed to log verification payment.');
                 }
                 
-                const { error: profileError } = await supabaseAdmin
+                const { error: profileError } = await supabase
                     .from('profiles')
                     .update({ verification_payment_status: 'paid' })
                     .eq('id', userId);
@@ -356,3 +354,5 @@ export async function releaseEscrowAction(transactionId: string) {
         return { success: false, error: error.response?.data?.message || 'Failed to initiate transfer.' };
     }
 }
+
+    
