@@ -1,15 +1,14 @@
-
 'use server';
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import axios from "axios";
 
-// Using a test secret key for development. Replace with your actual test key.
+// This is the correct place to read the environment variable.
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
 if (!PAYSTACK_SECRET_KEY) {
-    console.error("FATAL: Paystack secret key is not set in environment variables.");
+    console.error("FATAL: Paystack secret key is not set in environment variables. Ensure PAYSTACK_SECRET_KEY is in your .env.local file and the server is restarted.");
 }
 
 /**
@@ -346,5 +345,3 @@ export async function releaseEscrowAction(transactionId: string) {
         return { success: false, error: error.response?.data?.message || 'Failed to initiate transfer.' };
     }
 }
-
-    
