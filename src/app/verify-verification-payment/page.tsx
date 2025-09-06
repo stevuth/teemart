@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
@@ -61,7 +60,7 @@ function VerificationContent() {
                 </CardTitle>
                 <CardDescription>
                     {status === 'verifying' && 'Please wait while we confirm your transaction. Do not close this page.'}
-                    {status === 'success' && 'Your payment was successful. You will be redirected to your profile shortly.'}
+                    {status === 'success' && 'Your payment for identity verification has been confirmed. Please proceed to your profile to complete the next steps.'}
                     {status === 'failed' && (error || 'We could not verify your payment. Please try again or contact support.')}
                 </CardDescription>
             </CardHeader>
@@ -69,7 +68,7 @@ function VerificationContent() {
                 <div className="flex w-full justify-center gap-4">
                      {status === 'success' && (
                         <Button asChild className="w-full">
-                            <Link href="/profile">Go to My Profile</Link>
+                            <Link href="/profile">Continue Verification</Link>
                         </Button>
                     )}
                      {status === 'failed' && (
