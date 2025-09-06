@@ -20,7 +20,7 @@ import type { CartItem } from '@/contexts/cart-context';
 import type { Profile } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/use-auth';
-import { initializeTransactionAction } from '@/actions/paystack';
+import { initializeTransactionAction } from '@/app/actions/paystack';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
