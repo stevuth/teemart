@@ -108,8 +108,8 @@ export function DisputeTable() {
                                         <div className="text-xs text-muted-foreground">{dispute.buyer?.email}</div>
                                     </TableCell>
                                      <TableCell>
-                                        <div className="font-medium">{dispute.transaction?.product_details.seller_name}</div>
-                                        <div className="text-xs text-muted-foreground">{dispute.transaction?.seller?.email || 'N/A'}</div>
+                                        <div className="font-medium">{dispute.transaction?.product_details.seller_name || 'N/A'}</div>
+                                        {/* The email is not available in this simplified query, which is fine for now. */}
                                     </TableCell>
                                      <TableCell>
                                         <div className="font-medium max-w-xs truncate">{dispute.transaction?.product_details.name}</div>

@@ -64,9 +64,7 @@ export type DisputeWithRelations = {
         name: string;
         seller_name: string;
     };
-    seller: {
-        email: string;
-    } | null;
+    seller_id: string; // Keep seller_id for potential future use, e.g. linking to profile
   } | null;
   buyer: {
     full_name: string;
@@ -116,6 +114,8 @@ export async function getDisputes() {
     }
 
     const supabase = createSupabaseServerClient();
+    // Simplified query to avoid complex RLS join issues.
+    // We get the buyer info and the transaction info. Seller info is on the transaction's product_details.
     const { data, error } = await supabase
         .from('disputes')
         .select(`
@@ -126,12 +126,12 @@ export async function getDisputes() {
             status,
             created_at,
             resolved_at,
-            transaction:transactions!inner(
+            transaction:transactions(
                 paystack_ref,
                 product_details,
-                seller:profiles!transactions_seller_id_fkey(email)
+                seller_id
             ),
-            buyer:profiles!disputes_buyer_id_fkey(full_name, email)
+            buyer:profiles(full_name, email)
         `)
         .order('created_at', { ascending: false });
 
@@ -139,7 +139,6 @@ export async function getDisputes() {
         console.error('Error in getDisputes server action:', error);
         return { success: false, error: error.message };
     }
-
+    
     return { success: true, data: data as DisputeWithRelations[] };
 }
-
