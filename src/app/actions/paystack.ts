@@ -9,7 +9,7 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
 if (!PAYSTACK_SECRET_KEY) {
-    console.error("Paystack secret key is not set in environment variables.");
+    console.error("FATAL: Paystack secret key is not set in environment variables.");
 }
 
 /**
@@ -23,7 +23,8 @@ export async function initializeTransactionAction(email: string, amount: number,
     const callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-payment`;
 
     if (!PAYSTACK_SECRET_KEY) {
-        return { success: false, error: 'Payment provider not configured.' };
+        console.error("Paystack key is missing. Ensure PAYSTACK_SECRET_KEY is set in your .env.local file and the server is restarted.");
+        return { success: false, error: 'Payment provider not configured. Please contact support.' };
     }
     
     try {
@@ -316,7 +317,7 @@ export async function releaseEscrowAction(transactionId: string) {
     
     // 4. Initiate the transfer
     try {
-        const amountToTransfer = (transaction.product_price - transaction.seller_fee) * 100; // in kobo
+        const amountToTransfer = (transaction.product_price - (transaction.product_price * 0.02)) * 100; // in kobo
         
         await axios.post(`${PAYSTACK_API_URL}/transfer`, {
             source: "balance",
