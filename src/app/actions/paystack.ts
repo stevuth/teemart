@@ -21,6 +21,9 @@ if (!PAYSTACK_SECRET_KEY) {
  */
 export async function initializeTransactionAction(email: string, amount: number, metadata: object = {}) {
     const callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-payment`;
+    const verification_callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-verification-payment`;
+
+    const isVerification = (metadata as any)?.type === 'verification_payment';
 
     if (!PAYSTACK_SECRET_KEY) {
         console.error("Paystack key is missing. Ensure PAYSTACK_SECRET_KEY is set in your .env.local file and the server is restarted.");
@@ -34,7 +37,7 @@ export async function initializeTransactionAction(email: string, amount: number,
                 email, 
                 amount: Math.round(amount * 100), // Convert to kobo
                 metadata,
-                callback_url
+                callback_url: isVerification ? verification_callback_url : callback_url,
             },
             {
                 headers: {
@@ -79,10 +82,15 @@ export async function verifyTransactionAction(reference: string) {
             // Handle Verification Payment
             if (type === 'verification_payment') {
                 console.log('[Action] Processing verification payment.');
+                const userId = metadata.user_id;
+                if (!userId) {
+                    throw new Error('User ID not found in transaction metadata for verification.');
+                }
+
                  const { error: paymentError } = await supabase
                     .from('verification_payments')
                     .insert({
-                        user_id: buyer_id,
+                        user_id: userId,
                         amount: data.data.amount / 100, // convert from kobo
                         paystack_ref: reference,
                     });
@@ -95,7 +103,7 @@ export async function verifyTransactionAction(reference: string) {
                 const { error: profileError } = await supabase
                     .from('profiles')
                     .update({ verification_payment_status: 'paid' })
-                    .eq('id', buyer_id);
+                    .eq('id', userId);
 
                 if (profileError) {
                     console.error('[Action Error] Supabase profiles update error:', profileError);
@@ -346,3 +354,5 @@ export async function releaseEscrowAction(transactionId: string) {
         return { success: false, error: error.response?.data?.message || 'Failed to initiate transfer.' };
     }
 }
+
+    

@@ -67,7 +67,7 @@ export function VerificationForm() {
         setIsPaying(true);
 
         const metadata = {
-            user_id: user.id,
+            user_id: user.id, // Pass the user ID in the metadata
             type: 'verification_payment',
         };
 
@@ -244,3 +244,5 @@ export function VerificationForm() {
         </Card>
     );
 }
+
+    
