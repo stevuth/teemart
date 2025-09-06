@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -44,6 +43,14 @@ export function RaiseDisputeDialog({ transaction, isOpen, onClose, onDisputeRais
 
   const { isSubmitting } = form.formState;
 
+  // Effect to reset the form when the dialog opens or closes
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset({ message: "" });
+    }
+  }, [isOpen, form]);
+
+
   const handleSubmit = async (data: DisputeFormValues) => {
     if (!transaction) return;
 
@@ -63,11 +70,6 @@ export function RaiseDisputeDialog({ transaction, isOpen, onClose, onDisputeRais
       });
     }
   };
-  
-  // Reset form when dialog is closed or transaction changes
-  if (!isOpen && form.formState.isDirty) {
-    form.reset();
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
