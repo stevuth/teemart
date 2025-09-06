@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { getDisputes, type DisputeWithRelations } from '@/app/admin/actions';
 import {
   Table,
   TableBody,
@@ -12,7 +13,7 @@ import {
   TableCaption,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, CheckCircle, MessageSquareWarning, ExternalLink } from 'lucide-react';
+import { Loader2, CheckCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
@@ -20,76 +21,32 @@ import { Badge } from './ui/badge';
 import Link from 'next/link';
 import { resolveDisputeAction } from '@/app/actions/dispute';
 
-type Dispute = {
-  id: string;
-  transaction_id: string;
-  buyer_id: string;
-  message: string;
-  status: 'open' | 'resolved';
-  created_at: string;
-  resolved_at: string | null;
-  transactions: {
-    paystack_ref: string;
-    product_details: {
-        name: string;
-        seller_name: string;
-    };
-    seller: {
-        email: string;
-    };
-  } | null,
-  buyer: {
-    full_name: string;
-    email: string;
-  } | null;
-};
-
 type StatusFilter = 'all' | 'open' | 'resolved';
 
 export function DisputeTable() {
-    const [disputes, setDisputes] = useState<Dispute[]>([]);
+    const [disputes, setDisputes] = useState<DisputeWithRelations[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<StatusFilter>('open');
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const { toast } = useToast();
-    const { supabase } = useAuth();
 
     const fetchDisputes = useCallback(async () => {
-        if (!supabase) return;
         setLoading(true);
+        const result = await getDisputes();
 
-        const { data, error } = await supabase
-            .from('disputes')
-            .select(`
-                id,
-                transaction_id,
-                buyer_id,
-                message,
-                status,
-                created_at,
-                resolved_at,
-                transactions!inner(
-                    paystack_ref,
-                    product_details,
-                    seller:profiles!inner(email)
-                ),
-                buyer:profiles!inner(full_name, email)
-            `)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error("Error fetching disputes:", error);
+        if (result.success && result.data) {
+            setDisputes(result.data);
+        } else {
+            console.error("Error fetching disputes:", result.error);
             toast({
                 title: "Error",
                 description: "Could not fetch the list of disputes.",
                 variant: "destructive"
             });
             setDisputes([]);
-        } else {
-            setDisputes(data as Dispute[]);
         }
         setLoading(false);
-    }, [toast, supabase]);
+    }, [toast]);
 
     useEffect(() => {
         fetchDisputes();
@@ -151,12 +108,12 @@ export function DisputeTable() {
                                         <div className="text-xs text-muted-foreground">{dispute.buyer?.email}</div>
                                     </TableCell>
                                      <TableCell>
-                                        <div className="font-medium">{dispute.transactions?.product_details.seller_name}</div>
-                                        <div className="text-xs text-muted-foreground">{dispute.transactions?.seller?.email || 'N/A'}</div>
+                                        <div className="font-medium">{dispute.transaction?.product_details.seller_name}</div>
+                                        <div className="text-xs text-muted-foreground">{dispute.transaction?.seller?.email || 'N/A'}</div>
                                     </TableCell>
                                      <TableCell>
-                                        <div className="font-medium max-w-xs truncate">{dispute.transactions?.product_details.name}</div>
-                                         <Link href={`https://dashboard.paystack.com/#/transactions/${dispute.transactions?.paystack_ref}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                                        <div className="font-medium max-w-xs truncate">{dispute.transaction?.product_details.name}</div>
+                                         <Link href={`https://dashboard.paystack.com/#/transactions/${dispute.transaction?.paystack_ref}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
                                            View on Paystack <ExternalLink className="h-3 w-3" />
                                         </Link>
                                     </TableCell>

@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
 import { updateUserBanAction } from '@/app/actions/user';
+import { getUsersWithStats, type UserProfileWithStats } from '@/app/admin/actions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,19 +32,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type UserProfileWithStats = {
-  id: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  role: string | null;
-  is_verified: boolean;
-  created_at: string;
-  banned_until: string | null;
-  sales_count: number;
-  purchases_count: number;
-};
-
 type VerificationFilter = 'all' | 'verified' | 'unverified';
 
 export function UserTable() {
@@ -52,35 +40,31 @@ export function UserTable() {
   const [filter, setFilter] = useState<VerificationFilter>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { supabase, user: adminUser } = useAuth();
+  const { user: adminUser } = useAuth();
 
   const fetchUsers = useCallback(async () => {
-    if (!supabase) return;
     setLoading(true);
+    const result = await getUsersWithStats();
 
-    const { data, error } = await supabase.rpc('get_users_with_stats');
-
-    if (error) {
-        console.error("Error fetching users with stats:", error);
+    if (result.success && result.data) {
+        setUsers(result.data);
+    } else {
+        console.error("Error fetching users with stats:", result.error);
         toast({
             title: "Error",
             description: "Could not fetch the list of users.",
             variant: "destructive"
         });
         setUsers([]);
-    } else {
-        setUsers(data as UserProfileWithStats[]);
     }
     
     setLoading(false);
-  }, [toast, supabase]);
+  }, [toast]);
 
 
   useEffect(() => {
-    if (supabase) {
-      fetchUsers();
-    }
-  }, [fetchUsers, supabase]);
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleBanUser = async (userId: string, durationDays: number | null) => {
     console.log(`[Client] handleBanUser called for userId: ${userId} with duration: ${durationDays}`);

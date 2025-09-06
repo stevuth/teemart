@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { getSellersWithProducts, type SellerWithProducts } from '@/app/admin/actions';
 import {
   Table,
   TableBody,
@@ -30,14 +30,6 @@ type ProductInfo = {
     image_url: string[]; // This will now be included
 };
 
-type SellerWithProducts = {
-    seller_id: string;
-    full_name: string;
-    email: string;
-    product_count: number;
-    products: ProductInfo[];
-};
-
 export function SellerTable() {
     const [sellers, setSellers] = useState<SellerWithProducts[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,33 +37,28 @@ export function SellerTable() {
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const { toast } = useToast();
-    const { supabase } = useAuth();
 
     const fetchSellers = useCallback(async () => {
-        if (!supabase) return;
         setLoading(true);
-
-        const { data, error } = await supabase.rpc('get_sellers_with_products');
+        const result = await getSellersWithProducts();
         
-        if (error) {
-            console.error("Error fetching sellers:", error);
+        if (result.success && result.data) {
+            setSellers(result.data);
+        } else {
+            console.error("Error fetching sellers:", result.error);
             toast({
                 title: "Error",
                 description: "Could not fetch the list of sellers.",
                 variant: "destructive"
             });
             setSellers([]);
-        } else {
-            setSellers(data as SellerWithProducts[]);
         }
         setLoading(false);
-    }, [toast, supabase]);
+    }, [toast]);
 
     useEffect(() => {
-        if (supabase) {
-            fetchSellers();
-        }
-    }, [fetchSellers, supabase]);
+        fetchSellers();
+    }, [fetchSellers]);
     
     const filteredSellers = useMemo(() => {
         if (!searchTerm) {
