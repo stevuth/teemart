@@ -58,14 +58,15 @@ export type DisputeWithRelations = {
   status: 'open' | 'resolved';
   created_at: string;
   resolved_at: string | null;
-  transactions: {
+  transaction: {
     paystack_ref: string;
     product_details: {
       name: string;
       seller_name: string;
     };
-    profiles: {
-        email: string | null;
+    seller: {
+      email: string | null;
+      full_name: string | null;
     } | null;
   } | null;
   buyer: {
@@ -117,15 +118,20 @@ export async function getDisputes() {
 
     const supabase = createSupabaseServerClient();
     
+    // This query is structured to be explicit about relationships.
+    // 1. Select all from disputes.
+    // 2. Join profiles where the dispute's buyer_id matches the profile id (aliased as 'buyer').
+    // 3. Join transactions where the dispute's transaction_id matches the transaction id.
+    // 4. From within that transaction join, join profiles again where the transaction's seller_id matches the profile id (aliased as 'seller').
     const { data, error } = await supabase
         .from('disputes')
         .select(`
             *,
-            buyer:profiles (full_name, email),
-            transaction:transactions (
+            buyer:profiles!disputes_buyer_id_fkey(full_name, email),
+            transaction:transactions!disputes_transaction_id_fkey(
                 paystack_ref,
                 product_details,
-                seller:profiles (email, full_name)
+                seller:profiles!transactions_seller_id_fkey(email, full_name)
             )
         `)
         .order('created_at', { ascending: false });
@@ -134,17 +140,6 @@ export async function getDisputes() {
         console.error('Error in getDisputes server action:', error);
         return { success: false, error: error.message };
     }
-
-    // Transform the data to match the expected DisputeWithRelations type structure
-    const transformedData = data.map(d => ({
-        ...d,
-        buyer_name: d.buyer?.full_name,
-        buyer_email: d.buyer?.email,
-        seller_name: d.transaction?.seller?.full_name,
-        seller_email: d.transaction?.seller?.email,
-        paystack_ref: d.transaction?.paystack_ref,
-        product_details: d.transaction?.product_details,
-    }));
     
-    return { success: true, data: transformedData as unknown as DisputeWithRelations[] };
+    return { success: true, data: data as unknown as DisputeWithRelations[] };
 }

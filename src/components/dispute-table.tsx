@@ -35,12 +35,12 @@ export function DisputeTable() {
         const result = await getDisputes();
 
         if (result.success && result.data) {
-            setDisputes(result.data as any);
+            setDisputes(result.data);
         } else {
             console.error("Error fetching disputes:", result.error);
             toast({
-                title: "Error",
-                description: `Error fetching disputes: ${result.error}`,
+                title: "Error Fetching Disputes",
+                description: `There was an issue loading disputes: ${result.error}`,
                 variant: "destructive"
             });
             setDisputes([]);
