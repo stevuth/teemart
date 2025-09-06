@@ -17,17 +17,22 @@ function VerificationContent() {
     
     const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
     const [error, setError] = useState<string | null>(null);
+    const [hasVerified, setHasVerified] = useState(false);
 
     useEffect(() => {
+        if (hasVerified) return;
+
         const reference = searchParams.get('reference');
         
         if (!reference) {
             setError("No payment reference found.");
             setStatus('failed');
+            setHasVerified(true);
             return;
         }
 
         async function verify() {
+            setHasVerified(true);
             const result = await verifyTransactionAction(reference!);
             if (result.success) {
                 setStatus('success');
@@ -39,7 +44,7 @@ function VerificationContent() {
         
         verify();
 
-    }, [searchParams]);
+    }, [searchParams, hasVerified]);
 
 
     return (
