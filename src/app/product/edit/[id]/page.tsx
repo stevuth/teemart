@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useParams } from 'next/navigation';
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -14,7 +14,7 @@ import { BackButton } from '@/components/back-button';
 
 export default function EditProductPage() {
     const { user, loading: authLoading, supabase } = useAuth();
-    const params = useParams();
+    const params = use(useParams());
     const productId = params.id as string;
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);

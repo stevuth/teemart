@@ -118,11 +118,6 @@ export async function getDisputes() {
 
     const supabase = createSupabaseServerClient();
     
-    // This query is structured to be explicit about relationships.
-    // 1. Select all from disputes.
-    // 2. Join profiles where the dispute's buyer_id matches the profile id (aliased as 'buyer').
-    // 3. Join transactions where the dispute's transaction_id matches the transaction id.
-    // 4. From within that transaction join, join profiles again where the transaction's seller_id matches the profile id (aliased as 'seller').
     const { data, error } = await supabase
         .from('disputes')
         .select(`
