@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -274,6 +274,31 @@ export default function ProfilePage() {
     return <Badge variant="outline" className={cn("capitalize", statusStyles[status])}>{status.replace(/_/g, ' ')}</Badge>;
   }
 
+  const PaymentStatusBadge = ({ status }: { status: Transaction['status'] }) => {
+    let text;
+    let style;
+    switch (status) {
+        case 'released':
+            text = 'Paid';
+            style = 'bg-green-100 text-green-800 border-green-300';
+            break;
+        case 'refunded':
+        case 'disputed':
+            text = 'N/A';
+            style = 'bg-gray-100 text-gray-800 border-gray-300';
+            break;
+        default:
+            text = 'Held in Escrow';
+            style = 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    }
+    return (
+        <div className="flex flex-col items-end">
+            <p className="text-xs text-muted-foreground">Payment</p>
+            <Badge variant="outline" className={cn("capitalize", style)}>{text}</Badge>
+        </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <DeleteProductDialog 
@@ -380,11 +405,15 @@ export default function ProfilePage() {
                                               <div className="flex-1">
                                                   <p className="font-bold">{t.product_details?.name}</p>
                                                   <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
+                                                  <p className="text-lg font-bold text-primary pt-1">₦{t.product_price.toLocaleString()}</p>
                                               </div>
                                           </div>
-                                          <div className="flex sm:flex-col items-end justify-between w-full sm:w-auto">
-                                              <TransactionStatusBadge status={t.status} />
-                                              <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
+                                          <div className="flex flex-col items-end justify-between self-stretch gap-2">
+                                              <div className="flex flex-col items-end">
+                                                <p className="text-xs text-muted-foreground">Order Status</p>
+                                                <TransactionStatusBadge status={t.status} />
+                                              </div>
+                                              <PaymentStatusBadge status={t.status} />
                                           </div>
                                       </CardContent>
                                       <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
@@ -439,3 +468,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
