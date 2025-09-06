@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
@@ -69,12 +68,12 @@ export function DisputeTable() {
                 status,
                 created_at,
                 resolved_at,
-                transactions (
+                transactions!inner(
                     paystack_ref,
                     product_details,
-                    seller:profiles (email)
+                    seller:profiles!inner(email)
                 ),
-                buyer:profiles (full_name, email)
+                buyer:profiles!inner(full_name, email)
             `)
             .order('created_at', { ascending: false });
 
