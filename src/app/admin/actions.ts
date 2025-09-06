@@ -126,7 +126,7 @@ export async function getDisputes() {
             status,
             created_at,
             resolved_at,
-            transaction:transactions!left(
+            transaction:transactions!inner(
                 paystack_ref,
                 product_details,
                 seller:profiles!transactions_seller_id_fkey(email)
@@ -142,3 +142,4 @@ export async function getDisputes() {
 
     return { success: true, data: data as DisputeWithRelations[] };
 }
+
