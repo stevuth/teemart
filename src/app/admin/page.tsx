@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, AlertCircle, Banknote } from 'lucide-react';
+import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, AlertCircle, Banknote, MessageCircleWarning } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
 import { UserTable } from '@/components/user-table';
 import { SellerTable } from '@/components/seller-table';
@@ -23,13 +23,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { VerificationPaymentsTable } from '@/components/verification-payments-table';
+import { DisputeTable } from '@/components/dispute-table';
 
-type AdminView = 'verification' | 'sellers' | 'users' | 'hero' | 'verification_payments';
+type AdminView = 'verification' | 'sellers' | 'users' | 'hero' | 'verification_payments' | 'disputes';
 
 const navItems = [
     { id: 'verification', label: 'Verification Queue', icon: UserCheck },
     { id: 'sellers', label: 'Sellers & Listings', icon: ShoppingBag },
     { id: 'users', label: 'Registered Users', icon: Users },
+    { id: 'disputes', label: 'Disputes', icon: MessageCircleWarning },
     { id: 'hero', label: 'Hero Section', icon: GalleryHorizontal },
     { id: 'verification_payments', label: 'Verification Payments', icon: Banknote },
 ];
@@ -109,6 +111,8 @@ export default function AdminDashboardPage() {
         return <HeroSectionManager />;
       case 'verification_payments':
         return <VerificationPaymentsTable />;
+      case 'disputes':
+        return <DisputeTable />;
       default:
         return <VerificationQueue />;
     }

@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import Image from 'next/image';
 import { releaseEscrowAction, markAsDeliveredAction } from '@/app/actions/paystack';
+import { RaiseDisputeDialog } from '@/components/raise-dispute-dialog';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -62,6 +63,7 @@ export default function ProfilePage() {
   const [isReleasingPayment, setIsReleasingPayment] = useState<string | null>(null);
   const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
+  const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
 
   const fetchUserData = useCallback(async () => {
     if (!user || !supabase) return;
@@ -180,6 +182,11 @@ export default function ProfilePage() {
     setProductToDelete(null);
     fetchUserData();
   }
+  
+  const onDisputeRaised = () => {
+    setTransactionToDispute(null);
+    fetchUserData(); // Refetch data to show new "disputed" status
+  }
 
   const renderProfileError = (tabName: string) => (
     <div className="flex justify-center p-8">
@@ -284,8 +291,8 @@ export default function ProfilePage() {
             break;
         case 'refunded':
         case 'disputed':
-            text = 'N/A';
-            style = 'bg-gray-100 text-gray-800 border-gray-300';
+            text = 'On Hold';
+            style = 'bg-orange-100 text-orange-800 border-orange-300';
             break;
         default:
             text = 'Held in Escrow';
@@ -306,6 +313,12 @@ export default function ProfilePage() {
           isOpen={!!productToDelete}
           onClose={() => setProductToDelete(null)}
           onDeleted={onListingDeleted}
+      />
+       <RaiseDisputeDialog
+        transaction={transactionToDispute}
+        isOpen={!!transactionToDispute}
+        onClose={() => setTransactionToDispute(null)}
+        onDisputeRaised={onDisputeRaised}
       />
       <AlertDialog open={isConfirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
@@ -446,7 +459,38 @@ export default function ProfilePage() {
                   </TabsContent>
 
                   <TabsContent value="my-purchases" className="mt-0">
-                    {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => <Card key={t.id}><CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start"><div className="w-full sm:w-auto flex items-center gap-4 flex-1"><Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" /><div className="flex-1"><p className="font-bold">{t.product_details?.name}</p><p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p><p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p></div></div><div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto"><TransactionStatusBadge status={t.status} /><p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p></div></CardContent>{t.status === 'delivered' && (<CardFooter className="p-4 border-t"><Button className="w-full sm:w-auto ml-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>{isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}Confirm & Release Payment</Button></CardFooter>)}</Card>)}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
+                    {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => (
+                        <Card key={t.id}>
+                            <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
+                                <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
+                                    <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
+                                    <div className="flex-1">
+                                        <p className="font-bold">{t.product_details?.name}</p>
+                                        <p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p>
+                                        <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto">
+                                    <TransactionStatusBadge status={t.status} />
+                                    <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
+                                </div>
+                            </CardContent>
+                            <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
+                                {t.status === 'delivered' && (
+                                    <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
+                                        {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                                        Confirm & Release Payment
+                                    </Button>
+                                )}
+                                {(t.status === 'pending' || t.status === 'delivered') && (
+                                    <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(t)}>
+                                        <MessageCircleWarning className="mr-2 h-4 w-4" />
+                                        Raise a Dispute
+                                    </Button>
+                                )}
+                            </CardFooter>
+                        </Card>
+                    ))}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
                   </TabsContent>
                   
                   <TabsContent value="reviews" className="mt-0">
@@ -468,4 +512,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
