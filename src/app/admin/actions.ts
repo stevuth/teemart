@@ -129,9 +129,9 @@ export async function getDisputes() {
             transaction:transactions!inner(
                 paystack_ref,
                 product_details,
-                seller:profiles!inner(email)
+                seller:profiles!transactions_seller_id_fkey(email)
             ),
-            buyer:profiles!inner(full_name, email)
+            buyer:profiles!disputes_buyer_id_fkey(full_name, email)
         `)
         .order('created_at', { ascending: false });
 
