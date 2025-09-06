@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { SelfieCapture } from './selfie-capture';
 import { useRouter } from 'next/navigation';
-import { initializeTransactionAction } from '@/actions/paystack';
+import { initializeTransactionAction } from '@/app/actions/paystack';
 
 type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
