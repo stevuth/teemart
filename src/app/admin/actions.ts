@@ -58,18 +58,16 @@ export type DisputeWithRelations = {
   status: 'open' | 'resolved';
   created_at: string;
   resolved_at: string | null;
-  transaction: {
-    paystack_ref: string;
-    product_details: {
-        name: string;
-        seller_name: string;
-    };
-    seller_id: string; // Keep seller_id for potential future use, e.g. linking to profile
+  paystack_ref: string | null;
+  product_details: {
+    name: string;
+    seller_name: string; // This might be stale, but good for a fallback
   } | null;
-  buyer: {
-    full_name: string;
-    email: string;
-  } | null;
+  seller_id: string | null;
+  buyer_name: string | null;
+  buyer_email: string | null;
+  seller_name: string | null;
+  seller_email: string | null;
 };
 
 
@@ -114,25 +112,10 @@ export async function getDisputes() {
     }
 
     const supabase = createSupabaseServerClient();
-    // Simplified query to avoid complex RLS join issues.
-    // We get the buyer info and the transaction info. Seller info is on the transaction's product_details.
+    // Query the new view instead of performing complex joins
     const { data, error } = await supabase
-        .from('disputes')
-        .select(`
-            id,
-            transaction_id,
-            buyer_id,
-            message,
-            status,
-            created_at,
-            resolved_at,
-            transaction:transactions(
-                paystack_ref,
-                product_details,
-                seller_id
-            ),
-            buyer:profiles(full_name, email)
-        `)
+        .from('disputes_with_details')
+        .select('*')
         .order('created_at', { ascending: false });
 
     if (error) {

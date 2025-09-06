@@ -104,16 +104,16 @@ export function DisputeTable() {
                             {filteredDisputes.map(dispute => (
                                 <TableRow key={dispute.id} className={dispute.status === 'open' ? 'bg-orange-50' : ''}>
                                     <TableCell>
-                                        <div className="font-medium">{dispute.buyer?.full_name}</div>
-                                        <div className="text-xs text-muted-foreground">{dispute.buyer?.email}</div>
+                                        <div className="font-medium">{dispute.buyer_name}</div>
+                                        <div className="text-xs text-muted-foreground">{dispute.buyer_email}</div>
                                     </TableCell>
                                      <TableCell>
-                                        <div className="font-medium">{dispute.transaction?.product_details.seller_name || 'N/A'}</div>
-                                        {/* The email is not available in this simplified query, which is fine for now. */}
+                                        <div className="font-medium">{dispute.seller_name || 'N/A'}</div>
+                                        <div className="text-xs text-muted-foreground">{dispute.seller_email || 'N/A'}</div>
                                     </TableCell>
                                      <TableCell>
-                                        <div className="font-medium max-w-xs truncate">{dispute.transaction?.product_details.name}</div>
-                                         <Link href={`https://dashboard.paystack.com/#/transactions/${dispute.transaction?.paystack_ref}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
+                                        <div className="font-medium max-w-xs truncate">{dispute.product_details?.name}</div>
+                                         <Link href={`https://dashboard.paystack.com/#/transactions/${dispute.paystack_ref}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
                                            View on Paystack <ExternalLink className="h-3 w-3" />
                                         </Link>
                                     </TableCell>
