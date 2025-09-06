@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from "@/utils/supabase/server";
 import axios from "axios";
 
 // This is the correct place to read the environment variable.
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_SECRET_KEY = "sk_test_dc2996e32f46e3b88e8e636b2122cba9914cac4d";
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
 if (!PAYSTACK_SECRET_KEY) {
