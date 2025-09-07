@@ -1,7 +1,4 @@
 # Supabase project config.
 # For more information, see https://supabase.com/docs/guides/cli/config
-[functions]
-  [functions.send-push-notification]
-    handler = "index.handler"
-    runtime = "deno"
-    verify_jwt = false
+[functions.send-push-notification]
+  verify_jwt = false
