@@ -45,6 +45,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
+import { NotificationToggle } from '@/components/notification-toggle';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -626,7 +627,7 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-4">
           <BackButton />
         <div className="flex flex-col md:flex-row items-start gap-4 md:gap-8 mt-4">
             <div className="flex-shrink-0 flex flex-col items-center md:items-start">
@@ -657,11 +658,12 @@ export default function ProfilePage() {
                     <Button asChild variant="outline" className="w-full sm:w-auto">
                         <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help & Support</Link>
                     </Button>
+                    <NotificationToggle />
                 </div>
             </div>
         </div>
 
-        <Separator className="my-8" />
+        <Separator className="my-6 md:my-8" />
         
         {/* Mobile View */}
         <div className="md:hidden">

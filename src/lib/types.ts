@@ -16,6 +16,7 @@ export type Profile = {
     account_number?: string;
     bank_code?: string;
     recipient_code?: string;
+    fcm_tokens?: string[]; // For push notifications
 };
 
 export type Product = {
