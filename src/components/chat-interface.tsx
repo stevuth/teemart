@@ -179,6 +179,8 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
 
             if (error) throw error;
             
+            // The database trigger will now handle sending the notification.
+            
             setMessages(current => current.map(m => m.id === optimisticId ? (data as Message) : m));
 
         } catch (error: any) {

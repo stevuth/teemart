@@ -24,6 +24,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="font-body antialiased bg-secondary/20">
         <AuthProvider>
@@ -34,6 +35,18 @@ export default function RootLayout({
             </NotificationProvider>
           </CartProvider>
         </AuthProvider>
+        <Script id="service-worker-registration">
+          {`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then(function(registration) {
+                  console.log('Service Worker registered with scope:', registration.scope);
+                }).catch(function(err) {
+                  console.error('Service Worker registration failed:', err);
+                });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
