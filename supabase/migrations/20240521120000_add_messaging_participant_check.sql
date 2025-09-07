@@ -1,2 +1,0 @@
--- This migration has been renamed to 20240521140000_fix_messaging_permissions_again.sql to ensure it runs.
--- This file can be safely deleted.

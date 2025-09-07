@@ -1,36 +1,30 @@
+-- Drop existing RLS policies on messages to ensure a clean state.
+DROP POLICY IF EXISTS "Allow insert for conversation participants" ON public.messages;
+DROP POLICY IF EXISTS "Allow read for conversation participants" ON public.messages;
 
--- Enable HTTP extension for Supabase Edge Functions (if needed elsewhere)
-create extension if not exists http with schema extensions;
--- Enable pg_net for direct network access from PostgreSQL
-create extension if not exists pg_net with schema extensions;
-
--- Clean up any previous, potentially conflicting policies and functions
-drop policy if exists "Allow insert for authenticated users" on "public"."messages";
-drop policy if exists "Allow insert for conversation participants" on "public"."messages";
-drop function if exists is_conversation_participant(uuid, uuid);
-
--- Function to check if a user is part of a conversation
-create or replace function is_conversation_participant(p_user_id uuid, p_conversation_id uuid)
-returns boolean as $$
-begin
-  return exists (
-    select 1
-    from conversation_participants
-    where conversation_id = p_conversation_id and user_id = p_user_id
+-- A helper function to check if a user is part of a conversation.
+CREATE OR REPLACE FUNCTION is_conversation_participant(p_conversation_id uuid, p_user_id uuid)
+RETURNS boolean AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM conversation_participants
+    WHERE conversation_id = p_conversation_id AND user_id = p_user_id
   );
-end;
-$$ language plpgsql security definer;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS Policy: Allow users to insert messages only into conversations they are part of.
-create policy "Allow insert for conversation participants"
-on "public"."messages"
-for insert with check (
-  (auth.uid() = sender_id) and
-  is_conversation_participant(auth.uid(), conversation_id)
+-- POLICY: Allow users to read messages in conversations they are a part of.
+CREATE POLICY "Allow read for conversation participants"
+ON public.messages
+FOR SELECT USING (
+  is_conversation_participant(conversation_id, auth.uid())
 );
 
-
--- Completely remove the trigger and function related to push notifications.
--- This is the key fix to prevent the messaging error.
-drop trigger if exists on_new_message on public.messages;
-drop function if exists public.handle_new_message();
+-- POLICY: Allow users to insert messages into conversations they are a part of.
+-- This is the key policy that fixes the sending issue.
+CREATE POLICY "Allow insert for conversation participants"
+ON public.messages
+FOR INSERT WITH CHECK (
+  is_conversation_participant(conversation_id, auth.uid()) AND sender_id = auth.uid()
+);
