@@ -131,6 +131,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+
+        if (event === 'TOKEN_REFRESHED' && session) {
+            // Re-initialize the client with the new token
+            supabase.realtime.setAuth(session.access_token);
+        }
         
         await fetchProfile(session?.user ?? null, event === 'SIGNED_IN');
         
