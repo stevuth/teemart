@@ -2,9 +2,11 @@
 'use server';
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { type Transaction } from "@/lib/types";
 
 // Helper function to check if the current user is an admin
+// This still uses the user's context client
 async function isAdmin() {
     try {
         const supabase = createSupabaseServerClient();
@@ -114,7 +116,7 @@ export async function getUsersWithStats() {
             return { success: false, error: 'Permission denied.' };
         }
 
-        const supabase = createSupabaseServerClient();
+        const supabase = createSupabaseAdminClient();
         const { data, error } = await supabase.rpc('get_users_with_stats');
 
         if (error) {
@@ -136,7 +138,7 @@ export async function getSellersWithProducts() {
             return { success: false, error: 'Permission denied.' };
         }
 
-        const supabase = createSupabaseServerClient();
+        const supabase = createSupabaseAdminClient();
         const { data, error } = await supabase.rpc('get_sellers_with_products');
 
         if (error) {
@@ -158,7 +160,7 @@ export async function getDisputes() {
             return { success: false, error: 'Permission denied.' };
         }
 
-        const supabase = createSupabaseServerClient();
+        const supabase = createSupabaseAdminClient();
         
         const { data, error } = await supabase
             .from('disputes')
@@ -198,7 +200,7 @@ export async function getAdminDashboardStats() {
         if (!(await isAdmin())) {
             return { success: false, error: 'Permission denied.' };
         }
-        const supabase = createSupabaseServerClient();
+        const supabase = createSupabaseAdminClient();
         const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
         if (error) {
             console.error('Error fetching dashboard stats RPC:', error);
@@ -218,7 +220,7 @@ export async function getPendingPayouts() {
         if (!(await isAdmin())) {
             return { success: false, error: 'Permission denied.' };
         }
-        const supabase = createSupabaseServerClient();
+        const supabase = createSupabaseAdminClient();
         const { data, error } = await supabase.rpc('get_pending_payouts');
         if (error) {
             console.error('Error fetching pending payouts RPC:', error);
@@ -237,17 +239,35 @@ export async function getAllTransactions() {
         if (!(await isAdmin())) {
             return { success: false, error: 'Permission denied.' };
         }
-        const supabase = createSupabaseServerClient();
-        // Use the robust RPC function instead of a direct query
-        const { data, error } = await supabase.rpc('get_all_transactions_admin');
         
+        // Use the admin client to bypass RLS
+        const supabase = createSupabaseAdminClient();
+
+        // Perform a direct query with joins
+        const { data, error } = await supabase
+            .from('transactions')
+            .select(`
+                *,
+                buyer:profiles!transactions_buyer_id_fkey(full_name, email),
+                seller:profiles!transactions_seller_id_fkey(full_name, email)
+            `)
+            .order('created_at', { ascending: false });
+
         if (error) {
-            console.error('Error fetching admin transactions:', error);
+            console.error('Error fetching admin transactions:', { message: error.message, details: error.details, hint: error.hint });
             throw new Error(error.message);
         }
         
-        // The RPC function now returns data that already matches the AdminTransaction shape
-        return { success: true, data: data as AdminTransaction[] };
+        // Transform the data to the expected AdminTransaction shape
+        const transformedData = data.map((t: any) => ({
+            ...t,
+            buyer_name: t.buyer?.full_name || 'N/A',
+            buyer_email: t.buyer?.email || 'N/A',
+            seller_name: t.seller?.full_name || 'N/A',
+            seller_email: t.seller?.email || 'N/A',
+        }));
+
+        return { success: true, data: transformedData as AdminTransaction[] };
 
     } catch (e: any) {
         console.error("Server Action Exception: getAllTransactions failed.", e);
