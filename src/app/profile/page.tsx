@@ -639,13 +639,13 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8">
         <BackButton />
-        <Card className="mt-4 overflow-hidden">
-            <div className="relative h-24 md:h-32 bg-secondary/50"></div>
+        <Card className="overflow-hidden">
+            <div className="relative h-20 md:h-24 bg-secondary/50"></div>
             <div className="px-4 sm:px-6 pb-6">
                 <div className="flex flex-col sm:flex-row sm:items-end -mt-12 sm:-mt-16 relative z-10 gap-4">
-                    <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background ring-2 ring-primary/50">
+                    <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background ring-2 ring-primary/50 rounded-md">
                         <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
                         <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                     </Avatar>
@@ -659,7 +659,7 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                              <div className="flex items-center gap-2">
-                                <Button asChild variant="outline" size="sm">
+                                <Button asChild variant="outline" size="sm" className="h-8">
                                     <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help</Link>
                                 </Button>
                                 <NotificationToggle />
@@ -725,3 +725,6 @@ export default function ProfilePage() {
   );
 }
 
+
+
+    
