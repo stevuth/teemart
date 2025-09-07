@@ -28,26 +28,27 @@ export function NotificationToggle() {
         <Button
           variant="outline"
           size="sm"
+          className="h-8 px-2"
           onClick={subscribe}
           disabled={isInitializing}
         >
           {isInitializing ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Bell className="mr-2 h-4 w-4" />
+            <Bell className="h-4 w-4" />
           )}
-          Enable Notifications
+          <span className="sr-only sm:not-sr-only sm:ml-2">Notify</span>
         </Button>
       );
     }
   
     if (permissionStatus === 'denied') {
       return (
-         <Alert variant="destructive" className="max-w-xs">
+         <Alert variant="destructive" className="max-w-xs p-2">
               <BellOff className="h-4 w-4" />
-              <AlertTitle className="text-xs">Notifications Blocked</AlertTitle>
+              <AlertTitle className="text-xs sr-only">Notifications Blocked</AlertTitle>
               <AlertDescription className="text-xs">
-                  Enable in browser settings.
+                  Notifications Blocked
               </AlertDescription>
           </Alert>
       );
@@ -58,10 +59,11 @@ export function NotificationToggle() {
         <Button
           variant="destructive"
           size="sm"
+          className="h-8 px-2"
           onClick={unsubscribe}
         >
-          <BellOff className="mr-2 h-4 w-4" />
-          Disable Notifications
+          <BellOff className="h-4 w-4" />
+          <span className="sr-only sm:not-sr-only sm:ml-2">Notify Off</span>
         </Button>
       );
     }
@@ -70,14 +72,16 @@ export function NotificationToggle() {
       <Button
         variant="outline"
         size="sm"
+        className="h-8 px-2"
         onClick={subscribe}
       >
-        <Bell className="mr-2 h-4 w-4" />
-        Enable Notifications
+        <Bell className="h-4 w-4" />
+        <span className="sr-only sm:not-sr-only sm:ml-2">Notify</span>
       </Button>
     );
   }
 
   return <div className="flex items-center">{renderButton()}</div>
 }
+
 

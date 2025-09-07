@@ -593,18 +593,6 @@ export default function ProfilePage() {
         </div>
     );
   }
-  
-  const StatCard = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | number }) => (
-    <Card className="flex-1">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-      </CardContent>
-    </Card>
-  );
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary/30">
@@ -639,54 +627,16 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8">
-        <BackButton />
-        <Card className="overflow-hidden">
-            <div className="relative h-20 md:h-24 bg-secondary/50"></div>
-            <div className="px-4 sm:px-6 pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-end -mt-12 sm:-mt-16 relative z-10 gap-4">
-                    <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background ring-2 ring-primary/50 rounded-md">
-                        <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
-                        <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-                    </Avatar>
-                     <div className="flex-grow py-2">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                             <div>
-                                <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <p className="text-muted-foreground">TeeMart Seller</p>
-                                     {profile?.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
-                                </div>
-                            </div>
-                             <div className="flex items-center gap-2">
-                                <Button asChild variant="outline" size="sm" className="h-8">
-                                    <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help</Link>
-                                </Button>
-                                <NotificationToggle />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                 <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                     <StatCard icon={CalendarDays} label="Member Since" value={creationTime ? format(new Date(creationTime), 'MMM yyyy') : 'N/A'} />
-                     <StatCard icon={List} label="Active Listings" value={loadingData ? '-' : activeListings.length} />
-                     <StatCard icon={ShoppingBag} label="Total Sales" value={loadingData ? '-' : sales.length} />
-                     <StatCard icon={Star} label="Reviews" value={loadingData ? '-' : reviews.length} />
-                 </div>
-            </div>
-        </Card>
-        
-        <Separator />
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-2">
         
         {/* Mobile View */}
-        <div className="md:hidden p-4">
+        <div className="md:hidden">
             {renderMobileContent()}
         </div>
 
         {/* Desktop View */}
         <Tabs defaultValue="listings" className="w-full hidden md:block">
-          <div className="flex flex-col md:flex-row gap-8 p-4">
+          <div className="flex flex-col md:flex-row gap-8 py-4">
               <div className="w-full md:w-64 flex-shrink-0">
                   <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
                       <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
