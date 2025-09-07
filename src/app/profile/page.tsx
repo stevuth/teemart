@@ -542,13 +542,35 @@ export default function ProfilePage() {
     payment: { title: "Payment Details", content: renderPayment() },
   };
 
+  const MobileProfileHeader = () => (
+    <div className="p-4 bg-card rounded-lg border mb-6">
+        <div className="flex items-start gap-4">
+             <Avatar className="h-16 w-16 border rounded-md">
+                <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
+                <AvatarFallback className="rounded-md">{getInitials(displayName)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-grow">
+                <h1 className="text-xl font-bold">{displayName}</h1>
+                <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    {profile?.is_verified && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
+                    )}
+                    <NotificationToggle />
+                </div>
+            </div>
+        </div>
+    </div>
+  )
+
   const renderMobileContent = () => {
     if (mobileView === 'menu') {
         return (
             <div className="space-y-4">
+                 <MobileProfileHeader />
                 <div>
                     <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">My Activity</p>
-                    <div className="divide-y border-y">
+                    <div className="divide-y border-y bg-card rounded-lg">
                         {activityTabs.map(tab => (
                             <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
                                 <div className="flex items-center gap-4">
@@ -565,7 +587,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                     <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">Account Settings</p>
-                    <div className="divide-y border-y">
+                    <div className="divide-y border-y bg-card rounded-lg">
                         {settingsTabs.map(tab => (
                             <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
                                 <div className="flex items-center gap-4">
@@ -628,7 +650,7 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         {/* Mobile View */}
         <div className="md:hidden">
