@@ -74,6 +74,8 @@ export default function ProfilePage() {
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
   const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>('menu');
+  const [isChatting, setIsChatting] = useState(false);
+
 
   const fetchUserData = useCallback(async () => {
     if (!user || !supabase) return;
@@ -210,6 +212,35 @@ export default function ProfilePage() {
       </Alert>
     </div>
   );
+  
+  const handleChatWithSeller = async (sellerId: string) => {
+    if (!user) {
+        toast({ title: "Please log in", description: "You need to be logged in to chat with a seller.", variant: "destructive" });
+        return;
+    }
+    if (!sellerId) {
+        toast({ title: "Error", description: "Seller ID is missing.", variant: "destructive" });
+        return;
+    }
+
+    setIsChatting(true);
+    try {
+        const { data, error } = await supabase.rpc('get_or_create_conversation', {
+            p_participant_one_id: user.id,
+            p_participant_two_id: sellerId
+        });
+
+        if (error) throw error;
+        
+        router.push(`/messages?conversationId=${data}`);
+
+    } catch (error: any) {
+        console.error("Error starting conversation:", error);
+        toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
+    } finally {
+        setIsChatting(false);
+    }
+}
 
   if (authLoading) {
     return (
@@ -350,7 +381,7 @@ export default function ProfilePage() {
                     <AccordionContent>
                         <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
                             <div className="text-sm text-muted-foreground space-y-2">
-                                <h4 className="font-semibold text-sm text-foreground">Buyer &amp; Delivery Information</h4>
+                                <h4 className="font-semibold text-sm text-foreground">Buyer & Delivery Information</h4>
                                 <div className="flex items-center gap-2">
                                     <User className="h-4 w-4 text-primary" />
                                     <span>{t.product_details.buyer_name}</span>
@@ -397,6 +428,10 @@ export default function ProfilePage() {
                 </div>
             </CardContent>
             <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
+                <Button onClick={() => handleChatWithSeller(t.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
+                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
+                    Chat with Seller
+                </Button>
                 {t.status === 'delivered' && (
                     <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
                         {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}

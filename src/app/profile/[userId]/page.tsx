@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
-import { Loader2, Star, CalendarDays, Package, ShieldCheck, ShoppingCart, MessageSquare } from 'lucide-react';
+import { Loader2, Star, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,6 @@ export default function SellerProfilePage() {
     const [listings, setListings] = useState<Product[]>([]);
     const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isChatting, setIsChatting] = useState(false);
     const [reviewSubmittedToggle, setReviewSubmittedToggle] = useState(false);
 
     const fetchAllData = useCallback(async () => {
@@ -127,31 +126,6 @@ export default function SellerProfilePage() {
     const handleReviewSubmitted = () => {
         setReviewSubmittedToggle(prev => !prev);
     };
-    
-    const handleChatWithSeller = async () => {
-        if (!currentUser || !seller) {
-            toast({ title: "Please log in", description: "You need to be logged in to chat with a seller.", variant: "destructive" });
-            return;
-        }
-
-        setIsChatting(true);
-        try {
-            const { data, error } = await supabase.rpc('get_or_create_conversation', {
-                p_participant_one_id: currentUser.id,
-                p_participant_two_id: seller.id
-            });
-
-            if (error) throw error;
-            
-            router.push(`/messages?conversationId=${data}`);
-
-        } catch (error: any) {
-            console.error("Error starting conversation:", error);
-            toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
-        } finally {
-            setIsChatting(false);
-        }
-    }
 
     const averageRating = useMemo(() => {
         if (reviews.length === 0) {
@@ -244,7 +218,7 @@ export default function SellerProfilePage() {
                                 <ShieldCheck className="h-4 w-4 text-primary" />
                                  <Badge variant={seller.is_verified ? "secondary" : "destructive"} className={seller.is_verified ? "bg-green-100 text-green-800 border-green-300" : "bg-red-100 text-red-800 border-red-300"}>
                                     {seller.is_verified ? "Verified" : "Not Verified"}
-                                </Badge>
+                                 </Badge>
                             </div>
                             <div className="flex items-center gap-3">
                                 <Star className="h-4 w-4 text-primary" />
@@ -258,14 +232,6 @@ export default function SellerProfilePage() {
                                     <span>No ratings yet</span>
                                 )}
                             </div>
-                            {currentUser && currentUser.id !== seller.id && (
-                                <div className="col-span-2 lg:col-span-1">
-                                    <Button onClick={handleChatWithSeller} disabled={isChatting} className="w-full sm:w-auto">
-                                        {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
-                                        Chat with Seller
-                                    </Button>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -324,3 +290,4 @@ export default function SellerProfilePage() {
 }
 
     
+
