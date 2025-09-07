@@ -1,4 +1,3 @@
-
 // supabase/functions/send-push-notification/index.ts
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -30,7 +29,8 @@ async function getAccessToken() {
 serve(async (req) => {
   // 1. Validate authorization
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader || authHeader !== `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`) {
+  // Use the new secret name here
+  if (!authHeader || authHeader !== `Bearer ${Deno.env.get("SERVICE_ROLE_KEY")}`) {
     return new Response(JSON.stringify({ error: "Unauthorized: Invalid service role key." }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
@@ -48,7 +48,7 @@ serve(async (req) => {
   // 2. Create a Supabase client with the service_role_key to bypass RLS.
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    Deno.env.get("SERVICE_ROLE_KEY") ?? "", // Use the new secret name here
     { auth: { persistSession: false } }
   );
 

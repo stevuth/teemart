@@ -3,7 +3,7 @@
 
 [db]
 local_port = 54322
-uri = "postgres://postgres:[YOUR-PASSWORD]@db.femgftishdtzacfimkpw.supabase.co:5432/postgres"
+uri = postgresql://postgres:Mervelous%40100@db.femgftishdtzacfimkpw.supabase.co:5432/postgres
 
 [api]
 ports = [ 8000, 54321 ]
