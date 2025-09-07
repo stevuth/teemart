@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +49,8 @@ const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-fo
     ssr: false,
 });
 
+type MobileView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
+
 export default function ProfilePage() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
   const router = useRouter();
@@ -64,6 +66,7 @@ export default function ProfilePage() {
   const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
   const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
+  const [mobileView, setMobileView] = useState<MobileView>('menu');
 
   const fetchUserData = useCallback(async () => {
     if (!user || !supabase) return;
@@ -187,7 +190,7 @@ export default function ProfilePage() {
     setTransactionToDispute(null);
     fetchUserData(); // Refetch data to show new "disputed" status
   }
-
+  
   const renderProfileError = (tabName: string) => (
     <div className="flex justify-center p-8">
       <Alert variant="destructive" className="max-w-md">
@@ -259,16 +262,22 @@ export default function ProfilePage() {
   const creationTime = user.created_at;
 
   const activityTabs = [
-    { value: "active-listings", label: "Active Listings", icon: Package, count: activeListings.length },
-    { value: "my-sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
-    { value: "my-purchases", label: "My Purchases", icon: History, count: purchases.length },
+    { value: "listings", label: "Active Listings", icon: Package, count: activeListings.length },
+    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
+    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length },
     { value: "reviews", label: "Reviews Received", icon: Star, count: reviews.length },
   ];
 
   const settingsTabs = [
     { value: "verification", label: "Verification", icon: ShieldCheck },
-    { value: "payment-details", label: "Payment Details", icon: Banknote },
+    { value: "payment", label: "Payment Details", icon: Banknote },
   ];
+  
+  const renderListings = () => (
+    loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div> : 
+    activeListings.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{activeListings.map(product => <ProductCard key={product.id} product={product} isClickable={false} actions={<><Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button><Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></>}/>)}</div> : 
+    <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>
+  );
 
   const TransactionStatusBadge = ({ status }: { status: Transaction['status'] }) => {
     const statusStyles: { [key in Transaction['status']]: string } = {
@@ -302,6 +311,167 @@ export default function ProfilePage() {
         <div className="flex flex-col items-end">
             <p className="text-xs text-muted-foreground">Payment</p>
             <Badge variant="outline" className={cn("capitalize", style)}>{text}</Badge>
+        </div>
+    );
+  }
+  
+  const renderSales = () => (
+    loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
+    <div className="space-y-4">
+        {sales.map(t => (
+            <Card key={t.id}>
+                <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
+                    <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
+                        <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
+                        <div className="flex-1">
+                            <p className="font-bold">{t.product_details?.name}</p>
+                            <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
+                            <p className="text-lg font-bold text-primary pt-1">₦{t.product_price.toLocaleString()}</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end justify-between self-stretch gap-2">
+                        <div className="flex flex-col items-end">
+                          <p className="text-xs text-muted-foreground">Order Status</p>
+                          <TransactionStatusBadge status={t.status} />
+                        </div>
+                        <PaymentStatusBadge status={t.status} />
+                    </div>
+                </CardContent>
+                <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
+                    <div className="text-sm text-muted-foreground space-y-2">
+                         <h4 className="font-semibold text-sm text-foreground">Buyer &amp; Delivery Information</h4>
+                        <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-primary" />
+                            <span>{t.product_details.buyer_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-primary" />
+                            <span>{t.product_details.customer_phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Home className="h-4 w-4 text-primary" />
+                            <p>{t.product_details.delivery_address}</p>
+                        </div>
+                    </div>
+                    {t.status === 'pending' && (
+                        <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm">
+                            {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                            Confirm Delivery
+                        </Button>
+                    )}
+                </CardFooter>
+            </Card>
+        ))}
+    </div> 
+    : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>
+  );
+  
+  const renderPurchases = () => (
+     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => (
+        <Card key={t.id}>
+            <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
+                <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
+                    <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
+                    <div className="flex-1">
+                        <p className="font-bold">{t.product_details?.name}</p>
+                        <p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p>
+                        <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
+                    </div>
+                </div>
+                <div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto">
+                    <TransactionStatusBadge status={t.status} />
+                    <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
+                </div>
+            </CardContent>
+            <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
+                {t.status === 'delivered' && (
+                    <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
+                        {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                        Confirm & Release Payment
+                    </Button>
+                )}
+                {(t.status === 'pending' || t.status === 'delivered') && (
+                    <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(t)}>
+                        <MessageCircleWarning className="mr-2 h-4 w-4" />
+                        Raise a Dispute
+                    </Button>
+                )}
+            </CardFooter>
+        </Card>
+    ))}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>
+  );
+  
+  const renderReviews = () => (
+    loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} />
+  );
+  
+  const renderVerification = () => (
+    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")
+  );
+  
+  const renderPayment = () => (
+    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : renderProfileError("Payment Details")
+  );
+
+  const mobileContentMap: Record<MobileView, { title: string; content: JSX.Element; }> = {
+    menu: { title: "", content: <></>}, // Should not be rendered
+    listings: { title: "Active Listings", content: renderListings() },
+    sales: { title: "My Sales", content: renderSales() },
+    purchases: { title: "My Purchases", content: renderPurchases() },
+    reviews: { title: "Reviews Received", content: renderReviews() },
+    verification: { title: "Identity Verification", content: renderVerification() },
+    payment: { title: "Payment Details", content: renderPayment() },
+  };
+
+  const renderMobileContent = () => {
+    if (mobileView === 'menu') {
+        return (
+            <div className="space-y-4">
+                <div>
+                    <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">My Activity</p>
+                    <div className="divide-y border-y">
+                        {activityTabs.map(tab => (
+                            <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
+                                <div className="flex items-center gap-4">
+                                    <tab.icon className="h-6 w-6 text-primary" />
+                                    <span className="text-base font-medium">{tab.label}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="secondary">{tab.count}</Badge>
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div>
+                    <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">Account Settings</p>
+                    <div className="divide-y border-y">
+                        {settingsTabs.map(tab => (
+                            <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
+                                <div className="flex items-center gap-4">
+                                    <tab.icon className="h-6 w-6 text-primary" />
+                                    <span className="text-base font-medium">{tab.label}</span>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+    
+    const { title, content } = mobileContentMap[mobileView];
+    return (
+        <div>
+            <div className="flex items-center gap-2 mb-6">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMobileView('menu')}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h2 className="text-xl font-bold">{title}</h2>
+            </div>
+            {content}
         </div>
     );
   }
@@ -375,8 +545,14 @@ export default function ProfilePage() {
         </div>
 
         <Separator className="my-12" />
+        
+        {/* Mobile View */}
+        <div className="md:hidden">
+            {renderMobileContent()}
+        </div>
 
-        <Tabs defaultValue="active-listings" className="w-full">
+        {/* Desktop View */}
+        <Tabs defaultValue="active-listings" className="w-full hidden md:block">
           <div className="flex flex-col md:flex-row gap-8">
               <div className="w-full md:w-64 flex-shrink-0">
                   <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
@@ -401,109 +577,12 @@ export default function ProfilePage() {
                   </TabsList>
               </div>
               <div className="flex-1 min-w-0">
-                  <TabsContent value="active-listings" className="mt-0">
-                    {loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div> : 
-                     activeListings.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{activeListings.map(product => <ProductCard key={product.id} product={product} isClickable={false} actions={<><Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button><Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></>}/>)}</div> : 
-                     <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>}
-                  </TabsContent>
-                  
-                  <TabsContent value="my-sales" className="mt-0">
-                      {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
-                          <div className="space-y-4">
-                              {sales.map(t => (
-                                  <Card key={t.id}>
-                                      <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
-                                          <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                                              <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                                              <div className="flex-1">
-                                                  <p className="font-bold">{t.product_details?.name}</p>
-                                                  <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                                                  <p className="text-lg font-bold text-primary pt-1">₦{t.product_price.toLocaleString()}</p>
-                                              </div>
-                                          </div>
-                                          <div className="flex flex-col items-end justify-between self-stretch gap-2">
-                                              <div className="flex flex-col items-end">
-                                                <p className="text-xs text-muted-foreground">Order Status</p>
-                                                <TransactionStatusBadge status={t.status} />
-                                              </div>
-                                              <PaymentStatusBadge status={t.status} />
-                                          </div>
-                                      </CardContent>
-                                      <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
-                                          <div className="text-sm text-muted-foreground space-y-2">
-                                               <h4 className="font-semibold text-sm text-foreground">Buyer &amp; Delivery Information</h4>
-                                              <div className="flex items-center gap-2">
-                                                  <User className="h-4 w-4 text-primary" />
-                                                  <span>{t.product_details.buyer_name}</span>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                  <Phone className="h-4 w-4 text-primary" />
-                                                  <span>{t.product_details.customer_phone}</span>
-                                              </div>
-                                              <div className="flex items-center gap-2">
-                                                  <Home className="h-4 w-4 text-primary" />
-                                                  <p>{t.product_details.delivery_address}</p>
-                                              </div>
-                                          </div>
-                                          {t.status === 'pending' && (
-                                              <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm">
-                                                  {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                                  Confirm Delivery
-                                              </Button>
-                                          )}
-                                      </CardFooter>
-                                  </Card>
-                              ))}
-                          </div> 
-                          : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>}
-                  </TabsContent>
-
-                  <TabsContent value="my-purchases" className="mt-0">
-                    {loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => (
-                        <Card key={t.id}>
-                            <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
-                                <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                                    <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                                    <div className="flex-1">
-                                        <p className="font-bold">{t.product_details?.name}</p>
-                                        <p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p>
-                                        <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto">
-                                    <TransactionStatusBadge status={t.status} />
-                                    <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
-                                {t.status === 'delivered' && (
-                                    <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
-                                        {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-                                        Confirm & Release Payment
-                                    </Button>
-                                )}
-                                {(t.status === 'pending' || t.status === 'delivered') && (
-                                    <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(t)}>
-                                        <MessageCircleWarning className="mr-2 h-4 w-4" />
-                                        Raise a Dispute
-                                    </Button>
-                                )}
-                            </CardFooter>
-                        </Card>
-                    ))}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>}
-                  </TabsContent>
-                  
-                  <TabsContent value="reviews" className="mt-0">
-                      {loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} />}
-                  </TabsContent>
-
-                  <TabsContent value="verification" className="mt-0">
-                      {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")}
-                  </TabsContent>
-
-                  <TabsContent value="payment-details" className="mt-0">
-                      {authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : renderProfileError("Payment Details")}
-                  </TabsContent>
+                  <TabsContent value="listings" className="mt-0">{renderListings()}</TabsContent>
+                  <TabsContent value="sales" className="mt-0">{renderSales()}</TabsContent>
+                  <TabsContent value="purchases" className="mt-0">{renderPurchases()}</TabsContent>
+                  <TabsContent value="reviews" className="mt-0">{renderReviews()}</TabsContent>
+                  <TabsContent value="verification" className="mt-0">{renderVerification()}</TabsContent>
+                  <TabsContent value="payment" className="mt-0">{renderPayment()}</TabsContent>
               </div>
           </div>
         </Tabs>
