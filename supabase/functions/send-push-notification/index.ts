@@ -99,7 +99,7 @@ serve(async (req) => {
             link: url || Deno.env.get("NEXT_PUBLIC_BASE_URL"),
           },
           notification: {
-            icon: `${Deno.env.get("NEXT_PUBLIC_BASE_URL") || ''}/logo.png`,
+            icon: `${Deno.env.get("NEXT_PUBLIC_BASE_URL") || ''}/favicon.ico`,
           }
         },
       },

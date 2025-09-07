@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Image src="/public/logo.png" alt="TeeMart Logo" width={48} height={48} className="mx-auto mb-4" />
+            <Image src="/logo.png" alt="TeeMart Logo" width={48} height={48} className="mx-auto mb-4" />
           <CardTitle className="text-2xl">Forgot Password</CardTitle>
           <CardDescription>
             {isSubmitted 
