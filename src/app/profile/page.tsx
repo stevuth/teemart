@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -355,98 +355,118 @@ export default function ProfilePage() {
   
   const renderSales = () => (
     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
-    <Accordion type="single" collapsible className="w-full space-y-4">
-        {sales.map(t => (
-             <AccordionItem value={t.id} key={t.id} className="border-none">
-                <Card>
-                    <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:border-b">
-                        <div className="flex flex-col sm:flex-row gap-4 items-start w-full text-left">
-                            <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                                <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                                <div className="flex-1">
-                                    <p className="font-bold">{t.product_details?.name}</p>
-                                    <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                                    <p className="text-lg font-bold text-primary pt-1">₦{t.product_price.toLocaleString()}</p>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end justify-between self-stretch gap-2">
-                                <div className="flex flex-col items-end">
-                                <p className="text-xs text-muted-foreground">Order Status</p>
-                                <TransactionStatusBadge status={t.status} />
-                                </div>
-                                <PaymentStatusBadge status={t.status} />
-                            </div>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
-                            <div className="text-sm text-muted-foreground space-y-2">
-                                <h4 className="font-semibold text-sm text-foreground">Buyer & Delivery Information</h4>
-                                <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4 text-primary" />
-                                    <span>{t.product_details.buyer_name}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-primary" />
-                                    <span>{t.product_details.customer_phone}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Home className="h-4 w-4 text-primary" />
-                                    <p>{t.product_details.delivery_address}</p>
-                                </div>
-                            </div>
-                            {t.status === 'pending' && (
-                                <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm" className="w-full sm:w-auto">
-                                    {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                    Confirm Delivery
-                                </Button>
-                            )}
-                        </div>
-                    </AccordionContent>
-                </Card>
-            </AccordionItem>
-        ))}
-    </Accordion>
+    <div className="space-y-4">
+      <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle className="font-bold">Important Information for Sellers</AlertTitle>
+          <AlertDescription>
+            Only mark an order as "Confirm Delivery" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly.
+          </AlertDescription>
+      </Alert>
+      <Accordion type="single" collapsible className="w-full space-y-4">
+          {sales.map(t => (
+              <AccordionItem value={t.id} key={t.id} className="border-none">
+                  <Card>
+                      <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:border-b">
+                          <div className="flex flex-col sm:flex-row gap-4 items-start w-full text-left">
+                              <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
+                                  <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
+                                  <div className="flex-1">
+                                      <p className="font-bold">{t.product_details?.name}</p>
+                                      <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
+                                      <p className="text-lg font-bold text-primary pt-1">₦{t.product_price.toLocaleString()}</p>
+                                  </div>
+                              </div>
+                              <div className="flex flex-col items-end justify-between self-stretch gap-2">
+                                  <div className="flex flex-col items-end">
+                                  <p className="text-xs text-muted-foreground">Order Status</p>
+                                  <TransactionStatusBadge status={t.status} />
+                                  </div>
+                                  <PaymentStatusBadge status={t.status} />
+                              </div>
+                          </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                          <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
+                              <div className="text-sm text-muted-foreground space-y-2">
+                                  <h4 className="font-semibold text-sm text-foreground">Buyer & Delivery Information</h4>
+                                  <div className="flex items-center gap-2">
+                                      <User className="h-4 w-4 text-primary" />
+                                      <span>{t.product_details.buyer_name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <Phone className="h-4 w-4 text-primary" />
+                                      <span>{t.product_details.customer_phone}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                      <Home className="h-4 w-4 text-primary" />
+                                      <p>{t.product_details.delivery_address}</p>
+                                  </div>
+                              </div>
+                              {t.status === 'pending' && (
+                                  <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm" className="w-full sm:w-auto">
+                                      {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                      Confirm Delivery
+                                  </Button>
+                              )}
+                          </div>
+                      </AccordionContent>
+                  </Card>
+              </AccordionItem>
+          ))}
+      </Accordion>
+    </div>
     : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>
   );
   
   const renderPurchases = () => (
-     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? <div className="space-y-4">{purchases.map(t => (
-        <Card key={t.id}>
-            <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
-                <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                    <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                    <div className="flex-1">
-                        <p className="font-bold">{t.product_details?.name}</p>
-                        <p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p>
-                        <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                    </div>
-                </div>
-                <div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto">
-                    <TransactionStatusBadge status={t.status} />
-                    <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
-                </div>
-            </CardContent>
-            <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
-                <Button onClick={() => handleChatWithSeller(t.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
-                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
-                    Chat with Seller
-                </Button>
-                {t.status === 'delivered' && (
-                    <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
-                        {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-                        Confirm & Release Payment
-                    </Button>
-                )}
-                {(t.status === 'pending' || t.status === 'delivered') && (
-                    <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(t)}>
-                        <MessageCircleWarning className="mr-2 h-4 w-4" />
-                        Raise a Dispute
-                    </Button>
-                )}
-            </CardFooter>
-        </Card>
-    ))}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>
+     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? 
+     <div className="space-y-4">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle className="font-bold">Important Information for Buyers</AlertTitle>
+          <AlertDescription>
+            Only press "Confirm & Release Payment" after you have received your item and confirmed it is as described. Use the "Chat with Seller" button for updates on delivery. This ensures your payment remains secure with TeeMart escrow.
+          </AlertDescription>
+        </Alert>
+        <div className="space-y-4">{purchases.map(t => (
+          <Card key={t.id}>
+              <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
+                  <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
+                      <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
+                      <div className="flex-1">
+                          <p className="font-bold">{t.product_details?.name}</p>
+                          <p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p>
+                          <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
+                      </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto">
+                      <TransactionStatusBadge status={t.status} />
+                      <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
+                  </div>
+              </CardContent>
+              <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
+                  <Button onClick={() => handleChatWithSeller(t.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
+                      {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
+                      Chat with Seller
+                  </Button>
+                  {t.status === 'delivered' && (
+                      <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
+                          {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                          Confirm & Release Payment
+                      </Button>
+                  )}
+                  {(t.status === 'pending' || t.status === 'delivered') && (
+                      <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(t)}>
+                          <MessageCircleWarning className="mr-2 h-4 w-4" />
+                          Raise a Dispute
+                      </Button>
+                  )}
+              </CardFooter>
+          </Card>
+      ))}</div>
+     </div>
+     : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>
   );
   
     const renderReviews = () => {
@@ -616,8 +636,8 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
-            <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground pt-4 md:pt-0">
+            <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8 pt-4 md:pt-0">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-3">
                         <CalendarDays className="h-4 w-4 text-primary" />
                         <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : ''}</span>
