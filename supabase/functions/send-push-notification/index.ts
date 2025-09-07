@@ -1,3 +1,4 @@
+
 // supabase/functions/send-push-notification/index.ts
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -27,8 +28,7 @@ async function getAccessToken() {
 }
 
 serve(async (req) => {
-  // 1. Validate authorization and payload
-  // The service_role_key is passed in the Authorization header from the database trigger.
+  // 1. Validate authorization
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || authHeader !== `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`) {
     return new Response(JSON.stringify({ error: "Unauthorized: Invalid service role key." }), {
@@ -46,7 +46,6 @@ serve(async (req) => {
   }
 
   // 2. Create a Supabase client with the service_role_key to bypass RLS.
-  // This is safe because this function is only called by our trusted database trigger.
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -63,7 +62,7 @@ serve(async (req) => {
     const errorMessage = profileError ? profileError.message : "User has no notification tokens.";
     console.warn(`Could not send notification to ${recipient_id}: ${errorMessage}`);
     return new Response(JSON.stringify({ message: `Could not send notification: ${errorMessage}` }), {
-      status: 200, 
+      status: 200,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -80,7 +79,7 @@ serve(async (req) => {
     });
   }
 
-  // 4. Send notifications to all of the user's registered devices
+  // 4. Send notifications
   const sendPromises = profile.fcm_tokens.map((token: string) => {
     const message = {
       message: {
@@ -135,7 +134,6 @@ serve(async (req) => {
     }
   }
 
-  // If there are expired tokens, remove them from the user's profile
   if (tokensToRemove.length > 0) {
     const newTokens = profile.fcm_tokens.filter((t: string) => !tokensToRemove.includes(t));
     await supabase
@@ -144,7 +142,7 @@ serve(async (req) => {
       .eq("id", recipient_id);
   }
 
-  // 6. Return the final response
+  // 6. Return response
   if (successCount > 0) {
     return new Response(JSON.stringify({ message: `Successfully sent ${successCount} notifications.` }), {
       headers: { "Content-Type": "application/json" },
