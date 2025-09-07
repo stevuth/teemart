@@ -1,45 +1,83 @@
 
--- Enable RLS on the public messages table
-alter table public.messages enable row level security;
+-- Drop existing policies if they exist, to ensure a clean slate.
+DROP POLICY IF EXISTS "Users can view their own messages" ON public.messages;
+DROP POLICY IF EXISTS "Users can insert their own messages" ON public.messages;
+DROP POLICY IF EXISTS "Enable read access for authenticated users" ON public.conversations;
 
--- Allow users to see their own messages
-create policy "Users can view their own messages."
-  on public.messages for select
-  using ( auth.uid() = sender_id or auth.uid() = recipient_id );
+-- Drop the function if it exists, to recreate it.
+DROP FUNCTION IF EXISTS is_conversation_participant(uuid, uuid);
 
--- Allow users to send messages
-create policy "Users can insert their own messages."
-  on public.messages for insert
-  with check ( auth.uid() = sender_id );
+-- 
+-- RLS for conversations table
+--
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 
--- POLICIES FOR STORAGE
--- In a real app, you would create these policies in the Supabase Dashboard
--- under Storage -> Policies. We add them here for reproducibility.
+CREATE POLICY "Enable read access for authenticated users"
+ON public.conversations
+AS PERMISSIVE
+FOR SELECT
+TO authenticated
+USING (
+  (participant_one_id = auth.uid()) OR (participant_two_id = auth.uid())
+);
 
--- Create policy for users to upload to the 'chat-images' bucket
-create policy "Users can upload chat images"
-  on storage.objects for insert
-  to authenticated
-  with check ( bucket_id = 'chat-images' AND auth.uid() = owner );
-
--- Create policy for users to view images in their conversations
-create policy "Users can view images in their conversations"
-  on storage.objects for select
-  to authenticated
-  using (
-    bucket_id = 'chat-images' AND
-    (
-      auth.uid() IN (
-        SELECT m.sender_id FROM public.messages m WHERE m.image_url LIKE '%' || storage.objects.name
-      ) OR
-      auth.uid() IN (
-        SELECT m.recipient_id FROM public.messages m WHERE m.image_url LIKE '%' || storage.objects.name
-      )
-    )
+--
+-- Helper function to check if a user is part of a conversation
+--
+CREATE OR REPLACE FUNCTION is_conversation_participant(p_conversation_id uuid, p_user_id uuid)
+RETURNS boolean AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.conversations
+    WHERE id = p_conversation_id
+      AND (participant_one_id = p_user_id OR participant_two_id = p_user_id)
   );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create policy for users to delete their own chat images
-create policy "Users can delete their own chat images"
-  on storage.objects for delete
-  to authenticated
-  using ( bucket_id = 'chat-images' AND auth.uid() = owner );
+
+--
+-- RLS for messages table
+--
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own messages"
+ON public.messages
+AS PERMISSIVE
+FOR SELECT
+TO authenticated
+USING (
+  (sender_id = auth.uid()) OR (recipient_id = auth.uid())
+);
+
+CREATE POLICY "Users can insert their own messages"
+ON public.messages
+AS PERMISSIVE
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  (sender_id = auth.uid()) AND (is_conversation_participant(conversation_id, auth.uid()))
+);
+
+
+--
+-- RLS for Storage
+--
+-- Allow authenticated users to upload to 'chat-images'
+CREATE POLICY "Allow authenticated users to upload chat images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK ( bucket_id = 'chat-images' AND auth.role() = 'authenticated' );
+
+-- Allow users to view images in conversations they are part of
+CREATE POLICY "Allow conversation participants to view images"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (
+    bucket_id = 'chat-images'
+    AND is_conversation_participant(
+        (storage.foldername(name))[1]::uuid,
+        auth.uid()
+    )
+);
