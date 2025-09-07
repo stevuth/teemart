@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
-import { Loader2, Star, CalendarDays, Package, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { Loader2, Star, CalendarDays, Package, ShieldCheck, ShoppingCart, MessageSquare } from 'lucide-react';
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +44,8 @@ export default function SellerProfilePage() {
     const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [reviewSubmittedToggle, setReviewSubmittedToggle] = useState(false);
+    const [isChatting, setIsChatting] = useState(false);
+
 
     const fetchAllData = useCallback(async () => {
         if (!userId || !supabase) return;
@@ -135,6 +137,35 @@ export default function SellerProfilePage() {
         return (totalRating / reviews.length).toFixed(1);
     }, [reviews]);
 
+    const startConversation = async () => {
+        if (!currentUser) {
+            toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
+            return;
+        }
+        if (currentUser.id === userId) {
+            toast({ title: "Cannot chat with yourself", description: "You cannot start a conversation with yourself.", variant: "destructive" });
+            return;
+        }
+
+        setIsChatting(true);
+        try {
+            const { data, error } = await supabase.rpc('get_or_create_conversation', {
+                p_participant_one_id: currentUser.id,
+                p_participant_two_id: userId
+            });
+
+            if (error) throw error;
+            
+            router.push(`/messages?conversationId=${data}`);
+
+        } catch (error: any) {
+            console.error("Error starting conversation:", error);
+            toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
+        } finally {
+            setIsChatting(false);
+        }
+    };
+
 
     if (loading) {
         return (
@@ -196,7 +227,7 @@ export default function SellerProfilePage() {
             <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <BackButton className="-ml-4" />
                 <div className="flex flex-col md:flex-row items-start gap-8 mt-8">
-                    <div className="flex-shrink-0 flex flex-col items-center md:items-start">
+                    <div className="flex-shrink-0 flex flex-col items-center md:items-start gap-4">
                         <Avatar className="h-32 w-32 mb-4 border-4 border-background ring-2 ring-primary">
                             <AvatarImage src={seller.avatar_url || ''} alt={seller.full_name || ''} />
                             <AvatarFallback>{getInitials(seller.full_name)}</AvatarFallback>
@@ -205,6 +236,12 @@ export default function SellerProfilePage() {
                             <h1 className="text-3xl font-bold">{seller.full_name}</h1>
                             <p className="text-muted-foreground">TeeMart Seller</p>
                         </div>
+                        {currentUser?.id !== seller.id && (
+                           <Button onClick={startConversation} disabled={isChatting} className="w-full">
+                                {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                                Chat with Seller
+                            </Button>
+                        )}
                     </div>
                     <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8 pt-8 md:pt-0">
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 text-sm text-muted-foreground">
@@ -288,6 +325,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    
-
