@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 type ProfileForVerification = {
   id: string;
@@ -77,38 +78,15 @@ export function VerificationQueue() {
   const handleVerification = async (userId: string, isVerified: boolean) => {
     setUpdatingId(userId);
 
-    // Get the profile to find the image URLs for deletion
-    const profileToDelete = profiles.find(p => p.id === userId);
-    if (!profileToDelete) {
-        toast({ title: 'Error', description: 'Could not find user profile.', variant: 'destructive' });
-        setUpdatingId(null);
-        return;
-    }
-
-    try {
-        // Delete images from storage. Extract path from public URL.
-        const ninPath = profileToDelete.nin_image_url.split('/public-verification-documents/')[1];
-        const selfiePath = profileToDelete.selfie_image_url.split('/public-verification-documents/')[1];
-
-        if(ninPath) await supabase.storage.from('public-verification-documents').remove([ninPath]);
-        if(selfiePath) await supabase.storage.from('public-verification-documents').remove([selfiePath]);
-
-    } catch(storageError) {
-        // Log error but continue, as the DB update is more critical.
-        console.error("Could not delete verification images from storage:", storageError);
-        toast({ title: "Storage Warning", description: "Could not remove images from storage, but user status updated.", variant: "destructive" })
-    }
-
     const { error } = await supabase
       .from('profiles')
-      .update({ is_verified: isVerified, nin_image_url: null, selfie_image_url: null }) // Set to verified and clear image URLs
+      .update({ is_verified: isVerified, nin_image_url: null, selfie_image_url: null })
       .eq('id', userId);
 
     if (error) {
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Success', description: `User has been ${isVerified ? 'approved' : 'rejected'}.` });
-      // Refresh list by removing the processed user from the local state
       setProfiles(currentProfiles => currentProfiles.filter(p => p.id !== userId));
     }
     setUpdatingId(null);
