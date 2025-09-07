@@ -45,10 +45,10 @@ function MessagingPage() {
         setLoading(true);
 
         const { data, error } = await supabase
-            .rpc('get_user_conversations', { p_user_id: user.id });
+            .rpc('get_user_conversations');
 
         if (error) {
-            console.error('Error fetching conversations', error);
+            console.error('Error fetching conversations:', JSON.stringify(error, null, 2));
         } else {
             setConversations(data || []);
         }
