@@ -2,17 +2,16 @@
 'use server';
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
-import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 
 /**
  * Uploads verification documents (NIN and selfie) to a public Supabase storage bucket.
- * This action uses the admin client to bypass RLS for robust server-side uploads.
+ * This action is authenticated and uses the user's session to perform the upload.
  * @param formData - The FormData object containing the 'ninImage' and 'selfieImage' files.
  * @returns An object with either the URLs of the uploaded files or an error message.
  */
 export async function uploadVerificationDocumentsAction(formData: FormData) {
+  // Use the standard server client, which acts on behalf of the logged-in user.
   const supabase = createSupabaseServerClient();
-  const supabaseAdmin = createSupabaseAdminClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -32,28 +31,29 @@ export async function uploadVerificationDocumentsAction(formData: FormData) {
   let selfiePublicUrl: string | undefined;
 
   try {
-    // Upload NIN Image
+    // The RLS policy we created allows the authenticated user to insert into this bucket.
+    // The file path includes the user's ID for organization.
     const ninFileName = `${user.id}/${Date.now()}_nin_${ninImage.name}`;
-    const { error: ninUploadError } = await supabaseAdmin.storage
+    const { error: ninUploadError } = await supabase.storage
       .from(bucketName)
       .upload(ninFileName, ninImage);
 
     if (ninUploadError) {
       console.error('NIN Upload Error:', ninUploadError);
-      throw new Error('Failed to upload NIN image.');
+      throw new Error(`Failed to upload NIN image: ${ninUploadError.message}`);
     }
     ninPublicUrl = supabase.storage.from(bucketName).getPublicUrl(ninFileName).data.publicUrl;
 
 
     // Upload Selfie Image
     const selfieFileName = `${user.id}/${Date.now()}_selfie_${selfieImage.name}`;
-    const { error: selfieUploadError } = await supabaseAdmin.storage
+    const { error: selfieUploadError } = await supabase.storage
       .from(bucketName)
       .upload(selfieFileName, selfieImage);
 
     if (selfieUploadError) {
       console.error('Selfie Upload Error:', selfieUploadError);
-      throw new Error('Failed to upload selfie image.');
+      throw new Error(`Failed to upload selfie image: ${selfieUploadError.message}`);
     }
     selfiePublicUrl = supabase.storage.from(bucketName).getPublicUrl(selfieFileName).data.publicUrl;
     
