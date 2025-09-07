@@ -121,9 +121,15 @@ export async function getDisputes() {
     const { data, error } = await supabase
         .from('disputes')
         .select(`
-            *,
+            id,
+            transaction_id,
+            buyer_id,
+            message,
+            status,
+            created_at,
+            resolved_at,
             buyer:profiles!disputes_buyer_id_fkey(full_name, email),
-            transaction:transactions!disputes_transaction_id_fkey(
+            transaction:transactions(
                 paystack_ref,
                 product_details,
                 seller:profiles!transactions_seller_id_fkey(email, full_name)
