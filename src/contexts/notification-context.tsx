@@ -28,10 +28,14 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     try {
       // This RPC function needs to be created in Supabase
       const { data, error } = await supabase.rpc('get_unread_message_count');
-      if (error) throw error;
+      if (error) {
+        // Ensure the full error object is thrown to be caught below
+        throw error;
+      }
       setNotificationCount(data);
-    } catch (error) {
-      console.error("Error fetching unread message count:", error);
+    } catch (error: any) {
+      // Log the specific error message for better debugging
+      console.error("Error fetching unread message count:", error.message || JSON.stringify(error));
       setNotificationCount(0);
     }
   }, [user, supabase]);
