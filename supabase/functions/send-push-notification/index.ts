@@ -28,9 +28,10 @@ async function getAccessToken() {
 
 serve(async (req) => {
   // 1. Validate authorization and payload
+  // The service_role_key is passed in the Authorization header from the database trigger.
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Missing authorization header" }), {
+  if (!authHeader || authHeader !== `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized: Invalid service role key." }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
@@ -44,12 +45,12 @@ serve(async (req) => {
     });
   }
 
-  // 2. Create a Supabase client with the public anon key.
-  // RLS policies will ensure this function can only read data it's allowed to.
+  // 2. Create a Supabase client with the service_role_key to bypass RLS.
+  // This is safe because this function is only called by our trusted database trigger.
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-    { global: { headers: { Authorization: authHeader } } }
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
   );
 
   const { data: profile, error: profileError } = await supabase
