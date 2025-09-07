@@ -1,4 +1,4 @@
-// src/components/notification-toggle.tsx
+
 "use client";
 
 import { usePushNotifications } from "@/hooks/use-push-notifications";
@@ -10,6 +10,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { cn } from "@/lib/utils";
 
 export function NotificationToggle() {
   const {
@@ -40,21 +42,13 @@ export function NotificationToggle() {
 
   if (permissionStatus === 'denied') {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span tabIndex={0}>
-              <Button variant="destructive" className="w-full sm:w-auto" disabled>
-                <BellOff className="mr-2 h-4 w-4" />
-                Notifications Blocked
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>You have blocked notifications. Please enable them in your browser settings.</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+       <Alert variant="destructive" className="max-w-md">
+            <BellOff className="h-4 w-4" />
+            <AlertTitle>Notifications Blocked</AlertTitle>
+            <AlertDescription>
+                You have previously blocked notifications. To enable them, please go to your browser's site settings for this page and change the permission to "Allow".
+            </AlertDescription>
+        </Alert>
     );
   }
 
