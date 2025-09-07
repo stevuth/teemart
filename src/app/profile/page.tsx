@@ -45,7 +45,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
-import { NotificationToggle } from '@/components/notification-toggle';
 import { ProfileFeatureCard } from '@/components/profile-feature-card';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
@@ -556,7 +555,6 @@ export default function ProfilePage() {
                     {profile?.is_verified && (
                         <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
                     )}
-                    <NotificationToggle />
                 </div>
             </div>
         </div>
@@ -669,7 +667,6 @@ export default function ProfilePage() {
                         <div className="flex-grow">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h1 className="text-2xl font-bold">{displayName}</h1>
-                                <NotificationToggle />
                             </div>
                             <p className="text-muted-foreground">{profile?.email}</p>
                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">

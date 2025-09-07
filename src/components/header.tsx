@@ -19,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/use-cart';
 import { Badge } from './ui/badge';
-import { useNotifications } from '@/hooks/use-notifications';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +28,6 @@ export function Header() {
   const { openLoginModal } = useAuthModal();
   const { toast } = useToast();
   const { cartCount } = useCart();
-  const { notificationCount } = useNotifications();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -85,11 +83,6 @@ export function Header() {
                {user && (
                  <Link href="/messages" className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "relative")} aria-label="Messages">
                     <MessageSquare className="h-5 w-5" />
-                    {notificationCount > 0 && (
-                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
-                        {notificationCount}
-                    </Badge>
-                    )}
                  </Link>
                )}
 

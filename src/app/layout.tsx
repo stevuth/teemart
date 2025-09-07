@@ -4,8 +4,6 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
 import { CartProvider } from '@/contexts/cart-context';
-import { NotificationProvider } from '@/contexts/notification-context';
-import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'TeeMart Marketplace',
@@ -29,27 +27,11 @@ export default function RootLayout({
       <body className="font-body antialiased bg-secondary/20">
         <AuthProvider>
           <CartProvider>
-            <NotificationProvider>
-              {children}
-              <Toaster />
-            </NotificationProvider>
+            {children}
+            <Toaster />
           </CartProvider>
         </AuthProvider>
-        <Script id="service-worker-registration">
-          {`
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                .then(function(registration) {
-                  console.log('Service Worker registered with scope:', registration.scope);
-                }).catch(function(err) {
-                  console.error('Service Worker registration failed:', err);
-                });
-            }
-          `}
-        </Script>
       </body>
     </html>
   );
 }
-
-    

@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useNotifications } from '@/hooks/use-notifications';
 import Image from 'next/image';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -37,7 +36,6 @@ type ChatInterfaceProps = {
 export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfaceProps) {
     const { user, supabase } = useAuth();
     const { toast } = useToast();
-    const { decrementCount } = useNotifications();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
@@ -48,18 +46,6 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const markMessagesAsRead = useCallback(async () => {
-        if (!user || !conversationId) return;
-        const { error } = await supabase.rpc('mark_messages_as_read', {
-            p_conversation_id: conversationId,
-            p_user_id: user.id
-        });
-        if (error) {
-            console.error("Error marking messages as read:", error);
-        } else {
-             decrementCount(0); // This tells the provider to refetch the count
-        }
-    }, [conversationId, user, supabase, decrementCount]);
     
     useEffect(() => {
         const fetchMessages = async () => {
@@ -75,7 +61,6 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 toast({ title: "Error", description: "Failed to load messages.", variant: "destructive" });
             } else {
                 setMessages(data);
-                markMessagesAsRead();
             }
             setLoading(false);
         };
@@ -83,7 +68,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         if (conversationId) {
             fetchMessages();
         }
-    }, [conversationId, toast, markMessagesAsRead, supabase]);
+    }, [conversationId, toast, supabase]);
     
      useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -108,7 +93,6 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                             if (currentMessages.some(m => m.id === newMessagePayload.id)) return currentMessages;
                             return [...currentMessages, newMessagePayload]
                          });
-                         markMessagesAsRead();
                     }
                 }
             )
@@ -123,7 +107,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId, user?.id, markMessagesAsRead, supabase]);
+    }, [conversationId, user?.id, supabase]);
     
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
