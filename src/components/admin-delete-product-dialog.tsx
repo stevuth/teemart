@@ -30,19 +30,19 @@ export function AdminDeleteProductDialog({ product, isOpen, onClose, onDeleted }
   const { supabase } = useAuth();
 
   const handleDelete = async () => {
-    if (!product) return;
+    if (!product || !supabase) return;
     setLoading(true);
 
     try {
       // 1. Delete images from storage
-      const imageUrls = product.image;
-      if (imageUrls && imageUrls.length > 0) {
+      const imagePaths = product.image; // This now correctly gets the array of paths
+      if (imagePaths && imagePaths.length > 0) {
         // The `image` field now correctly contains paths, not full URLs.
         // We can use the array of paths directly.
-        const { error: storageError } = await supabase.storage.from('product-images').remove(imageUrls);
+        const { error: storageError } = await supabase.storage.from('product-images').remove(imagePaths);
         if (storageError) {
           // Log the error but don't stop the DB deletion.
-          // This prevents the user from being stuck if a file is already deleted.
+          // This prevents the user from being stuck if a file is already deleted or path is wrong.
           console.error("Storage Deletion Error:", storageError);
           toast({ title: "Image Deletion Warning", description: "Could not delete all product images from storage. They may have been removed already.", variant: "destructive" });
         }
