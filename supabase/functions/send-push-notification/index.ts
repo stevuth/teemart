@@ -1,4 +1,3 @@
-
 // supabase/functions/send-push-notification/index.ts
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -45,13 +44,15 @@ serve(async (req) => {
     });
   }
 
-  // 2. Create Supabase admin client to fetch user tokens
-  const supabaseAdmin = createClient(
+  // 2. Create a Supabase client with the public anon key.
+  // RLS policies will ensure this function can only read data it's allowed to.
+  const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
   );
 
-  const { data: profile, error: profileError } = await supabaseAdmin
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("fcm_tokens")
     .eq("id", recipient_id)
@@ -61,7 +62,7 @@ serve(async (req) => {
     const errorMessage = profileError ? profileError.message : "User has no notification tokens.";
     console.warn(`Could not send notification to ${recipient_id}: ${errorMessage}`);
     return new Response(JSON.stringify({ message: `Could not send notification: ${errorMessage}` }), {
-      status: 200, // Return 200 to not block calling function, but log the issue.
+      status: 200, 
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -136,7 +137,7 @@ serve(async (req) => {
   // If there are expired tokens, remove them from the user's profile
   if (tokensToRemove.length > 0) {
     const newTokens = profile.fcm_tokens.filter((t: string) => !tokensToRemove.includes(t));
-    await supabaseAdmin
+    await supabase
       .from("profiles")
       .update({ fcm_tokens: newTokens })
       .eq("id", recipient_id);
