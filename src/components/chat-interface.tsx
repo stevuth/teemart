@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useNotifications } from '@/hooks/use-notifications';
 
 type Message = {
     id: string;
@@ -36,6 +37,7 @@ type ChatInterfaceProps = {
 export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfaceProps) {
     const { user, supabase } = useAuth();
     const { toast } = useToast();
+    const { decrementCount } = useNotifications();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
@@ -86,13 +88,16 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                   table: 'messages', 
                   filter: `conversation_id=eq.${conversationId}` 
                 },
-                (payload) => {
+                async (payload) => {
                     const newMessagePayload = payload.new as Message;
                     if (newMessagePayload.sender_id !== user?.id) {
                          setMessages(currentMessages => {
                             if (currentMessages.some(m => m.id === newMessagePayload.id)) return currentMessages;
                             return [...currentMessages, newMessagePayload]
                          });
+                         // Mark as read immediately since the user is viewing the chat
+                         await supabase.rpc('mark_conversation_as_read', { p_conversation_id: conversationId });
+                         decrementCount(1);
                     }
                 }
             )
@@ -107,7 +112,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId, user?.id, supabase]);
+    }, [conversationId, user?.id, supabase, decrementCount]);
     
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];

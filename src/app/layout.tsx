@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
 import { CartProvider } from '@/contexts/cart-context';
+import { NotificationProvider } from '@/contexts/notification-context';
 
 export const metadata: Metadata = {
   title: 'TeeMart Marketplace',
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className="font-body antialiased bg-secondary/20">
         <AuthProvider>
           <CartProvider>
-            {children}
+            <NotificationProvider>
+              {children}
+            </NotificationProvider>
             <Toaster />
           </CartProvider>
         </AuthProvider>

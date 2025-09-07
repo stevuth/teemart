@@ -7,11 +7,13 @@ import { useAuth } from '@/hooks/use-auth';
 interface NotificationContextType {
   notificationCount: number;
   decrementCount: (amount: number) => void;
+  fetchUnreadCount: () => Promise<void>;
 }
 
 export const NotificationContext = createContext<NotificationContextType>({
   notificationCount: 0,
   decrementCount: () => {},
+  fetchUnreadCount: async () => {},
 });
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
@@ -24,7 +26,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     try {
-      const { data, error } = await supabase.rpc('get_unread_message_count', { p_user_id: user.id });
+      // This RPC function needs to be created in Supabase
+      const { data, error } = await supabase.rpc('get_unread_message_count');
       if (error) throw error;
       setNotificationCount(data);
     } catch (error) {
@@ -53,6 +56,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
           filter: `recipient_id=eq.${user.id}` 
         },
         (payload) => {
+          // Instead of assuming +1, just refetch the count from the DB for accuracy
           fetchUnreadCount();
         }
       )
@@ -69,16 +73,13 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, [user, supabase, fetchUnreadCount]);
   
   const decrementCount = useCallback((amount: number) => {
-    if (amount === 0) {
-        fetchUnreadCount();
-    } else {
-        setNotificationCount(prev => Math.max(0, prev - amount));
-    }
-  }, [fetchUnreadCount]);
+    setNotificationCount(prev => Math.max(0, prev - amount));
+  }, []);
 
   const value = {
     notificationCount,
     decrementCount,
+    fetchUnreadCount,
   };
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

@@ -13,12 +13,14 @@ import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { useScrollToTop } from '@/hooks/use-scroll-to-top';
+import { useNotifications } from '@/hooks/use-notifications';
 
 type Conversation = {
     id: string;
     last_message_at: string;
     last_message_content: string | null;
     last_message_sender_id: string | null;
+    unread_count: number;
     other_participant: {
         id: string;
         full_name: string;
@@ -32,6 +34,7 @@ function MessagingPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
+    const { fetchUnreadCount, notificationCount, decrementCount } = useNotifications();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,7 +61,16 @@ function MessagingPage() {
         }
     }, [user, authLoading, fetchConversations]);
 
-    const handleSelectConversation = (conversationId: string) => {
+    const handleSelectConversation = async (conversationId: string) => {
+        const conversation = conversations.find(c => c.id === conversationId);
+        if (conversation && conversation.unread_count > 0) {
+            const { error } = await supabase.rpc('mark_conversation_as_read', { p_conversation_id: conversationId });
+            if (!error) {
+                decrementCount(conversation.unread_count);
+                // Refresh local state to hide unread indicator
+                setConversations(convos => convos.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+            }
+        }
         const newParams = new URLSearchParams(searchParams.toString());
         newParams.set('conversationId', conversationId);
         router.push(`${pathname}?${newParams.toString()}`);
@@ -151,11 +163,18 @@ function MessagingPage() {
                                         ) : 'No messages yet'}
                                     </p>
                                 </div>
+                                <div className="flex flex-col items-end gap-1">
                                 {convo.last_message_at && (
                                     <p className="text-xs text-muted-foreground self-start flex-shrink-0">
                                         {formatDistanceToNow(new Date(convo.last_message_at), { addSuffix: true })}
                                     </p>
                                 )}
+                                {convo.unread_count > 0 && (
+                                    <span className="h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-bold">
+                                        {convo.unread_count}
+                                    </span>
+                                )}
+                                </div>
                             </div>
                         ))
                     ) : (
