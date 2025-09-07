@@ -549,23 +549,39 @@ export default function ProfilePage() {
   };
 
   const MobileProfileHeader = () => (
-    <div className="p-4 bg-card rounded-lg border mb-6">
-        <div className="flex items-start gap-4">
-             <Avatar className="h-16 w-16 border rounded-md">
-                <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
-                <AvatarFallback className="rounded-md">{getInitials(displayName)}</AvatarFallback>
-            </Avatar>
-            <div className="flex-grow">
-                <h1 className="text-xl font-bold">{displayName}</h1>
-                <p className="text-sm text-muted-foreground">{profile?.email}</p>
-                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-                    {profile?.is_verified && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
-                    )}
+    <Card className="mb-6">
+        <div className="p-4">
+            <div className="flex items-start gap-4">
+                <Avatar className="h-16 w-16 border rounded-md">
+                    <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
+                    <AvatarFallback className="rounded-md">{getInitials(displayName)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-grow">
+                    <h1 className="text-xl font-bold">{displayName}</h1>
+                    <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                        {profile?.is_verified && (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+        <div className="grid grid-cols-1 p-4 border-t gap-2">
+            <ProfileFeatureCard
+                icon={CalendarDays}
+                label="Member Since"
+                value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
+            />
+            <ProfileFeatureCard
+                icon={HelpCircle}
+                label="Need help?"
+                value="Contact our support team"
+                buttonText="Help & Support"
+                onButtonClick={() => router.push('/help')}
+            />
+        </div>
+    </Card>
   )
 
   const renderMobileContent = () => {
