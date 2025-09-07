@@ -78,26 +78,38 @@ export function VerificationQueue() {
         ) : (
           <div className="space-y-6">
             {profiles.map(profile => (
-              <Card key={profile.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-                <div className="md:col-span-1 space-y-2">
-                  <p className="font-semibold">{profile.full_name}</p>
-                  <p className="text-sm text-muted-foreground break-all">{profile.id}</p>
+              <Card key={profile.id} className="overflow-hidden">
+                <div className="p-4 bg-muted/50 border-b">
+                    <h3 className="font-semibold">{profile.full_name}</h3>
+                    <p className="text-xs text-muted-foreground">{profile.id}</p>
                 </div>
-                <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                   <div>
                     <p className="text-sm font-medium mb-2">NIN Document</p>
-                    <a href={profile.nin_image_url} target="_blank" rel="noopener noreferrer">
-                      <Image src={profile.nin_image_url} alt="NIN Document" width={200} height={120} className="rounded-md object-cover border" />
+                    <a href={profile.nin_image_url} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-secondary rounded-md overflow-hidden border">
+                      <Image 
+                        src={profile.nin_image_url} 
+                        alt="NIN Document" 
+                        fill
+                        className="object-contain" 
+                        sizes="(max-width: 768px) 90vw, 40vw"
+                      />
                     </a>
                   </div>
                    <div>
                     <p className="text-sm font-medium mb-2">User Selfie</p>
-                    <a href={profile.selfie_image_url} target="_blank" rel="noopener noreferrer">
-                      <Image src={profile.selfie_image_url} alt="User Selfie" width={120} height={120} className="rounded-md object-cover border" />
+                    <a href={profile.selfie_image_url} target="_blank" rel="noopener noreferrer" className="block relative aspect-square w-48 bg-secondary rounded-md overflow-hidden border">
+                      <Image 
+                        src={profile.selfie_image_url} 
+                        alt="User Selfie" 
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, 20vw"
+                      />
                     </a>
                   </div>
                 </div>
-                <div className="md:col-span-3 flex justify-end gap-2 pt-4 border-t mt-4">
+                <CardFooter className="flex justify-end gap-2 bg-muted/50 p-4 border-t">
                   <Button
                     variant="outline"
                     size="sm"
@@ -116,7 +128,7 @@ export function VerificationQueue() {
                     {updatingId === profile.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                     Approve
                   </Button>
-                </div>
+                </CardFooter>
               </Card>
             ))}
           </div>
