@@ -51,7 +51,10 @@ serve(async (req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SERVICE_ROLE_KEY") ?? "", // Use the new secret name here
-    { auth: { persistSession: false } }
+    { 
+        auth: { persistSession: false },
+        db: { schema: 'public' } // Explicitly set the schema to 'public'
+    }
   );
 
   const { data: profile, error: profileError } = await supabase
