@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import type { Product, ReviewWithUser, Transaction } from '@/lib/types';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteProductDialog } from '@/components/delete-product-dialog';
 import { ReviewList } from '@/components/review-list';
@@ -44,6 +44,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { StarRatingDisplay } from '@/components/star-rating-display';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -413,9 +414,52 @@ export default function ProfilePage() {
     ))}</div> : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>
   );
   
-  const renderReviews = () => (
-    loadingData ? <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div> : <ReviewList reviews={reviews} />
-  );
+    const renderReviews = () => {
+        if (loadingData) {
+            return <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+        }
+
+        if (reviews.length === 0) {
+            return (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                    <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-xl font-medium">No reviews yet</h3>
+                    <p className="mt-2 text-muted-foreground">You haven't received any reviews.</p>
+                </div>
+            );
+        }
+
+        return (
+            <Accordion type="single" collapsible className="w-full space-y-4">
+                {reviews.map((review) => (
+                    <AccordionItem value={review.id} key={review.id} className="border-none">
+                        <Card>
+                             <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:border-b">
+                                <div className="flex items-center gap-4 text-left">
+                                    <Avatar>
+                                        <AvatarImage src={review.user?.avatar_url || undefined} alt={review.user?.full_name || ''} />
+                                        <AvatarFallback>{getInitials(review.user?.full_name)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-grow">
+                                        <p className="font-semibold">{review.user?.full_name || 'Anonymous'}</p>
+                                        <div className="flex items-center gap-2">
+                                            <StarRatingDisplay rating={review.rating} starClassName="h-4 w-4" />
+                                            <p className="text-xs text-muted-foreground">
+                                                {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </AccordionTrigger>
+                             <AccordionContent className="p-4 pt-0">
+                                <p className="text-muted-foreground pl-14">{review.comment || "No comment provided."}</p>
+                            </AccordionContent>
+                        </Card>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+        );
+    };
   
   const renderVerification = () => (
     authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")
@@ -603,5 +647,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
