@@ -213,13 +213,13 @@ export default function ProfilePage() {
     </div>
   );
   
-  const handleChatWithSeller = async (sellerId: string) => {
+  const startConversation = async (otherParticipantId: string) => {
     if (!user) {
-        toast({ title: "Please log in", description: "You need to be logged in to chat with a seller.", variant: "destructive" });
+        toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
         return;
     }
-    if (!sellerId) {
-        toast({ title: "Error", description: "Seller ID is missing.", variant: "destructive" });
+    if (!otherParticipantId) {
+        toast({ title: "Error", description: "Recipient ID is missing.", variant: "destructive" });
         return;
     }
 
@@ -227,7 +227,7 @@ export default function ProfilePage() {
     try {
         const { data, error } = await supabase.rpc('get_or_create_conversation', {
             p_participant_one_id: user.id,
-            p_participant_two_id: sellerId
+            p_participant_two_id: otherParticipantId
         });
 
         if (error) throw error;
@@ -240,7 +240,7 @@ export default function ProfilePage() {
     } finally {
         setIsChatting(false);
     }
-}
+};
 
   if (authLoading) {
     return (
@@ -360,7 +360,7 @@ export default function ProfilePage() {
           <Info className="h-4 w-4" />
           <AlertTitle className="font-bold">Important Information for Sellers</AlertTitle>
           <AlertDescription>
-            Only mark an order as "Confirm Delivery" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly.
+            Only mark an order as "Confirm Delivery" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly. Use the "Chat with Buyer" button to send delivery updates.
           </AlertDescription>
       </Alert>
       <Accordion type="single" collapsible className="w-full space-y-4">
@@ -387,7 +387,7 @@ export default function ProfilePage() {
                           </div>
                       </AccordionTrigger>
                       <AccordionContent>
-                          <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-secondary/30">
+                          <div className="p-4 flex flex-col sm:flex-row items-start justify-between gap-3 bg-secondary/30">
                               <div className="text-sm text-muted-foreground space-y-2">
                                   <h4 className="font-semibold text-sm text-foreground">Buyer & Delivery Information</h4>
                                   <div className="flex items-center gap-2">
@@ -403,12 +403,18 @@ export default function ProfilePage() {
                                       <p>{t.product_details.delivery_address}</p>
                                   </div>
                               </div>
-                              {t.status === 'pending' && (
-                                  <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm" className="w-full sm:w-auto">
-                                      {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                      Confirm Delivery
-                                  </Button>
-                              )}
+                              <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                <Button onClick={() => startConversation(t.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
+                                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                                    Chat with Buyer
+                                </Button>
+                                {t.status === 'pending' && (
+                                    <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm" className="w-full sm:w-auto">
+                                        {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                        Confirm Delivery
+                                    </Button>
+                                )}
+                              </div>
                           </div>
                       </AccordionContent>
                   </Card>
@@ -446,7 +452,7 @@ export default function ProfilePage() {
                   </div>
               </CardContent>
               <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
-                  <Button onClick={() => handleChatWithSeller(t.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
+                  <Button onClick={() => startConversation(t.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
                       {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                       Chat with Seller
                   </Button>
@@ -702,5 +708,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
