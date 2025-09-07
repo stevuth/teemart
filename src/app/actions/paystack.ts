@@ -149,3 +149,58 @@ export async function verifyAndProcessTransaction(reference: string) {
         return { success: false, error: error.message || 'An unexpected server error occurred during verification.' };
     }
 }
+
+
+/**
+ * Releases escrowed funds to a seller after a buyer confirms delivery.
+ * @param transactionId - The ID of the transaction to release funds for.
+ * @returns An object with either a success status or an error message.
+ */
+export async function releaseEscrowAction(transactionId: string) {
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: "You must be logged in." };
+    }
+    
+    // Using an RPC function to handle the entire logic securely on the database side.
+    const { error } = await supabase.rpc('handle_escrow_release', {
+        p_transaction_id: transactionId,
+        p_buyer_id: user.id
+    });
+    
+    if (error) {
+        console.error("Escrow release error:", error);
+        return { success: false, error: error.message };
+    }
+    
+    return { success: true };
+}
+
+/**
+ * Marks a transaction as delivered by the seller.
+ * @param transactionId - The ID of the transaction to update.
+ * @returns An object with either a success status or an error message.
+ */
+export async function markAsDeliveredAction(transactionId: string) {
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: "You must be logged in as a seller." };
+    }
+    
+    // Use an RPC function to ensure only the correct seller can update the status.
+    const { error } = await supabase.rpc('handle_mark_as_delivered', {
+        p_transaction_id: transactionId,
+        p_seller_id: user.id
+    });
+    
+    if (error) {
+        console.error("Mark as delivered error:", error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
+}
