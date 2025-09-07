@@ -565,16 +565,16 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           <BackButton />
-        <div className="flex flex-col md:flex-row items-start gap-8 mt-8">
+        <div className="flex flex-col md:flex-row items-start gap-4 md:gap-8 mt-4">
             <div className="flex-shrink-0 flex flex-col items-center md:items-start">
-                <Avatar className="h-32 w-32 mb-4 border-4 border-background ring-2 ring-primary">
+                <Avatar className="h-24 w-24 md:h-32 md:w-32 mb-4 border-4 border-background ring-2 ring-primary">
                     <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
                     <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                 </Avatar>
                 <div className="text-center md:text-left">
-                    <h1 className="text-3xl font-bold">{displayName}</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
                     <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
                         <p className="text-muted-foreground">TeeMart Seller</p>
                          {profile?.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
@@ -582,7 +582,7 @@ export default function ProfilePage() {
                 </div>
             </div>
             <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground pt-8 md:pt-0">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground pt-4 md:pt-0">
                     <div className="flex items-center gap-3">
                         <CalendarDays className="h-4 w-4 text-primary" />
                         <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : ''}</span>
@@ -592,7 +592,7 @@ export default function ProfilePage() {
                         <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
                     </div>
                 </div>
-                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
                     <Button asChild variant="outline" className="w-full sm:w-auto">
                         <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help & Support</Link>
                     </Button>
@@ -600,7 +600,7 @@ export default function ProfilePage() {
             </div>
         </div>
 
-        <Separator className="my-12" />
+        <Separator className="my-8" />
         
         {/* Mobile View */}
         <div className="md:hidden">
@@ -608,7 +608,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Desktop View */}
-        <Tabs defaultValue="active-listings" className="w-full hidden md:block">
+        <Tabs defaultValue="listings" className="w-full hidden md:block">
           <div className="flex flex-col md:flex-row gap-8">
               <div className="w-full md:w-64 flex-shrink-0">
                   <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
@@ -647,3 +647,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
