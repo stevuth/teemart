@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getAdminDashboardStats, type DashboardStats, getPendingPayouts, type PendingPayout } from '@/app/admin/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, TrendingUp, HandCoins, Landmark, Repeat } from 'lucide-react';
+import { Loader2, TrendingUp, HandCoins, Landmark, Repeat, Wallet, PiggyBank } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
@@ -133,20 +133,34 @@ export function DashboardStats() {
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 <StatCard 
-                    title="Total Sales Volume"
-                    value={stats?.total_sales_volume || 0}
+                    title="Gross Transaction Value"
+                    value={stats?.gross_transaction_value || 0}
                     icon={TrendingUp}
                     isLoading={loading}
-                    description="Gross value of all completed transactions."
+                    description="Total value of all purchases."
                 />
                 <StatCard 
                     title="Total Commissions"
                     value={stats?.total_commissions || 0}
                     icon={HandCoins}
                     isLoading={loading}
-                    description="Total escrow fees earned from sales."
+                    description="Total escrow fees earned."
+                />
+                 <StatCard 
+                    title="Total Paid to Sellers"
+                    value={stats?.total_paid_to_sellers || 0}
+                    icon={Wallet}
+                    isLoading={loading}
+                    description="Total funds released from escrow."
+                />
+                <StatCard 
+                    title="Pending Payouts"
+                    value={stats?.pending_payouts || 0}
+                    icon={Landmark}
+                    isLoading={loading}
+                    description="Funds held for delivered items."
                 />
                 <StatCard 
                     title="Completed Transactions"
@@ -154,14 +168,7 @@ export function DashboardStats() {
                     icon={Repeat}
                     formatAsCurrency={false}
                     isLoading={loading}
-                    description="Number of successfully completed orders."
-                />
-                <StatCard 
-                    title="Pending Payouts to Sellers"
-                    value={stats?.pending_payouts || 0}
-                    icon={Landmark}
-                    isLoading={loading}
-                    description="Value of funds held in escrow for delivered items."
+                    description="Number of successful orders."
                 />
             </div>
             <PendingPayoutsTable />

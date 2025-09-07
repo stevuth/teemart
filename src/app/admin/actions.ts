@@ -76,10 +76,11 @@ export type DisputeWithRelations = {
 };
 
 export type DashboardStats = {
-    total_sales_volume: number;
+    gross_transaction_value: number;
     total_transactions: number;
     total_commissions: number;
     pending_payouts: number;
+    total_paid_to_sellers: number;
 };
 
 export type PendingPayout = {
@@ -171,6 +172,7 @@ export async function getAdminDashboardStats() {
         console.error('Error fetching dashboard stats:', error);
         return { success: false, error: error.message };
     }
+    // The RPC returns an array with one object, so we return the first element.
     return { success: true, data: data as DashboardStats[] };
 }
 
