@@ -2,7 +2,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { GoogleAuth } from "https://deno.land/x/google_auth@v0.4.0/mod.ts";
+import { GoogleAuth } from "https://esm.sh/google-auth-library";
 
 const FCM_API_URL = `https://fcm.googleapis.com/v1/projects/${Deno.env.get("FIREBASE_PROJECT_ID")}/messages:send`;
 
@@ -15,15 +15,17 @@ interface PushNotificationPayload {
 
 // Initialize Google Auth client
 const auth = new GoogleAuth({
-  scope: ["https://www.googleapis.com/auth/firebase.messaging"],
+  scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
 });
 
 async function getAccessToken() {
-  const token = await auth.getAccessToken();
-  if (!token) {
+  const client = await auth.getClient();
+  const accessToken = await client.getAccessToken();
+
+  if (!accessToken.token) {
     throw new Error("Failed to get Google Auth token.");
   }
-  return token;
+  return accessToken.token;
 }
 
 serve(async (req) => {
