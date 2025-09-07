@@ -99,7 +99,7 @@ export function VerificationForm() {
                 .from('verification-documents')
                 .upload(ninFileName, ninImageFile);
             if (ninUploadError) throw ninUploadError;
-            const { data: { publicUrl: ninPublicUrl } } = supabase.storage.from('verification-documents').getPublicUrl(ninUploadData.path);
+            const ninFilePath = ninUploadData.path;
 
             // Upload Selfie image
             const selfieFileName = `${user.id}/${Date.now()}_selfie.png`;
@@ -108,12 +108,12 @@ export function VerificationForm() {
                 .from('verification-documents')
                 .upload(selfieFileName, selfieFile);
             if (selfieUploadError) throw selfieUploadError;
-            const { data: { publicUrl: selfiePublicUrl } } = supabase.storage.from('verification-documents').getPublicUrl(selfieUploadData.path);
+            const selfieFilePath = selfieUploadData.path;
             
-            // Update profile with URLs
+            // Update profile with the FILE PATHS, not public URLs
             const { error: profileUpdateError } = await supabase
                 .from('profiles')
-                .update({ nin_image_url: ninPublicUrl, selfie_image_url: selfiePublicUrl })
+                .update({ nin_image_url: ninFilePath, selfie_image_url: selfieFilePath })
                 .eq('id', user.id);
             
             if (profileUpdateError) throw profileUpdateError;

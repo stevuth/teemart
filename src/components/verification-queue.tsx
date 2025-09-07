@@ -17,6 +17,47 @@ type ProfileForVerification = {
   selfie_image_url: string;
 };
 
+// A new component to handle generating the signed URL and displaying the image
+function VerificationImage({ path }: { path: string }) {
+    const { supabase } = useAuth();
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (path && supabase) {
+            const getSignedUrl = async () => {
+                const { data, error } = await supabase.storage
+                    .from('verification-documents')
+                    .createSignedUrl(path, 60 * 5); // URL valid for 5 minutes
+
+                if (error) {
+                    console.error("Error creating signed URL:", error);
+                    setImageUrl(null);
+                } else {
+                    setImageUrl(data.signedUrl);
+                }
+            };
+            getSignedUrl();
+        }
+    }, [path, supabase]);
+
+    if (!imageUrl) {
+        return <div className="flex items-center justify-center h-full bg-secondary rounded-md"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+    }
+
+    return (
+        <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative">
+            <Image
+                src={imageUrl}
+                alt="Verification Document"
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 90vw, 40vw"
+            />
+        </a>
+    );
+}
+
+
 export function VerificationQueue() {
   const [profiles, setProfiles] = useState<ProfileForVerification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,30 +124,18 @@ export function VerificationQueue() {
                     <h3 className="font-semibold">{profile.full_name}</h3>
                     <p className="text-xs text-muted-foreground">{profile.id}</p>
                 </div>
-                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                  <div>
-                    <p className="text-sm font-medium mb-2">NIN Document</p>
-                    <a href={profile.nin_image_url} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-secondary rounded-md overflow-hidden border">
-                      <Image 
-                        src={profile.nin_image_url} 
-                        alt="NIN Document" 
-                        fill
-                        className="object-contain" 
-                        sizes="(max-width: 768px) 90vw, 40vw"
-                      />
-                    </a>
+                 <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">NIN Document</p>
+                    <div className="relative aspect-video bg-secondary rounded-md overflow-hidden border">
+                       {profile.nin_image_url && <VerificationImage path={profile.nin_image_url} />}
+                    </div>
                   </div>
-                   <div>
-                    <p className="text-sm font-medium mb-2">User Selfie</p>
-                    <a href={profile.selfie_image_url} target="_blank" rel="noopener noreferrer" className="block relative aspect-square w-48 bg-secondary rounded-md overflow-hidden border">
-                      <Image 
-                        src={profile.selfie_image_url} 
-                        alt="User Selfie" 
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 50vw, 20vw"
-                      />
-                    </a>
+                   <div className="space-y-2">
+                    <p className="text-sm font-medium">User Selfie</p>
+                     <div className="relative aspect-square w-48 bg-secondary rounded-md overflow-hidden border">
+                       {profile.selfie_image_url && <VerificationImage path={profile.selfie_image_url} />}
+                    </div>
                   </div>
                 </div>
                 <CardFooter className="flex justify-end gap-2 bg-muted/50 p-4 border-t">
@@ -137,3 +166,5 @@ export function VerificationQueue() {
     </Card>
   );
 }
+
+    
