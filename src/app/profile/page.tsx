@@ -154,15 +154,23 @@ export default function ProfilePage() {
       fetchUserData();
     }
   }, [user, authLoading, router, fetchUserData, supabase]);
+
+   useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') as DesktopTab | null;
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+      setMobileView(tabFromUrl);
+    }
+  }, [searchParams, activeTab]);
   
   const handleMarkAsDelivered = async (transactionId: string) => {
     setIsConfirmingDelivery(transactionId);
-    const result = await markAsDeliveredAction(transactionId);
-    if (result.success) {
+    const { success, error } = await markAsDeliveredAction(transactionId);
+    if (success) {
       toast({ title: "Order Updated", description: "You have marked this order as delivered." });
       fetchUserData(); // Refetch to update status
     } else {
-      toast({ title: "Error", description: result.error, variant: "destructive" });
+      toast({ title: "Error", description: error, variant: "destructive" });
     }
     setIsConfirmingDelivery(null);
   };
@@ -171,13 +179,13 @@ export default function ProfilePage() {
     if (!transactionToConfirm) return;
     setIsReleasingPayment(transactionToConfirm.id);
     
-    const result = await releaseEscrowAction(transactionToConfirm.id);
+    const { success, error } = await releaseEscrowAction(transactionToConfirm.id);
 
-    if (result.success) {
+    if (success) {
         toast({ title: "Payment Released!", description: `Payment has been released to ${transactionToConfirm.product_details?.seller_name}.` });
         fetchUserData(); // Refetch all data to update the status
     } else {
-        toast({ title: "Action Failed", description: result.error, variant: "destructive" });
+        toast({ title: "Action Failed", description: error, variant: "destructive" });
     }
     
     setIsReleasingPayment(null);

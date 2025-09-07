@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
@@ -7,12 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { verifyTransactionAction } from '@/app/actions/paystack';
+import { verifyAndProcessTransaction } from '@/app/actions/paystack';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
 
 function VerificationContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { refetchProfile } = useAuth();
     
     const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
     const [error, setError] = useState<string | null>(null);
@@ -32,9 +35,11 @@ function VerificationContent() {
 
         async function verify() {
             setHasVerified(true);
-            const result = await verifyTransactionAction(reference!);
+            const result = await verifyAndProcessTransaction(reference!);
             if (result.success) {
                 setStatus('success');
+                // Refetch profile to update verification status UI immediately
+                await refetchProfile();
             } else {
                 setError(result.error || "An unknown verification error occurred.");
                 setStatus('failed');
@@ -43,7 +48,7 @@ function VerificationContent() {
         
         verify();
 
-    }, [searchParams, hasVerified]);
+    }, [searchParams, hasVerified, refetchProfile]);
 
 
     return (
@@ -68,7 +73,7 @@ function VerificationContent() {
                 <div className="flex w-full justify-center gap-4">
                      {status === 'success' && (
                         <Button asChild className="w-full">
-                            <Link href="/profile">Continue Verification</Link>
+                            <Link href="/profile?tab=verification">Continue Verification</Link>
                         </Button>
                     )}
                      {status === 'failed' && (
