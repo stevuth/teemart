@@ -10,7 +10,7 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info } from 'lucide-react';
+import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info, List, BarChart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -593,9 +593,21 @@ export default function ProfilePage() {
         </div>
     );
   }
+  
+  const StatCard = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: string | number }) => (
+    <Card className="flex-1">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-secondary/30">
       <DeleteProductDialog 
           product={productToDelete}
           isOpen={!!productToDelete}
@@ -627,52 +639,57 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-4">
-          <BackButton />
-        <div className="flex flex-col md:flex-row items-start gap-4 md:gap-8 mt-4">
-            <div className="flex-shrink-0 flex flex-col items-center md:items-start">
-                <Avatar className="h-24 w-24 md:h-32 md:w-32 mb-4 border-4 border-background ring-2 ring-primary">
-                    <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
-                    <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-                </Avatar>
-                <div className="text-center md:text-left">
-                    <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
-                    <div className="flex items-center justify-center md:justify-start gap-2 mt-1">
-                        <p className="text-muted-foreground">TeeMart Seller</p>
-                         {profile?.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
-                    </div>
-                </div>
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <BackButton />
+        <Card className="mt-4 overflow-hidden">
+            <div className="relative h-32 md:h-48 bg-secondary">
+                 <Image src="https://picsum.photos/1200/300" alt="Profile banner" data-ai-hint="abstract geometric pattern" fill className="object-cover"/>
+                 <div className="absolute inset-0 bg-black/20"></div>
             </div>
-            <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8 pt-4 md:pt-0">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-3">
-                        <CalendarDays className="h-4 w-4 text-primary" />
-                        <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : ''}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Star className="h-4 w-4 text-primary" />
-                        <span>{reviews.length > 0 ? `${reviews.length} reviews` : 'No reviews yet'}</span>
+            <div className="px-4 sm:px-6 pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-end -mt-16 sm:-mt-20 relative z-10 gap-4">
+                    <Avatar className="h-32 w-32 border-4 border-background ring-2 ring-primary/50">
+                        <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
+                        <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+                    </Avatar>
+                     <div className="flex-grow py-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                             <div>
+                                <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <p className="text-muted-foreground">TeeMart Seller</p>
+                                     {profile?.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
+                                </div>
+                            </div>
+                             <div className="flex items-center gap-2">
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help</Link>
+                                </Button>
+                                <NotificationToggle />
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div className="mt-4 flex flex-col sm:flex-row gap-3">
-                    <Button asChild variant="outline" className="w-full sm:w-auto">
-                        <Link href="/help"><HelpCircle className="mr-2 h-4 w-4"/>Help & Support</Link>
-                    </Button>
-                    <NotificationToggle />
-                </div>
-            </div>
-        </div>
 
-        <Separator className="my-6 md:my-8" />
+                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                     <StatCard icon={CalendarDays} label="Member Since" value={creationTime ? format(new Date(creationTime), 'MMM yyyy') : 'N/A'} />
+                     <StatCard icon={List} label="Active Listings" value={loadingData ? '-' : activeListings.length} />
+                     <StatCard icon={ShoppingBag} label="Total Sales" value={loadingData ? '-' : sales.length} />
+                     <StatCard icon={Star} label="Reviews" value={loadingData ? '-' : reviews.length} />
+                 </div>
+            </div>
+        </Card>
+        
+        <Separator />
         
         {/* Mobile View */}
-        <div className="md:hidden">
+        <div className="md:hidden p-4">
             {renderMobileContent()}
         </div>
 
         {/* Desktop View */}
         <Tabs defaultValue="listings" className="w-full hidden md:block">
-          <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex flex-col md:flex-row gap-8 p-4">
               <div className="w-full md:w-64 flex-shrink-0">
                   <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
                       <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
