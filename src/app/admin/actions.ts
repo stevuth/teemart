@@ -239,10 +239,13 @@ export async function getAllTransactions() {
         }
         const supabase = createSupabaseServerClient();
         const { data, error } = await supabase.rpc('get_all_transactions_admin');
+        
         if (error) {
-            console.error('Error fetching all transactions RPC:', error);
+            console.error('Error in getAllTransactions RPC:', error);
             throw new Error(error.message);
         }
+        
+        // The RPC returns a JSON array, so we can cast it directly.
         return { success: true, data: data as AdminTransaction[] };
     } catch (e: any) {
         console.error("Server Action Exception: getAllTransactions failed.", e);
