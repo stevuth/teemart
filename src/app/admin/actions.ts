@@ -6,20 +6,28 @@ import { type Transaction } from "@/lib/types";
 
 // Helper function to check if the current user is an admin
 async function isAdmin() {
-    const supabase = createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+        const supabase = createSupabaseServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return false;
+        if (!user) return false;
 
-    const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-    
-    if (error) return false;
-    
-    return profile?.role === 'admin';
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        
+        if (error) {
+            console.error("Admin check profile fetch error:", error);
+            return false;
+        }
+        
+        return profile?.role === 'admin';
+    } catch (e) {
+        console.error("Exception in isAdmin:", e);
+        return false;
+    }
 }
 
 
@@ -101,113 +109,143 @@ export type AdminTransaction = Transaction & {
 
 // Server Action to get all users with their stats
 export async function getUsersWithStats() {
-    if (!(await isAdmin())) {
-        return { success: false, error: 'Permission denied.' };
-    }
+    try {
+        if (!(await isAdmin())) {
+            return { success: false, error: 'Permission denied.' };
+        }
 
-    const supabase = createSupabaseServerClient();
-    const { data, error } = await supabase.rpc('get_users_with_stats');
+        const supabase = createSupabaseServerClient();
+        const { data, error } = await supabase.rpc('get_users_with_stats');
 
-    if (error) {
-        console.error('Error in getUsersWithStats server action:', error);
-        return { success: false, error: error.message };
+        if (error) {
+            console.error('Error in getUsersWithStats RPC:', error);
+            throw new Error(error.message);
+        }
+        
+        return { success: true, data: data as UserProfileWithStats[] };
+    } catch (e: any) {
+        console.error("Server Action Exception: getUsersWithStats failed.", e);
+        return { success: false, error: e.message || "An unexpected server error occurred." };
     }
-    
-    return { success: true, data: data as UserProfileWithStats[] };
 }
 
 // Server action to get all sellers and their products
 export async function getSellersWithProducts() {
-    if (!(await isAdmin())) {
-        return { success: false, error: 'Permission denied.' };
+    try {
+        if (!(await isAdmin())) {
+            return { success: false, error: 'Permission denied.' };
+        }
+
+        const supabase = createSupabaseServerClient();
+        const { data, error } = await supabase.rpc('get_sellers_with_products');
+
+        if (error) {
+            console.error('Error in getSellersWithProducts RPC:', error);
+            throw new Error(error.message);
+        }
+
+        return { success: true, data: data as SellerWithProducts[] };
+    } catch (e: any) {
+        console.error("Server Action Exception: getSellersWithProducts failed.", e);
+        return { success: false, error: e.message || "An unexpected server error occurred." };
     }
-
-    const supabase = createSupabaseServerClient();
-    const { data, error } = await supabase.rpc('get_sellers_with_products');
-
-    if (error) {
-        console.error('Error in getSellersWithProducts server action:', error);
-        return { success: false, error: error.message };
-    }
-
-    return { success: true, data: data as SellerWithProducts[] };
 }
 
 // Server action to get all disputes with related data
 export async function getDisputes() {
-     if (!(await isAdmin())) {
-        return { success: false, error: 'Permission denied.' };
-    }
+     try {
+        if (!(await isAdmin())) {
+            return { success: false, error: 'Permission denied.' };
+        }
 
-    const supabase = createSupabaseServerClient();
-    
-    const { data, error } = await supabase
-        .from('disputes')
-        .select(`
-            id,
-            transaction_id,
-            buyer_id,
-            message,
-            status,
-            created_at,
-            resolved_at,
-            buyer:profiles!disputes_buyer_id_fkey(full_name, email),
-            transaction:transactions(
-                paystack_ref,
-                product_details,
-                seller:profiles!transactions_seller_id_fkey(email, full_name)
-            )
-        `)
-        .order('created_at', { ascending: false });
+        const supabase = createSupabaseServerClient();
+        
+        const { data, error } = await supabase
+            .from('disputes')
+            .select(`
+                id,
+                transaction_id,
+                buyer_id,
+                message,
+                status,
+                created_at,
+                resolved_at,
+                buyer:profiles!disputes_buyer_id_fkey(full_name, email),
+                transaction:transactions(
+                    paystack_ref,
+                    product_details,
+                    seller:profiles!transactions_seller_id_fkey(email, full_name)
+                )
+            `)
+            .order('created_at', { ascending: false });
 
-    if (error) {
-        console.error('Error in getDisputes server action:', error);
-        return { success: false, error: error.message };
+        if (error) {
+            console.error('Error in getDisputes query:', error);
+            throw new Error(error.message);
+        }
+        
+        return { success: true, data: data as unknown as DisputeWithRelations[] };
+    } catch (e: any) {
+        console.error("Server Action Exception: getDisputes failed.", e);
+        return { success: false, error: e.message || "An unexpected server error occurred." };
     }
-    
-    return { success: true, data: data as unknown as DisputeWithRelations[] };
 }
 
 
 // Server action to get dashboard financial stats
 export async function getAdminDashboardStats() {
-    if (!(await isAdmin())) {
-        return { success: false, error: 'Permission denied.' };
+    try {
+        if (!(await isAdmin())) {
+            return { success: false, error: 'Permission denied.' };
+        }
+        const supabase = createSupabaseServerClient();
+        const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+        if (error) {
+            console.error('Error fetching dashboard stats RPC:', error);
+            throw new Error(error.message);
+        }
+        // The RPC returns an array with one object, so we return the first element.
+        return { success: true, data: data as DashboardStats[] };
+    } catch (e: any) {
+        console.error("Server Action Exception: getAdminDashboardStats failed.", e);
+        return { success: false, error: e.message || "An unexpected server error occurred." };
     }
-    const supabase = createSupabaseServerClient();
-    const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
-    if (error) {
-        console.error('Error fetching dashboard stats:', error);
-        return { success: false, error: error.message };
-    }
-    // The RPC returns an array with one object, so we return the first element.
-    return { success: true, data: data as DashboardStats[] };
 }
 
 // Server action to get a detailed list of pending payouts
 export async function getPendingPayouts() {
-    if (!(await isAdmin())) {
-        return { success: false, error: 'Permission denied.' };
+    try {
+        if (!(await isAdmin())) {
+            return { success: false, error: 'Permission denied.' };
+        }
+        const supabase = createSupabaseServerClient();
+        const { data, error } = await supabase.rpc('get_pending_payouts');
+        if (error) {
+            console.error('Error fetching pending payouts RPC:', error);
+            throw new Error(error.message);
+        }
+        return { success: true, data: data as PendingPayout[] };
+    } catch (e: any) {
+        console.error("Server Action Exception: getPendingPayouts failed.", e);
+        return { success: false, error: e.message || "An unexpected server error occurred." };
     }
-    const supabase = createSupabaseServerClient();
-    const { data, error } = await supabase.rpc('get_pending_payouts');
-    if (error) {
-        console.error('Error fetching pending payouts:', error);
-        return { success: false, error: error.message };
-    }
-    return { success: true, data: data as PendingPayout[] };
 }
 
 // Server action to get ALL transactions for the admin panel
 export async function getAllTransactions() {
-    if (!(await isAdmin())) {
-        return { success: false, error: 'Permission denied.' };
+    try {
+        if (!(await isAdmin())) {
+            return { success: false, error: 'Permission denied.' };
+        }
+        const supabase = createSupabaseServerClient();
+        const { data, error } = await supabase.rpc('get_all_transactions_admin');
+        if (error) {
+            console.error('Error fetching all transactions RPC:', error);
+            throw new Error(error.message);
+        }
+        return { success: true, data: data as AdminTransaction[] };
+    } catch (e: any) {
+        console.error("Server Action Exception: getAllTransactions failed.", e);
+        return { success: false, error: e.message || "An unexpected server error occurred." };
     }
-    const supabase = createSupabaseServerClient();
-    const { data, error } = await supabase.rpc('get_all_transactions_admin');
-    if (error) {
-        console.error('Error fetching all transactions:', error);
-        return { success: false, error: error.message };
-    }
-    return { success: true, data: data as AdminTransaction[] };
 }
