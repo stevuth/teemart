@@ -51,7 +51,7 @@ function VerificationContent() {
         
         verify();
 
-    }, [searchParams, router, hasVerified]);
+    }, [searchParams, hasVerified]);
 
     // Use a separate effect to clear the cart only when status becomes 'success'
     useEffect(() => {
