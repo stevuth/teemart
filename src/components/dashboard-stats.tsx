@@ -2,11 +2,12 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { getAdminDashboardStats, type DashboardStats } from '@/app/admin/actions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAdminDashboardStats, type DashboardStats, getPendingPayouts, type PendingPayout } from '@/app/admin/actions';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, TrendingUp, HandCoins, Landmark, Repeat } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from './ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 
 const StatCard = ({ title, value, icon: Icon, formatAsCurrency = true, isLoading = false, description }: { title: string, value: number, icon: React.ElementType, formatAsCurrency?: boolean, isLoading?: boolean, description?: string }) => {
     const formattedValue = formatAsCurrency ? `₦${value.toLocaleString()}` : value.toLocaleString();
@@ -33,6 +34,73 @@ const StatCard = ({ title, value, icon: Icon, formatAsCurrency = true, isLoading
         </Card>
     );
 };
+
+const PendingPayoutsTable = () => {
+    const [payouts, setPayouts] = useState<PendingPayout[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        const fetchPayouts = async () => {
+            setLoading(true);
+            const result = await getPendingPayouts();
+            if (result.success && result.data) {
+                setPayouts(result.data);
+            } else {
+                toast({
+                    title: "Error Fetching Payouts",
+                    description: `Could not load pending payouts: ${result.error}`,
+                    variant: "destructive"
+                });
+            }
+            setLoading(false);
+        };
+        fetchPayouts();
+    }, [toast]);
+
+    if (loading) {
+        return (
+            <div className="space-y-2">
+                <Skeleton className="h-8 w-1/4" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+            </div>
+        );
+    }
+    
+    if(payouts.length === 0) {
+        return null; // Don't render the table if there are no payouts
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Pending Payouts Queue</CardTitle>
+                <CardDescription>This is a list of sellers with funds ready to be released.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Seller</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead className="text-right">Amount Due</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {payouts.map(payout => (
+                            <TableRow key={payout.seller_id}>
+                                <TableCell className="font-medium">{payout.full_name}</TableCell>
+                                <TableCell>{payout.email}</TableCell>
+                                <TableCell className="text-right font-semibold">₦{payout.total_payout_due.toLocaleString()}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    )
+}
 
 
 export function DashboardStats() {
@@ -64,36 +132,39 @@ export function DashboardStats() {
 
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard 
-                title="Total Sales Volume"
-                value={stats?.total_sales_volume || 0}
-                icon={TrendingUp}
-                isLoading={loading}
-                description="Gross value of all completed transactions."
-            />
-            <StatCard 
-                title="Total Commissions"
-                value={stats?.total_commissions || 0}
-                icon={HandCoins}
-                isLoading={loading}
-                description="Total escrow fees earned from sales."
-            />
-            <StatCard 
-                title="Completed Transactions"
-                value={stats?.total_transactions || 0}
-                icon={Repeat}
-                formatAsCurrency={false}
-                isLoading={loading}
-                description="Number of successfully completed orders."
-            />
-            <StatCard 
-                title="Pending Payouts to Sellers"
-                value={stats?.pending_payouts || 0}
-                icon={Landmark}
-                isLoading={loading}
-                description="Value of funds held in escrow for delivered items."
-            />
+        <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <StatCard 
+                    title="Total Sales Volume"
+                    value={stats?.total_sales_volume || 0}
+                    icon={TrendingUp}
+                    isLoading={loading}
+                    description="Gross value of all completed transactions."
+                />
+                <StatCard 
+                    title="Total Commissions"
+                    value={stats?.total_commissions || 0}
+                    icon={HandCoins}
+                    isLoading={loading}
+                    description="Total escrow fees earned from sales."
+                />
+                <StatCard 
+                    title="Completed Transactions"
+                    value={stats?.total_transactions || 0}
+                    icon={Repeat}
+                    formatAsCurrency={false}
+                    isLoading={loading}
+                    description="Number of successfully completed orders."
+                />
+                <StatCard 
+                    title="Pending Payouts to Sellers"
+                    value={stats?.pending_payouts || 0}
+                    icon={Landmark}
+                    isLoading={loading}
+                    description="Value of funds held in escrow for delivered items."
+                />
+            </div>
+            <PendingPayoutsTable />
         </div>
     );
 }

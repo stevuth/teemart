@@ -82,6 +82,13 @@ export type DashboardStats = {
     pending_payouts: number;
 };
 
+export type PendingPayout = {
+    seller_id: string;
+    full_name: string;
+    email: string;
+    total_payout_due: number;
+};
+
 
 // Server Action to get all users with their stats
 export async function getUsersWithStats() {
@@ -165,4 +172,18 @@ export async function getAdminDashboardStats() {
         return { success: false, error: error.message };
     }
     return { success: true, data: data as DashboardStats[] };
+}
+
+// Server action to get a detailed list of pending payouts
+export async function getPendingPayouts() {
+    if (!(await isAdmin())) {
+        return { success: false, error: 'Permission denied.' };
+    }
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase.rpc('get_pending_payouts');
+    if (error) {
+        console.error('Error fetching pending payouts:', error);
+        return { success: false, error: error.message };
+    }
+    return { success: true, data: data as PendingPayout[] };
 }
