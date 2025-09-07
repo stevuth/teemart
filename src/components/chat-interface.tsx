@@ -112,7 +112,13 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status, err) => {
+                if (status === 'CHANNEL_ERROR') {
+                    console.error('Realtime Channel Error:', err);
+                } else if (status === 'TIMED_OUT') {
+                    console.warn('Realtime Channel Timed Out');
+                }
+            });
 
         return () => {
             supabase.removeChannel(channel);
@@ -179,11 +185,10 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
 
             if (error) throw error;
             
-            // The database trigger will now handle sending the notification.
-            
             setMessages(current => current.map(m => m.id === optimisticId ? (data as Message) : m));
 
         } catch (error: any) {
+            console.error("Message send error:", error);
             toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
             setMessages(current => current.filter(m => m.id !== optimisticId));
             setNewMessage(content); 
