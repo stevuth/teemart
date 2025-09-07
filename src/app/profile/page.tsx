@@ -628,7 +628,7 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         
         {/* Mobile View */}
         <div className="md:hidden">
@@ -637,7 +637,7 @@ export default function ProfilePage() {
 
         {/* Desktop View */}
         <div className="hidden md:block">
-            <Card className="mt-6">
+            <Card>
                 <div className="p-4 sm:p-6 bg-primary/5 rounded-t-lg">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <Avatar className="h-24 w-24 border-4 border-background ring-2 ring-primary rounded-lg">
@@ -712,5 +712,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
