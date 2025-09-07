@@ -2,11 +2,9 @@
 'use server';
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
-import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import { type Transaction } from "@/lib/types";
 
 // Helper function to check if the current user is an admin
-// This still uses the user's context client
 async function isAdmin() {
     try {
         const supabase = createSupabaseServerClient();
@@ -116,7 +114,7 @@ export async function getUsersWithStats() {
             return { success: false, error: 'Permission denied.' };
         }
 
-        const supabase = createSupabaseAdminClient();
+        const supabase = createSupabaseServerClient();
         const { data, error } = await supabase.rpc('get_users_with_stats');
 
         if (error) {
@@ -138,7 +136,7 @@ export async function getSellersWithProducts() {
             return { success: false, error: 'Permission denied.' };
         }
 
-        const supabase = createSupabaseAdminClient();
+        const supabase = createSupabaseServerClient();
         const { data, error } = await supabase.rpc('get_sellers_with_products');
 
         if (error) {
@@ -160,7 +158,7 @@ export async function getDisputes() {
             return { success: false, error: 'Permission denied.' };
         }
 
-        const supabase = createSupabaseAdminClient();
+        const supabase = createSupabaseServerClient();
         
         const { data, error } = await supabase
             .from('disputes')
@@ -200,7 +198,7 @@ export async function getAdminDashboardStats() {
         if (!(await isAdmin())) {
             return { success: false, error: 'Permission denied.' };
         }
-        const supabase = createSupabaseAdminClient();
+        const supabase = createSupabaseServerClient();
         const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
         if (error) {
             console.error('Error fetching dashboard stats RPC:', error);
@@ -220,7 +218,7 @@ export async function getPendingPayouts() {
         if (!(await isAdmin())) {
             return { success: false, error: 'Permission denied.' };
         }
-        const supabase = createSupabaseAdminClient();
+        const supabase = createSupabaseServerClient();
         const { data, error } = await supabase.rpc('get_pending_payouts');
         if (error) {
             console.error('Error fetching pending payouts RPC:', error);
@@ -240,10 +238,9 @@ export async function getAllTransactions() {
             return { success: false, error: 'Permission denied.' };
         }
         
-        // Use the admin client to bypass RLS
-        const supabase = createSupabaseAdminClient();
+        const supabase = createSupabaseServerClient();
 
-        // Perform a direct query with joins
+        // Perform a direct query with joins. RLS policies will ensure only admins can see this.
         const { data, error } = await supabase
             .from('transactions')
             .select(`
