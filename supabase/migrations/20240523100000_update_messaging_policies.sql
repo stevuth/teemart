@@ -1,108 +1,88 @@
+-- Enable HTTP extension
+CREATE EXTENSION IF NOT EXISTS http WITH SCHEMA extensions;
+-- Enable pg_net extension
+CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
 
--- Enable the http extension
-create extension if not exists http with schema extensions;
+-- Drop existing policies and functions if they exist to ensure a clean slate.
+-- We use "IF EXISTS" to prevent errors if they were already removed.
+DROP POLICY IF EXISTS "Allow insert for authenticated users" ON "public"."messages";
+DROP POLICY IF EXISTS "Allow insert for conversation participants" ON "public"."messages";
+DROP POLICY IF EXISTS "Allow select for conversation participants" ON "public"."messages";
+DROP FUNCTION IF EXISTS is_conversation_participant(uuid, uuid);
+DROP FUNCTION IF EXISTS handle_new_message();
 
 -- Function to check if a user is a participant in a conversation
-create or replace function is_conversation_participant(p_conversation_id uuid, p_user_id uuid)
-returns boolean
-language sql
-security definer
-as $$
-  select exists (
-    select 1
-    from conversation_participants
-    where conversation_id = p_conversation_id and user_id = p_user_id
+CREATE OR REPLACE FUNCTION is_conversation_participant(p_conversation_id uuid, p_user_id uuid)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM conversation_participants
+    WHERE conversation_id = p_conversation_id AND user_id = p_user_id
   );
-$$;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- RLS Policy for selecting messages
-drop policy if exists "Allow select for conversation participants" on public.messages;
-create policy "Allow select for conversation participants"
-on public.messages for select
-using (
-  is_conversation_participant(conversation_id, auth.uid())
-);
+-- RLS Policy: Allow users to view messages in conversations they are part of.
+CREATE POLICY "Allow select for conversation participants"
+ON "public"."messages"
+FOR SELECT
+USING (is_conversation_participant(conversation_id, auth.uid()));
 
--- RLS Policy for inserting messages
-drop policy if exists "Allow insert for conversation participants" on public.messages;
-create policy "Allow insert for conversation participants"
-on public.messages for insert
-with check (
-  auth.uid() = sender_id and
-  is_conversation_participant(conversation_id, auth.uid())
-);
+-- RLS Policy: Allow users to insert messages into conversations they are part of.
+CREATE POLICY "Allow insert for conversation participants"
+ON "public"."messages"
+FOR INSERT
+WITH CHECK ((auth.uid() = sender_id) AND is_conversation_participant(conversation_id, auth.uid()));
 
--- Function to get or create a conversation
-create or replace function get_or_create_conversation(
-  p_participant_one_id uuid,
-  p_participant_two_id uuid
-)
-returns uuid
-language plpgsql
-as $$
-declare
-  v_conversation_id uuid;
-begin
-  -- Check if a conversation already exists
-  select cp1.conversation_id into v_conversation_id
-  from conversation_participants cp1
-  join conversation_participants cp2 on cp1.conversation_id = cp2.conversation_id
-  where
-    cp1.user_id = p_participant_one_id and
-    cp2.user_id = p_participant_two_id;
+-- Function to trigger push notification on new message
+CREATE OR REPLACE FUNCTION handle_new_message()
+RETURNS TRIGGER AS $$
+DECLARE
+  recipient_profile RECORD;
+  notification_payload JSON;
+BEGIN
+  -- Get recipient's profile to check for FCM tokens
+  SELECT * INTO recipient_profile FROM profiles WHERE id = NEW.recipient_id;
 
-  -- If not, create a new one
-  if v_conversation_id is null then
-    insert into conversations default values returning id into v_conversation_id;
-    
-    -- IMPORTANT: Insert both participants into the participants table
-    insert into conversation_participants (conversation_id, user_id)
-    values (v_conversation_id, p_participant_one_id), (v_conversation_id, p_participant_two_id);
-  end if;
-
-  return v_conversation_id;
-end;
-$$;
-
--- Function to handle push notifications on new messages
-create or replace function public.handle_new_message()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  sender_name text;
-begin
-  -- Get sender's name
-  select full_name into sender_name from public.profiles where id = new.sender_id;
-
-  -- Use a BEGIN/EXCEPTION block to gracefully handle potential errors
-  begin
-    perform net.http_post(
-      url:='https://femgftishdtzacfimkpw.supabase.co/functions/v1/send-push-notification',
-      headers:='{"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlbWdmdGlzaGR0emFjZmlta3B3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyMTM1NTg2MiwiZXhwIjoyMDM2OTMxODYyfQ.29z_OQCANt02zIs3z4fH8Z7hALnQJ4vWn15vVfP-O6E", "Content-Type": "application/json"}',
-      body:=jsonb_build_object(
-        'recipient_id', new.recipient_id,
-        'title', sender_name,
-        'body', new.content,
-        'url', '/messages?conversationId=' || new.conversation_id::text
-      )
+  -- Proceed only if recipient has FCM tokens
+  IF recipient_profile.fcm_tokens IS NOT NULL AND jsonb_array_length(recipient_profile.fcm_tokens::jsonb) > 0 THEN
+    -- Construct the payload for the push notification function
+    notification_payload := json_build_object(
+      'recipient_id', NEW.recipient_id,
+      'title', (SELECT full_name FROM profiles WHERE id = NEW.sender_id),
+      'body', NEW.content,
+      'url', '/messages?conversationId=' || NEW.conversation_id
     );
-  exception
-    when others then
-      -- Log the error to the database logs but do not re-throw it
-      raise warning 'Push notification failed for message %: %', new.id, SQLERRM;
-  end;
 
-  return new;
-end;
-$$;
+    -- Use a BEGIN/EXCEPTION block to handle potential errors from http_post
+    -- This ensures that a failure in sending the notification does not prevent the message from being saved.
+    BEGIN
+      -- Call the Supabase Edge Function to send the push notification
+      PERFORM http_post(
+        -- The URL of your deployed Edge Function
+        'https://femgftishdtzacfimkpw.supabase.co/functions/v1/send-push-notification',
+        notification_payload::TEXT,
+        'application/json',
+        -- Pass service_role_key for authorization
+        ('{"Authorization": "Bearer ' || secrets.get('service_role_key') || '"}')::http_header[]
+      );
+    EXCEPTION
+      WHEN OTHERS THEN
+        -- Log the error to the PostgreSQL logs but do not re-throw it
+        RAISE WARNING 'Failed to send push notification for message_id %: %', NEW.id, SQLERRM;
+    END;
+  END IF;
 
--- Trigger to call the function after a new message is inserted
-drop trigger if exists on_new_message_send_notification on public.messages;
-create trigger on_new_message_send_notification
-after insert on public.messages
-for each row
-execute function public.handle_new_message();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Drop the existing trigger if it exists
+DROP TRIGGER IF EXISTS on_new_message_trigger ON public.messages;
+
+-- Create the trigger that calls the function after a new message is inserted
+CREATE TRIGGER on_new_message_trigger
+AFTER INSERT ON public.messages
+FOR EACH ROW
+EXECUTE FUNCTION handle_new_message();
