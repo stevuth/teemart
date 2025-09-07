@@ -44,7 +44,7 @@ function MessagingPage() {
         if (!user) return;
         setLoading(true);
 
-        const { data, error } = await supabase.rpc('get_user_conversations_new', { p_user_id: user.id });
+        const { data, error } = await supabase.rpc('get_user_conversations', { p_user_id: user.id });
 
         if (error) {
             console.error('Error fetching conversations:', JSON.stringify(error, null, 2));
