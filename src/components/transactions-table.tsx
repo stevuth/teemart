@@ -48,9 +48,10 @@ export function TransactionsTable() {
         if (result.success && result.data) {
             setTransactions(result.data);
         } else {
+            console.error("Failed to fetch admin transactions. Full error object:", result);
             toast({
-                title: "Error",
-                description: `Could not fetch transactions: ${result.error}`,
+                title: "Error Fetching Transactions",
+                description: `Could not fetch transactions: ${result.error}. See console for details.`,
                 variant: "destructive"
             });
         }
