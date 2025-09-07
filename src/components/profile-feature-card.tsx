@@ -18,9 +18,6 @@ type ProfileFeatureCardProps = {
 
 export function ProfileFeatureCard({ icon: Icon, label, value, buttonText, onButtonClick }: ProfileFeatureCardProps) {
     const router = useRouter();
-
-    const Component = onButtonClick ? 'div' : Link;
-    const props = onButtonClick ? {} : { href: '/help' };
     
     const content = (
         <>
@@ -34,19 +31,25 @@ export function ProfileFeatureCard({ icon: Icon, label, value, buttonText, onBut
                 </div>
             </div>
             {buttonText && (
-                 <Button size="sm" variant="ghost" className="shrink-0">
+                 <div className="flex items-center text-sm font-medium text-primary">
                     {buttonText}
                     <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+                </div>
             )}
         </>
     );
 
     if (onButtonClick) {
         return (
-             <button onClick={onButtonClick} className="w-full flex items-center justify-between p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-left">
+             <div 
+                onClick={onButtonClick} 
+                className="w-full flex items-center justify-between p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-left cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onButtonClick()}}
+             >
                 {content}
-            </button>
+            </div>
         )
     }
 
