@@ -49,7 +49,7 @@ function VerificationContent() {
                 <div className="flex w-full justify-center gap-4">
                      {status === 'success' && (
                         <Button asChild className="w-full">
-                            <Link href="/profile">View My Orders</Link>
+                            <Link href="/profile?tab=purchases">View My Orders</Link>
                         </Button>
                     )}
                      {status === 'failed' && (
@@ -76,3 +76,5 @@ export default function VerifyPaymentPage() {
         </div>
     );
 }
+
+    

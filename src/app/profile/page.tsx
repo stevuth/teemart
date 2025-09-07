@@ -2,7 +2,7 @@
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
@@ -58,11 +58,15 @@ const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-fo
 });
 
 type MobileView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
+type DesktopTab = 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
+
 
 export default function ProfilePage() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  
   const [activeListings, setActiveListings] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [sales, setSales] = useState<Transaction[]>([]);
@@ -74,8 +78,11 @@ export default function ProfilePage() {
   const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
   const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
-  const [mobileView, setMobileView] = useState<MobileView>('menu');
   const [isChatting, setIsChatting] = useState(false);
+  
+  const initialTab = (searchParams.get('tab') as DesktopTab) || 'listings';
+  const [activeTab, setActiveTab] = useState<DesktopTab>(initialTab);
+  const [mobileView, setMobileView] = useState<MobileView>(initialTab);
 
 
   const fetchUserData = useCallback(async () => {
@@ -691,7 +698,7 @@ export default function ProfilePage() {
                 </div>
             </Card>
 
-            <Tabs defaultValue="listings" className="w-full mt-6">
+            <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as DesktopTab)} className="w-full mt-6">
                 <div className="flex flex-col md:flex-row gap-8">
                     <div className="w-full md:w-64 flex-shrink-0">
                         <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-card rounded-lg border">
@@ -731,3 +738,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
