@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
 import { NotificationToggle } from '@/components/notification-toggle';
+import { ProfileFeatureCard } from '@/components/profile-feature-card';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -627,7 +628,7 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-2">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Mobile View */}
         <div className="md:hidden">
@@ -635,46 +636,81 @@ export default function ProfilePage() {
         </div>
 
         {/* Desktop View */}
-        <Tabs defaultValue="listings" className="w-full hidden md:block">
-          <div className="flex flex-col md:flex-row gap-8 py-4">
-              <div className="w-full md:w-64 flex-shrink-0">
-                  <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-transparent">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
-                      {activityTabs.map(tab => (
-                          <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
-                              <tab.icon className="h-5 w-5" />
-                              <span>{tab.label}</span>
-                              <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
-                          </TabsTrigger>
-                      ))}
+        <div className="hidden md:block">
+            <Card className="mt-6">
+                <div className="p-4 sm:p-6 bg-primary/5 rounded-t-lg">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <Avatar className="h-24 w-24 border-4 border-background ring-2 ring-primary rounded-lg">
+                            <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
+                            <AvatarFallback className="rounded-md">{getInitials(displayName)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-grow">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <h1 className="text-2xl font-bold">{displayName}</h1>
+                                <NotificationToggle />
+                            </div>
+                            <p className="text-muted-foreground">{profile?.email}</p>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                                {profile?.is_verified && (
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 p-4 sm:p-6 border-t gap-4">
+                    <ProfileFeatureCard
+                        icon={CalendarDays}
+                        label="Member Since"
+                        value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
+                    />
+                     <ProfileFeatureCard
+                        icon={Package}
+                        label="Active Listings"
+                        value={`${activeListings.length} items`}
+                    />
+                </div>
+            </Card>
 
-                      <Separator className="my-2" />
+            <Tabs defaultValue="listings" className="w-full mt-6">
+                <div className="flex flex-col md:flex-row gap-8">
+                    <div className="w-full md:w-64 flex-shrink-0">
+                        <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-card rounded-lg border">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
+                            {activityTabs.map(tab => (
+                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                                    <tab.icon className="h-5 w-5" />
+                                    <span>{tab.label}</span>
+                                    <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
+                                </TabsTrigger>
+                            ))}
 
-                      <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">Account Settings</p>
-                      {settingsTabs.map(tab => (
-                          <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
-                              <tab.icon className="h-5 w-5" />
-                              <span>{tab.label}</span>
-                          </TabsTrigger>
-                      ))}
-                  </TabsList>
-              </div>
-              <div className="flex-1 min-w-0">
-                  <TabsContent value="listings" className="mt-0">{renderListings()}</TabsContent>
-                  <TabsContent value="sales" className="mt-0">{renderSales()}</TabsContent>
-                  <TabsContent value="purchases" className="mt-0">{renderPurchases()}</TabsContent>
-                  <TabsContent value="reviews" className="mt-0">{renderReviews()}</TabsContent>
-                  <TabsContent value="verification" className="mt-0">{renderVerification()}</TabsContent>
-                  <TabsContent value="payment" className="mt-0">{renderPayment()}</TabsContent>
-              </div>
-          </div>
-        </Tabs>
+                            <Separator className="my-2" />
+
+                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">Account Settings</p>
+                            {settingsTabs.map(tab => (
+                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                                    <tab.icon className="h-5 w-5" />
+                                    <span>{tab.label}</span>
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <TabsContent value="listings" className="mt-0">{renderListings()}</TabsContent>
+                        <TabsContent value="sales" className="mt-0">{renderSales()}</TabsContent>
+                        <TabsContent value="purchases" className="mt-0">{renderPurchases()}</TabsContent>
+                        <TabsContent value="reviews" className="mt-0">{renderReviews()}</TabsContent>
+                        <TabsContent value="verification" className="mt-0">{renderVerification()}</TabsContent>
+                        <TabsContent value="payment" className="mt-0">{renderPayment()}</TabsContent>
+                    </div>
+                </div>
+            </Tabs>
+        </div>
       </main>
       <Footer />
     </div>
   );
 }
-
-
 
     
