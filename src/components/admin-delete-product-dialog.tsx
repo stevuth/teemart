@@ -37,32 +37,14 @@ export function AdminDeleteProductDialog({ product, isOpen, onClose, onDeleted }
       // 1. Delete images from storage
       const imageUrls = product.image;
       if (imageUrls && imageUrls.length > 0) {
-        const filePaths = imageUrls.map(url => {
-            // A more robust way to extract the path after the bucket name.
-            // Example URL: https://<project>.supabase.co/storage/v1/object/public/product-images/user_id/image.png
-            // We want to extract 'user_id/image.png'
-            try {
-              const urlObject = new URL(url);
-              const pathSegments = urlObject.pathname.split('/');
-              // Find the index of the bucket name and slice from there
-              const bucketIndex = pathSegments.indexOf('product-images');
-              if (bucketIndex !== -1) {
-                return pathSegments.slice(bucketIndex + 1).join('/');
-              }
-              return '';
-            } catch (e) {
-                console.error("Invalid image URL:", url, e);
-                return '';
-            }
-        }).filter(Boolean);
-
-        if (filePaths.length > 0) {
-            const { error: storageError } = await supabase.storage.from('product-images').remove(filePaths);
-            if (storageError) {
-              // Log the error but don't stop the DB deletion.
-              console.error("Storage Deletion Error:", storageError);
-              toast({ title: "Image Deletion Warning", description: "Could not delete all product images from storage.", variant: "destructive" });
-            }
+        // The `image` field now correctly contains paths, not full URLs.
+        // We can use the array of paths directly.
+        const { error: storageError } = await supabase.storage.from('product-images').remove(imageUrls);
+        if (storageError) {
+          // Log the error but don't stop the DB deletion.
+          // This prevents the user from being stuck if a file is already deleted.
+          console.error("Storage Deletion Error:", storageError);
+          toast({ title: "Image Deletion Warning", description: "Could not delete all product images from storage. They may have been removed already.", variant: "destructive" });
         }
       }
 
