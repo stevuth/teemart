@@ -10,11 +10,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, CheckCircle, Upload, CreditCard, UserCheck, PartyPopper, Camera } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { SelfieCapture } from './selfie-capture';
 import { useRouter } from 'next/navigation';
 import { initializeTransactionAction } from '@/app/actions/paystack';
+import { uploadVerificationDocumentsAction } from '@/app/actions/verification';
 
 type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
@@ -67,7 +67,7 @@ export function VerificationForm() {
         setIsPaying(true);
 
         const metadata = {
-            user_id: user.id, // Pass the user ID in the metadata
+            user_id: user.id,
             type: 'verification_payment',
         };
 
@@ -93,24 +93,20 @@ export function VerificationForm() {
         setIsSubmitting(true);
         
         try {
-            // Upload NIN image to the new public bucket
-            const ninFileName = `${user.id}/${Date.now()}_nin.png`;
-            const { data: ninUploadData, error: ninUploadError } = await supabase.storage
-                .from('public-verification-documents')
-                .upload(ninFileName, ninImageFile);
-            if (ninUploadError) throw ninUploadError;
-            const { data: { publicUrl: ninPublicUrl } } = supabase.storage.from('public-verification-documents').getPublicUrl(ninUploadData.path);
-
-            // Upload Selfie image to the new public bucket
-            const selfieFileName = `${user.id}/${Date.now()}_selfie.png`;
-            const selfieFile = await (await fetch(selfieDataUrl)).blob();
-            const { data: selfieUploadData, error: selfieUploadError } = await supabase.storage
-                .from('public-verification-documents')
-                .upload(selfieFileName, selfieFile);
-            if (selfieUploadError) throw selfieUploadError;
-            const { data: { publicUrl: selfiePublicUrl } } = supabase.storage.from('public-verification-documents').getPublicUrl(selfieUploadData.path);
+            const formData = new FormData();
+            formData.append('ninImage', ninImageFile);
             
-            // Update profile with the public URLs
+            const selfieBlob = await (await fetch(selfieDataUrl)).blob();
+            formData.append('selfieImage', new File([selfieBlob], "selfie.png", { type: "image/png" }));
+
+            const uploadResult = await uploadVerificationDocumentsAction(formData);
+
+            if (!uploadResult.success || !uploadResult.data) {
+                throw new Error(uploadResult.error || "File upload failed on the server.");
+            }
+
+            const { ninPublicUrl, selfiePublicUrl } = uploadResult.data;
+            
             const { error: profileUpdateError } = await supabase
                 .from('profiles')
                 .update({ nin_image_url: ninPublicUrl, selfie_image_url: selfiePublicUrl })
@@ -118,7 +114,7 @@ export function VerificationForm() {
             
             if (profileUpdateError) throw profileUpdateError;
 
-            await refetchProfile(); // Refetch to get new image URLs and status
+            await refetchProfile();
             toast({ title: "Submission Successful", description: "Your documents are under review. This may take up to 24 hours." });
 
         } catch (error: any) {
@@ -193,7 +189,7 @@ export function VerificationForm() {
                                 <input ref={fileInputRef} type="file" accept="image/jpeg, image/png" onChange={handleNinImageChange} className="hidden" disabled={isSubmitting} />
                                 {ninImagePreview ? (
                                     <div className="relative h-40 w-full">
-                                        <Image src={ninImagePreview} alt="NIN Preview" layout="fill" className="object-contain rounded-md" />
+                                        <Image src={ninImagePreview} alt="NIN Preview" fill className="object-contain rounded-md" />
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
