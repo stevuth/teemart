@@ -642,17 +642,14 @@ export default function ProfilePage() {
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <BackButton />
         <Card className="mt-4 overflow-hidden">
-            <div className="relative h-32 md:h-48 bg-secondary">
-                 <Image src="https://picsum.photos/1200/300" alt="Profile banner" data-ai-hint="abstract geometric pattern" fill className="object-cover"/>
-                 <div className="absolute inset-0 bg-black/20"></div>
-            </div>
+            <div className="relative h-24 md:h-32 bg-secondary/50"></div>
             <div className="px-4 sm:px-6 pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-end -mt-16 sm:-mt-20 relative z-10 gap-4">
-                    <Avatar className="h-32 w-32 border-4 border-background ring-2 ring-primary/50">
+                <div className="flex flex-col sm:flex-row sm:items-end -mt-12 sm:-mt-16 relative z-10 gap-4">
+                    <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background ring-2 ring-primary/50">
                         <AvatarImage src={userAvatar || ''} alt={displayName || ''} />
                         <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                     </Avatar>
-                     <div className="flex-grow py-4">
+                     <div className="flex-grow py-2">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                              <div>
                                 <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
@@ -671,7 +668,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                 <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                      <StatCard icon={CalendarDays} label="Member Since" value={creationTime ? format(new Date(creationTime), 'MMM yyyy') : 'N/A'} />
                      <StatCard icon={List} label="Active Listings" value={loadingData ? '-' : activeListings.length} />
                      <StatCard icon={ShoppingBag} label="Total Sales" value={loadingData ? '-' : sales.length} />
@@ -727,3 +724,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
