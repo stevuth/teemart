@@ -19,10 +19,9 @@ function VerificationContent() {
     
     const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
     const [error, setError] = useState<string | null>(null);
-    const [hasVerified, setHasVerified] = useState(false); // New state to prevent re-verification
+    const [hasVerified, setHasVerified] = useState(false);
 
     useEffect(() => {
-        // Only run verification if it hasn't been attempted yet
         if (hasVerified) return;
 
         const reference = searchParams.get('reference');
@@ -32,19 +31,18 @@ function VerificationContent() {
             console.error("[Client] No payment reference found in URL.");
             setError("No payment reference found. Your transaction cannot be verified.");
             setStatus('failed');
-            setHasVerified(true); // Mark as attempted
+            setHasVerified(true);
             return;
         }
 
         async function verify() {
-            setHasVerified(true); // Mark as attempted immediately
+            setHasVerified(true);
             console.log("[Client] Calling verifyTransactionAction with reference:", reference);
             const result = await verifyTransactionAction(reference!);
             console.log("[Client] Result from verifyTransactionAction:", result);
             
             if (result.success) {
                 setStatus('success');
-                clearCart();
             } else {
                 setError(result.error || "An unknown verification error occurred.");
                 setStatus('failed');
@@ -53,7 +51,14 @@ function VerificationContent() {
         
         verify();
 
-    }, [searchParams, router, clearCart, hasVerified]); // Add hasVerified to dependencies
+    }, [searchParams, router, hasVerified]);
+
+    // Use a separate effect to clear the cart only when status becomes 'success'
+    useEffect(() => {
+        if (status === 'success') {
+            clearCart();
+        }
+    }, [status, clearCart]);
 
 
     return (
