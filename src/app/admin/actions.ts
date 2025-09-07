@@ -238,17 +238,35 @@ export async function getAllTransactions() {
             return { success: false, error: 'Permission denied.' };
         }
         const supabase = createSupabaseServerClient();
-        const { data, error } = await supabase.rpc('get_all_transactions_admin');
-        
+        // This is a direct query, which is more robust than the RPC function
+        const { data, error } = await supabase
+            .from('transactions')
+            .select(`
+                *,
+                buyer:profiles!transactions_buyer_id_fkey(full_name, email),
+                seller:profiles!transactions_seller_id_fkey(full_name, email)
+            `)
+            .order('created_at', { ascending: false });
+
         if (error) {
-            console.error('Error in getAllTransactions RPC:', error);
+            console.error('Error in getAllTransactions query:', error);
             throw new Error(error.message);
         }
         
-        // The RPC returns a JSON array, so we can cast it directly.
-        return { success: true, data: data as AdminTransaction[] };
+        // Manually shape the data to match the AdminTransaction type
+        const formattedData = data.map(t => ({
+            ...t,
+            buyer_name: t.buyer?.full_name || 'N/A',
+            buyer_email: t.buyer?.email || 'N/A',
+            seller_name: t.seller?.full_name || 'N/A',
+            seller_email: t.seller?.email || 'N/A',
+        }));
+        
+        return { success: true, data: formattedData as AdminTransaction[] };
     } catch (e: any) {
         console.error("Server Action Exception: getAllTransactions failed.", e);
         return { success: false, error: e.message || "An unexpected server error occurred." };
     }
 }
+
+    
