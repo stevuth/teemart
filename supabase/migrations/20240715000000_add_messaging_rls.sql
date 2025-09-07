@@ -1,48 +1,45 @@
 
--- Enable RLS on the messages table
-ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+-- Enable RLS on the public messages table
+alter table public.messages enable row level security;
 
--- Allow users to read messages in their conversations
-CREATE POLICY "Allow read access to own messages"
-ON public.messages FOR SELECT
-TO authenticated
-USING (
-    auth.uid() = sender_id OR auth.uid() = recipient_id
-);
+-- Allow users to see their own messages
+create policy "Users can view their own messages."
+  on public.messages for select
+  using ( auth.uid() = sender_id or auth.uid() = recipient_id );
 
--- Allow users to send messages in their conversations
-CREATE POLICY "Allow insert access to own messages"
-ON public.messages FOR INSERT
-TO authenticated
-WITH CHECK (
-    auth.uid() = sender_id
-);
+-- Allow users to send messages
+create policy "Users can insert their own messages."
+  on public.messages for insert
+  with check ( auth.uid() = sender_id );
 
--- Enable RLS on the chat-images bucket objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- POLICIES FOR STORAGE
+-- In a real app, you would create these policies in the Supabase Dashboard
+-- under Storage -> Policies. We add them here for reproducibility.
 
--- Allow authenticated users to upload images to the 'chat-images' bucket
--- The owner column is text, so we must cast it to uuid to compare with auth.uid()
-CREATE POLICY "Allow authenticated users to upload chat images"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (
+-- Create policy for users to upload to the 'chat-images' bucket
+create policy "Users can upload chat images"
+  on storage.objects for insert
+  to authenticated
+  with check ( bucket_id = 'chat-images' AND auth.uid() = owner );
+
+-- Create policy for users to view images in their conversations
+create policy "Users can view images in their conversations"
+  on storage.objects for select
+  to authenticated
+  using (
     bucket_id = 'chat-images' AND
-    auth.uid() = owner::uuid 
-);
-
--- Allow authenticated users to read images from the 'chat-images' bucket
--- if they are a participant in the message that contains the image.
-CREATE POLICY "Allow authenticated users to read chat images"
-ON storage.objects FOR SELECT
-TO authenticated
-USING (
-    bucket_id = 'chat-images' AND
-    EXISTS (
-        SELECT 1
-        FROM public.messages
-        WHERE
-            messages.image_url LIKE '%' || storage.objects.name AND
-            (messages.sender_id = auth.uid() OR messages.recipient_id = auth.uid())
+    (
+      auth.uid() IN (
+        SELECT m.sender_id FROM public.messages m WHERE m.image_url LIKE '%' || storage.objects.name
+      ) OR
+      auth.uid() IN (
+        SELECT m.recipient_id FROM public.messages m WHERE m.image_url LIKE '%' || storage.objects.name
+      )
     )
-);
+  );
+
+-- Create policy for users to delete their own chat images
+create policy "Users can delete their own chat images"
+  on storage.objects for delete
+  to authenticated
+  using ( bucket_id = 'chat-images' AND auth.uid() = owner );
