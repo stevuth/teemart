@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, AlertCircle, Banknote, MessageCircleWarning } from 'lucide-react';
+import { LogOut, Shield, Loader2, Users, UserCheck, ShoppingBag, GalleryHorizontal, AlertCircle, Banknote, MessageCircleWarning, AreaChart } from 'lucide-react';
 import { VerificationQueue } from '@/components/verification-queue';
 import { UserTable } from '@/components/user-table';
 import { SellerTable } from '@/components/seller-table';
@@ -24,10 +24,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { VerificationPaymentsTable } from '@/components/verification-payments-table';
 import { DisputeTable } from '@/components/dispute-table';
+import { DashboardStats } from '@/components/dashboard-stats';
 
-type AdminView = 'verification' | 'sellers' | 'users' | 'hero' | 'verification_payments' | 'disputes';
+type AdminView = 'dashboard' | 'verification' | 'sellers' | 'users' | 'hero' | 'verification_payments' | 'disputes';
 
 const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: AreaChart },
     { id: 'verification', label: 'Verification Queue', icon: UserCheck },
     { id: 'sellers', label: 'Sellers & Listings', icon: ShoppingBag },
     { id: 'users', label: 'Registered Users', icon: Users },
@@ -57,7 +59,7 @@ function AdminNav({ activeView, onLinkClick }: { activeView: AdminView, onLinkCl
 export default function AdminDashboardPage() {
   const { user, profile, loading: authLoading, supabase } = useAuth();
   const router = useRouter();
-  const [activeView, setActiveView] = useState<AdminView>('verification');
+  const [activeView, setActiveView] = useState<AdminView>('dashboard');
 
   useEffect(() => {
     if (!authLoading) {
@@ -101,6 +103,8 @@ export default function AdminDashboardPage() {
 
   const renderContent = () => {
     switch (activeView) {
+      case 'dashboard':
+        return <DashboardStats />;
       case 'verification':
         return <VerificationQueue />;
       case 'sellers':
@@ -114,7 +118,7 @@ export default function AdminDashboardPage() {
       case 'disputes':
         return <DisputeTable />;
       default:
-        return <VerificationQueue />;
+        return <DashboardStats />;
     }
   };
   

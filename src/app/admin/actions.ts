@@ -75,6 +75,13 @@ export type DisputeWithRelations = {
   } | null;
 };
 
+export type DashboardStats = {
+    total_sales_volume: number;
+    total_transactions: number;
+    total_commissions: number;
+    pending_payouts: number;
+};
+
 
 // Server Action to get all users with their stats
 export async function getUsersWithStats() {
@@ -143,4 +150,19 @@ export async function getDisputes() {
     }
     
     return { success: true, data: data as unknown as DisputeWithRelations[] };
+}
+
+
+// Server action to get dashboard financial stats
+export async function getAdminDashboardStats() {
+    if (!(await isAdmin())) {
+        return { success: false, error: 'Permission denied.' };
+    }
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+    if (error) {
+        console.error('Error fetching dashboard stats:', error);
+        return { success: false, error: error.message };
+    }
+    return { success: true, data: data as DashboardStats[] };
 }
