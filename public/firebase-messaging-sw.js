@@ -7,12 +7,12 @@ importScripts("https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compa
 // Initialize the Firebase app in the service worker by passing in the messagingSenderId.
 // Note: This config must be present and valid.
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
-  projectId: "YOUR_FIREBASE_PROJECT_ID",
-  storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
-  appId: "YOUR_FIREBASE_APP_ID",
+  apiKey: "AIzaSyCcD2gznrLLhDtvW1aQ06mg_4d_pVsh7WI",
+  authDomain: "teemart-notifications.firebaseapp.com",
+  projectId: "teemart-notifications",
+  storageBucket: "teemart-notifications.firebasestorage.app",
+  messagingSenderId: "936326547408",
+  appId: "1:936326547408:web:db845288c18b7fe3569bd5",
 };
 
 firebase.initializeApp(firebaseConfig);
