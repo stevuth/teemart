@@ -2,6 +2,7 @@
 'use server';
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { type Transaction } from "@/lib/types";
 
 // Helper function to check if the current user is an admin
 async function isAdmin() {
@@ -88,6 +89,13 @@ export type PendingPayout = {
     full_name: string;
     email: string;
     total_payout_due: number;
+};
+
+export type AdminTransaction = Transaction & {
+  buyer_name: string;
+  buyer_email: string;
+  seller_name: string;
+  seller_email: string;
 };
 
 
@@ -188,4 +196,18 @@ export async function getPendingPayouts() {
         return { success: false, error: error.message };
     }
     return { success: true, data: data as PendingPayout[] };
+}
+
+// Server action to get ALL transactions for the admin panel
+export async function getAllTransactions() {
+    if (!(await isAdmin())) {
+        return { success: false, error: 'Permission denied.' };
+    }
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase.rpc('get_all_transactions_admin');
+    if (error) {
+        console.error('Error fetching all transactions:', error);
+        return { success: false, error: error.message };
+    }
+    return { success: true, data: data as AdminTransaction[] };
 }

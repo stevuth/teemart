@@ -10,7 +10,7 @@ import { Skeleton } from './ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 
 const StatCard = ({ title, value, icon: Icon, formatAsCurrency = true, isLoading = false, description }: { title: string, value: number, icon: React.ElementType, formatAsCurrency?: boolean, isLoading?: boolean, description?: string }) => {
-    const formattedValue = formatAsCurrency ? `₦${value.toLocaleString()}` : value.toLocaleString();
+    const formattedValue = formatAsCurrency ? `₦${Math.round(value).toLocaleString()}` : value.toLocaleString();
     
     return (
         <Card>
@@ -76,7 +76,7 @@ const PendingPayoutsTable = () => {
         <Card>
             <CardHeader>
                 <CardTitle>Pending Payouts Queue</CardTitle>
-                <CardDescription>This is a list of sellers with funds ready to be released.</CardDescription>
+                <CardDescription>This is a list of sellers with funds ready to be released for delivered items.</CardDescription>
             </CardHeader>
             <CardContent>
                  <Table>
@@ -133,20 +133,20 @@ export function DashboardStats() {
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
                 <StatCard 
                     title="Gross Transaction Value"
                     value={stats?.gross_transaction_value || 0}
                     icon={TrendingUp}
                     isLoading={loading}
-                    description="Total value of all purchases."
+                    description="Total value of all placed orders."
                 />
                 <StatCard 
-                    title="Total Commissions"
+                    title="Total Commissions Earned"
                     value={stats?.total_commissions || 0}
                     icon={HandCoins}
                     isLoading={loading}
-                    description="Total escrow fees earned."
+                    description="Total escrow fees from all orders."
                 />
                  <StatCard 
                     title="Total Paid to Sellers"
@@ -156,19 +156,19 @@ export function DashboardStats() {
                     description="Total funds released from escrow."
                 />
                 <StatCard 
-                    title="Pending Payouts"
+                    title="Value Held in Escrow"
                     value={stats?.pending_payouts || 0}
                     icon={Landmark}
                     isLoading={loading}
-                    description="Funds held for delivered items."
+                    description="Funds for pending & delivered items."
                 />
                 <StatCard 
-                    title="Completed Transactions"
+                    title="Released Transactions"
                     value={stats?.total_transactions || 0}
                     icon={Repeat}
                     formatAsCurrency={false}
                     isLoading={loading}
-                    description="Number of successful orders."
+                    description="Number of orders paid out to sellers."
                 />
             </div>
             <PendingPayoutsTable />
