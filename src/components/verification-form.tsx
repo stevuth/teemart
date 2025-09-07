@@ -93,27 +93,27 @@ export function VerificationForm() {
         setIsSubmitting(true);
         
         try {
-            // Upload NIN image
+            // Upload NIN image to the new public bucket
             const ninFileName = `${user.id}/${Date.now()}_nin.png`;
             const { data: ninUploadData, error: ninUploadError } = await supabase.storage
-                .from('verification-documents')
+                .from('public-verification-documents')
                 .upload(ninFileName, ninImageFile);
             if (ninUploadError) throw ninUploadError;
-            const ninFilePath = ninUploadData.path;
+            const { data: { publicUrl: ninPublicUrl } } = supabase.storage.from('public-verification-documents').getPublicUrl(ninUploadData.path);
 
-            // Upload Selfie image
+            // Upload Selfie image to the new public bucket
             const selfieFileName = `${user.id}/${Date.now()}_selfie.png`;
             const selfieFile = await (await fetch(selfieDataUrl)).blob();
             const { data: selfieUploadData, error: selfieUploadError } = await supabase.storage
-                .from('verification-documents')
+                .from('public-verification-documents')
                 .upload(selfieFileName, selfieFile);
             if (selfieUploadError) throw selfieUploadError;
-            const selfieFilePath = selfieUploadData.path;
+            const { data: { publicUrl: selfiePublicUrl } } = supabase.storage.from('public-verification-documents').getPublicUrl(selfieUploadData.path);
             
-            // Update profile with the FILE PATHS, not public URLs
+            // Update profile with the public URLs
             const { error: profileUpdateError } = await supabase
                 .from('profiles')
-                .update({ nin_image_url: ninFilePath, selfie_image_url: selfieFilePath })
+                .update({ nin_image_url: ninPublicUrl, selfie_image_url: selfiePublicUrl })
                 .eq('id', user.id);
             
             if (profileUpdateError) throw profileUpdateError;
@@ -244,5 +244,3 @@ export function VerificationForm() {
         </Card>
     );
 }
-
-    

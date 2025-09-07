@@ -17,48 +17,24 @@ type ProfileForVerification = {
   selfie_image_url: string;
 };
 
-function VerificationImage({ path }: { path: string }) {
-    const { supabase } = useAuth();
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
+function VerificationImage({ url }: { url: string | null }) {
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (path && supabase) {
-            const getSignedUrl = async () => {
-                setLoading(true);
-                // Use a short-lived signed URL for security
-                const { data, error } = await supabase.storage
-                    .from('verification-documents')
-                    .createSignedUrl(path, 60 * 5); // 5 minutes validity
-
-                if (error) {
-                    console.error("Error creating signed URL:", error);
-                    setImageUrl(null);
-                } else {
-                    setImageUrl(data.signedUrl);
-                }
-                setLoading(false);
-            };
-            getSignedUrl();
-        }
-    }, [path, supabase]);
-
-    if (loading) {
-        return <div className="flex items-center justify-center h-full bg-secondary rounded-md"><Loader2 className="h-5 w-5 animate-spin" /></div>;
-    }
-    
-    if (!imageUrl) {
-        return <div className="flex items-center justify-center h-full bg-destructive/10 text-destructive text-xs p-2 text-center rounded-md">Image not found or access denied.</div>;
+    if (!url) {
+        return <div className="flex items-center justify-center h-full bg-secondary rounded-md text-xs text-muted-foreground">No image submitted.</div>;
     }
 
     return (
-        <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative group">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative group">
+            {loading && <div className="absolute inset-0 flex items-center justify-center bg-secondary rounded-md"><Loader2 className="h-5 w-5 animate-spin" /></div>}
             <Image
-                src={imageUrl}
+                src={url}
                 alt="Verification Document"
                 fill
-                className="object-contain"
+                className={cn("object-contain transition-opacity duration-300", loading ? "opacity-0" : "opacity-100")}
                 sizes="(max-width: 768px) 90vw, 40vw"
+                onLoad={() => setLoading(false)}
+                onError={() => setLoading(false)} // Handle image load error
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
                 Click to Enlarge
@@ -66,6 +42,7 @@ function VerificationImage({ path }: { path: string }) {
         </a>
     );
 }
+
 
 export function VerificationQueue() {
   const [profiles, setProfiles] = useState<ProfileForVerification[]>([]);
@@ -79,7 +56,7 @@ export function VerificationQueue() {
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, nin_image_url, selfie_image_url')
+      .select('id, full_name, nin_image_url, selfie_image_url, email')
       .eq('is_verified', false)
       .not('nin_image_url', 'is', null)
       .not('selfie_image_url', 'is', null);
@@ -99,16 +76,40 @@ export function VerificationQueue() {
 
   const handleVerification = async (userId: string, isVerified: boolean) => {
     setUpdatingId(userId);
+
+    // Get the profile to find the image URLs for deletion
+    const profileToDelete = profiles.find(p => p.id === userId);
+    if (!profileToDelete) {
+        toast({ title: 'Error', description: 'Could not find user profile.', variant: 'destructive' });
+        setUpdatingId(null);
+        return;
+    }
+
+    try {
+        // Delete images from storage. Extract path from public URL.
+        const ninPath = profileToDelete.nin_image_url.split('/public-verification-documents/')[1];
+        const selfiePath = profileToDelete.selfie_image_url.split('/public-verification-documents/')[1];
+
+        if(ninPath) await supabase.storage.from('public-verification-documents').remove([ninPath]);
+        if(selfiePath) await supabase.storage.from('public-verification-documents').remove([selfiePath]);
+
+    } catch(storageError) {
+        // Log error but continue, as the DB update is more critical.
+        console.error("Could not delete verification images from storage:", storageError);
+        toast({ title: "Storage Warning", description: "Could not remove images from storage, but user status updated.", variant: "destructive" })
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({ is_verified: isVerified, nin_image_url: null, selfie_image_url: null }) // Set to verified and clear image paths
+      .update({ is_verified: isVerified, nin_image_url: null, selfie_image_url: null }) // Set to verified and clear image URLs
       .eq('id', userId);
 
     if (error) {
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Success', description: `User has been ${isVerified ? 'approved' : 'rejected'}.` });
-      setProfiles(profiles.filter(p => p.id !== userId)); // Refresh list by removing the processed user
+      // Refresh list by removing the processed user from the local state
+      setProfiles(currentProfiles => currentProfiles.filter(p => p.id !== userId));
     }
     setUpdatingId(null);
   };
@@ -128,21 +129,23 @@ export function VerificationQueue() {
           <div className="space-y-6">
             {profiles.map(profile => (
               <Card key={profile.id} className="overflow-hidden">
-                <div className="p-4 bg-muted/50 border-b">
-                    <h3 className="font-semibold">{profile.full_name}</h3>
-                    <p className="text-xs text-muted-foreground">{profile.id}</p>
+                <div className="p-4 bg-muted/50 border-b flex justify-between items-center">
+                    <div>
+                        <h3 className="font-semibold">{profile.full_name}</h3>
+                        <p className="text-xs text-muted-foreground">{profile.email}</p>
+                    </div>
                 </div>
                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-center md:text-left">NIN Document</p>
                     <div className="relative aspect-[16/10] bg-secondary rounded-md overflow-hidden border">
-                       {profile.nin_image_url && <VerificationImage path={profile.nin_image_url} />}
+                       <VerificationImage url={profile.nin_image_url} />
                     </div>
                   </div>
                    <div className="space-y-2">
                     <p className="text-sm font-medium text-center md:text-left">User Selfie</p>
                      <div className="relative aspect-[16/10] bg-secondary rounded-md overflow-hidden border">
-                       {profile.selfie_image_url && <VerificationImage path={profile.selfie_image_url} />}
+                       <VerificationImage url={profile.selfie_image_url} />
                     </div>
                   </div>
                 </div>
