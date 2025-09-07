@@ -1,10 +1,11 @@
+
 // supabase/functions/send-push-notification/index.ts
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { GoogleAuth } from "https://deno.land/x/google_auth@v0.2.0/mod.ts";
 
-const FCM_API_URL = "https://fcm.googleapis.com/v1/projects/teemart-marketplace/messages:send";
+const FCM_API_URL = `https://fcm.googleapis.com/v1/projects/${Deno.env.get("FIREBASE_PROJECT_ID")}/messages:send`;
 
 interface PushNotificationPayload {
   recipient_id: string;
@@ -91,7 +92,7 @@ serve(async (req) => {
             link: url || Deno.env.get("NEXT_PUBLIC_BASE_URL"),
           },
           notification: {
-            icon: `${Deno.env.get("NEXT_PUBLIC_BASE_URL") || ''}/public/logo.png`,
+            icon: `${Deno.env.get("NEXT_PUBLIC_BASE_URL") || ''}/logo.png`,
           }
         },
       },

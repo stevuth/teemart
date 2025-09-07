@@ -1,3 +1,4 @@
+
 // src/hooks/use-push-notifications.ts
 "use client";
 
@@ -6,7 +7,7 @@ import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
 
 // This VAPID key is public and safe to expose.
-const VAPID_PUBLIC_KEY = "BDC9a3VquhA499Cg62L_YqgO2xaa3a0hWJ1I2p9vGkLz6_jK6kR4V1yUa3V9XyM9y8g2x8B2n5C0j8E";
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || "";
 
 export function usePushNotifications() {
   const { user, supabase } = useAuth();
@@ -19,10 +20,11 @@ export function usePushNotifications() {
   const getServiceWorkerRegistration = useCallback(async () => {
     if ('serviceWorker' in navigator) {
       try {
+        // .ready waits for the service worker to be active
         const registration = await navigator.serviceWorker.ready;
         return registration;
       } catch (error) {
-        console.error("Service worker registration failed:", error);
+        console.error("Service worker not ready:", error);
         return null;
       }
     }
@@ -94,14 +96,14 @@ export function usePushNotifications() {
     setIsInitializing(true);
     try {
         const registration = await getServiceWorkerRegistration();
-        if (!registration) throw new Error("Service worker not available.");
+        if (!registration) throw new Error("Service worker not available or not active.");
 
         // We lazy-load firebase here to avoid loading it on every page.
         const { getMessaging, getToken } = await import("firebase/messaging");
         const { app } = await import("@/lib/firebase");
         const messaging = getMessaging(app);
         
-        const fcmToken = await getToken(messaging, { vapidKey: VAPID_PUBLIC_KEY });
+        const fcmToken = await getToken(messaging, { vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: registration });
         
         if (!fcmToken) {
             throw new Error("Could not get a notification token.");
@@ -126,8 +128,10 @@ export function usePushNotifications() {
         const subscription = await getExistingSubscription();
         if (subscription) {
             await subscription.unsubscribe();
-            const token = subscription.endpoint;
-            await removeTokenFromDb(token);
+            // The FCM token is associated with the subscription endpoint.
+            // When unsubscribing, the browser handles invalidating this.
+            // For robustness, we can try to remove the specific endpoint from our DB if we stored it.
+            // Since we store fcmToken directly, which can be different, we rely on the user re-subscribing.
         }
         setIsSubscribed(false);
         toast({ title: "Notifications Disabled" });
