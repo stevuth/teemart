@@ -1,10 +1,7 @@
-# Supabase project config
-# PLEASE REPLACE THE URI BELOW WITH YOUR DIRECT DATABASE CONNECTION STRING
-
-[db]
-local_port = 54322
-uri = "postgresql://postgres:Mervelous%40100@db.femgftishdtzacfimkpw.supabase.co:5432/postgres"
-
-[api]
-ports = [ 8000, 54321 ]
-# ...
+# Supabase project config.
+# For more information, see https://supabase.com/docs/guides/cli/config
+[functions]
+  [functions.send-push-notification]
+    handler = "index.handler"
+    runtime = "deno"
+    verify_jwt = false
