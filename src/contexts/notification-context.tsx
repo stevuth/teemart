@@ -26,15 +26,14 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     try {
-      // This RPC function needs to be created in Supabase
+      // This RPC function is now called without parameters
       const { data, error } = await supabase.rpc('get_unread_message_count');
+
       if (error) {
-        // Ensure the full error object is thrown to be caught below
         throw error;
       }
       setNotificationCount(data);
     } catch (error: any) {
-      // Log the specific error message for better debugging
       console.error("Error fetching unread message count:", error.message || JSON.stringify(error));
       setNotificationCount(0);
     }
@@ -60,7 +59,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
           filter: `recipient_id=eq.${user.id}` 
         },
         (payload) => {
-          // Instead of assuming +1, just refetch the count from the DB for accuracy
           fetchUnreadCount();
         }
       )
@@ -70,7 +68,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-    // Cleanup function to remove the channel subscription when the component unmounts or dependencies change
     return () => {
       supabase.removeChannel(channel);
     };
