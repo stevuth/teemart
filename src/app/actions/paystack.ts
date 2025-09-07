@@ -4,8 +4,7 @@
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import axios from "axios";
 
-// This is the correct place to read the environment variable.
-const PAYSTACK_SECRET_KEY = "sk_test_dc2996e32f46e3b88e8e636b2122cba9914cac4d";
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
 
 if (!PAYSTACK_SECRET_KEY) {
@@ -20,7 +19,8 @@ if (!PAYSTACK_SECRET_KEY) {
  * @returns An object with either the transaction data or an error message.
  */
 export async function initializeTransactionAction(email: string, amount: number, metadata: object = {}) {
-    const callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-payment`;
+    // This now correctly points to our new server-to-server API route.
+    const callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify`;
     const verification_callback_url = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-verification-payment`;
 
     const isVerification = (metadata as any)?.type === 'verification_payment';
@@ -325,7 +325,7 @@ export async function releaseEscrowAction(transactionId: string) {
     
     // 4. Initiate the transfer
     try {
-        const amountToTransfer = (transaction.product_price - (transaction.product_price * 0.02)) * 100; // in kobo
+        const amountToTransfer = (transaction.product_price - transaction.seller_fee) * 100; // in kobo
         
         await axios.post(`${PAYSTACK_API_URL}/transfer`, {
             source: "balance",
@@ -354,5 +354,3 @@ export async function releaseEscrowAction(transactionId: string) {
         return { success: false, error: error.response?.data?.message || 'Failed to initiate transfer.' };
     }
 }
-
-    
