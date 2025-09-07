@@ -183,13 +183,19 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 image_url: imageUrl,
             }).select().single();
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
             
             setMessages(current => current.map(m => m.id === optimisticId ? (data as Message) : m));
 
         } catch (error: any) {
-            console.error("Message send error:", error);
-            toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
+            console.error("Message send error:", error.message || error);
+            toast({ 
+                title: 'Error Sending Message', 
+                description: error.message || 'An unexpected error occurred.', 
+                variant: 'destructive' 
+            });
             setMessages(current => current.filter(m => m.id !== optimisticId));
             setNewMessage(content); 
         } finally {
