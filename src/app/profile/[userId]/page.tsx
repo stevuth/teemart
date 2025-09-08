@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import { ReviewList } from '@/components/review-list';
-import { Loader2, Star, CalendarDays, Package, ShieldCheck, ShoppingCart, MessageSquare } from 'lucide-react';
+import { Loader2, Star, CalendarDays, Package, ShieldCheck, ShoppingCart, MessageSquare, Store } from 'lucide-react';
 import type { Product, ReviewWithUser } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -129,6 +129,37 @@ export default function SellerProfilePage() {
         setReviewSubmittedToggle(prev => !prev);
     };
 
+    const startConversation = async (otherParticipantId: string) => {
+        if (!currentUser) {
+            toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
+            return;
+        }
+        if (!otherParticipantId) {
+            toast({ title: "Error", description: "Recipient ID is missing.", variant: "destructive" });
+            return;
+        }
+
+        setIsChatting(true);
+        try {
+            const { data, error } = await supabase.rpc('get_or_create_conversation', {
+                p_participant_one_id: currentUser.id,
+                p_participant_two_id: otherParticipantId
+            });
+
+            if (error) throw error;
+            
+            router.push(`/messages?conversationId=${data}`);
+
+        } catch (error: any) {
+            console.error("Detailed error object when starting conversation:", error);
+            console.error("Stringified error for more details:", JSON.stringify(error, null, 2));
+            toast({ title: "Error starting conversation", description: "Could not start a conversation. Please try again. Check console for details.", variant: "destructive" });
+        } finally {
+            setIsChatting(false);
+        }
+    };
+
+
     const averageRating = useMemo(() => {
         if (reviews.length === 0) {
             return null;
@@ -196,7 +227,7 @@ export default function SellerProfilePage() {
             <Header />
             <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <BackButton className="-ml-4" />
-                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mt-2">
+                 <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mt-2">
                     <Avatar className="h-20 w-20 md:h-24 md:w-24 border">
                         <AvatarImage src={seller.avatar_url || ''} alt={seller.full_name || ''} className="object-cover" />
                         <AvatarFallback className="text-3xl">{getInitials(seller.full_name)}</AvatarFallback>
@@ -205,7 +236,7 @@ export default function SellerProfilePage() {
                         <h1 className="text-2xl md:text-3xl font-bold">{seller.full_name}</h1>
                         <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
                          {seller.is_verified ? (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1">
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs">
                                 <ShieldCheck className="h-3 w-3" /> Verified
                             </Badge>
                         ) : (
@@ -222,21 +253,29 @@ export default function SellerProfilePage() {
                         </div>
                     </div>
                     <div className="flex-shrink-0">
-                        {averageRating ? (
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
-                                <Star className="h-5 w-5 text-primary" />
-                                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                                    <span className="font-bold text-lg">{averageRating}</span>
-                                    <StarRatingDisplay rating={parseFloat(averageRating)} starClassName="h-4 w-4" />
-                                    <span className="whitespace-nowrap text-muted-foreground">({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
+                         <div className="flex items-center gap-4">
+                            {currentUser && currentUser.id !== seller.id && (
+                                 <Button onClick={() => startConversation(seller.id)} disabled={isChatting} size="lg">
+                                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                                    Chat with Seller
+                                </Button>
+                            )}
+                            {averageRating ? (
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
+                                    <Star className="h-5 w-5 text-primary" />
+                                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                                        <span className="font-bold text-lg">{averageRating}</span>
+                                        <StarRatingDisplay rating={parseFloat(averageRating)} starClassName="h-4 w-4" />
+                                        <span className="whitespace-nowrap text-muted-foreground">({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})</span>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 text-muted-foreground">
-                                <Star className="h-5 w-5" />
-                                <span>No ratings yet</span>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 text-muted-foreground">
+                                    <Star className="h-5 w-5" />
+                                    <span>No ratings yet</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -292,3 +331,5 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
+    
