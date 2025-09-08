@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
 // Never expose the service role key to the client.
 export function createSupabaseAdminClient() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Missing Supabase URL or Service Role Key for admin client');
+    throw new Error('Missing Supabase URL or Service Role Key for admin client. Ensure `SUPABASE_SERVICE_ROLE_KEY` is set in your environment variables.');
   }
 
   // We need to be able to read cookies to get the current user
