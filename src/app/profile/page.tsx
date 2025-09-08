@@ -689,36 +689,44 @@ export default function ProfilePage() {
         {/* Desktop View */}
         <div className="hidden md:block">
             <Card>
-                <div className="p-4 sm:p-6 bg-primary/5 rounded-t-lg">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <Avatar className="h-24 w-24 border-4 border-background ring-2 ring-primary rounded-lg">
-                            <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
-                            <AvatarFallback className="rounded-md">{getInitials(displayName)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-grow">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <h1 className="text-2xl font-bold">{displayName}</h1>
+                <div className="p-6">
+                    <div className="grid grid-cols-12 gap-6">
+                        <div className="col-span-12 sm:col-span-5 md:col-span-4 lg:col-span-3">
+                             <Avatar className="h-full w-full rounded-lg">
+                                <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
+                                <AvatarFallback className="rounded-lg text-4xl">{getInitials(displayName)}</AvatarFallback>
+                            </Avatar>
+                        </div>
+                        <div className="col-span-12 sm:col-span-7 md:col-span-8 lg:col-span-9 space-y-4">
+                            <div>
+                                <h1 className="text-3xl font-bold">{displayName}</h1>
+                                <p className="text-muted-foreground">{profile?.email}</p>
                             </div>
-                            <p className="text-muted-foreground">{profile?.email}</p>
-                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                            
+                            <div className="flex flex-wrap items-center gap-2">
                                 {profile?.is_verified && (
-                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm py-1 px-3">
+                                        <ShieldCheck className="h-4 w-4" /> Verified
+                                    </Badge>
                                 )}
+                            </div>
+                            
+                            <Separator className="my-4" />
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <ProfileFeatureCard
+                                    icon={CalendarDays}
+                                    label="Member Since"
+                                    value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
+                                />
+                                <ProfileFeatureCard
+                                    icon={Package}
+                                    label="Active Listings"
+                                    value={`${activeListings.length} items`}
+                                />
                             </div>
                         </div>
                     </div>
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 p-4 sm:p-6 border-t gap-4">
-                    <ProfileFeatureCard
-                        icon={CalendarDays}
-                        label="Member Since"
-                        value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
-                    />
-                     <ProfileFeatureCard
-                        icon={Package}
-                        label="Active Listings"
-                        value={`${activeListings.length} items`}
-                    />
                 </div>
             </Card>
 
