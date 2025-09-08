@@ -54,7 +54,7 @@ export function ProfileFeatureCard({ icon: Icon, label, value, buttonText, onBut
     }
 
     return (
-        <div className={cn("flex items-center justify-between p-3 rounded-lg bg-secondary/40", buttonText && "hover:bg-secondary/60")}>
+        <div className={cn("flex items-center justify-between p-3 rounded-lg bg-secondary/40")}>
             {content}
         </div>
     )

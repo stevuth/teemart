@@ -555,81 +555,46 @@ export default function ProfilePage() {
     verification: { title: "Identity Verification", content: renderVerification() },
     payment: { title: "Payment Details", content: renderPayment() },
   };
-
-  const MobileProfileHeader = () => (
-    <Card className="mb-6">
-        <div className="p-4">
-            <div className="flex items-start gap-4">
-                <Avatar className="h-16 w-16 border rounded-md">
-                    <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
-                    <AvatarFallback className="rounded-md">{getInitials(displayName)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-grow">
-                    <h1 className="text-xl font-bold">{displayName}</h1>
-                    <p className="text-sm text-muted-foreground">{profile?.email}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-                        {profile?.is_verified && (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-xs"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
-                        )}
-                    </div>
-                </div>
+  
+  const renderMobileMenu = () => (
+    <div className="space-y-4">
+        <div>
+            <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">My Activity</p>
+            <div className="divide-y border-y bg-card rounded-lg">
+                {activityTabs.map(tab => (
+                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
+                        <div className="flex items-center gap-4">
+                            <tab.icon className="h-6 w-6 text-primary" />
+                            <span className="text-base font-medium">{tab.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{tab.count}</Badge>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                    </button>
+                ))}
             </div>
         </div>
-        <div className="grid grid-cols-1 p-4 border-t gap-2">
-            <ProfileFeatureCard
-                icon={CalendarDays}
-                label="Member Since"
-                value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
-            />
-            <ProfileFeatureCard
-                icon={HelpCircle}
-                label="Need help?"
-                value="Contact our support team"
-                buttonText="Help & Support"
-                onButtonClick={() => router.push('/help')}
-            />
+        <div>
+            <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">Account Settings</p>
+            <div className="divide-y border-y bg-card rounded-lg">
+                {settingsTabs.map(tab => (
+                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
+                        <div className="flex items-center gap-4">
+                            <tab.icon className="h-6 w-6 text-primary" />
+                            <span className="text-base font-medium">{tab.label}</span>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                ))}
+            </div>
         </div>
-    </Card>
-  )
+    </div>
+  );
 
   const renderMobileContent = () => {
     if (mobileView === 'menu') {
-        return (
-            <div className="space-y-4">
-                 <MobileProfileHeader />
-                <div>
-                    <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">My Activity</p>
-                    <div className="divide-y border-y bg-card rounded-lg">
-                        {activityTabs.map(tab => (
-                            <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
-                                <div className="flex items-center gap-4">
-                                    <tab.icon className="h-6 w-6 text-primary" />
-                                    <span className="text-base font-medium">{tab.label}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="secondary">{tab.count}</Badge>
-                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div>
-                    <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">Account Settings</p>
-                    <div className="divide-y border-y bg-card rounded-lg">
-                        {settingsTabs.map(tab => (
-                            <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
-                                <div className="flex items-center gap-4">
-                                    <tab.icon className="h-6 w-6 text-primary" />
-                                    <span className="text-base font-medium">{tab.label}</span>
-                                </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
+        return renderMobileMenu();
     }
     
     const { title, content } = mobileContentMap[mobileView];
@@ -645,6 +610,48 @@ export default function ProfilePage() {
         </div>
     );
   }
+  
+  const ProfileHeader = () => (
+    <Card className="mb-6">
+        <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <div className="md:col-span-4 lg:col-span-3 flex justify-center">
+                     <Avatar className="h-32 w-32 rounded-lg border">
+                        <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
+                        <AvatarFallback className="rounded-lg text-4xl">{getInitials(displayName)}</AvatarFallback>
+                    </Avatar>
+                </div>
+                <div className="md:col-span-8 lg:col-span-9 space-y-4 text-center md:text-left">
+                    <div>
+                        <h1 className="text-3xl font-bold">{displayName}</h1>
+                        <p className="text-muted-foreground">{profile?.email}</p>
+                    </div>
+                    
+                    {profile?.is_verified && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm py-1 px-3">
+                            <ShieldCheck className="h-4 w-4" /> Verified
+                        </Badge>
+                    )}
+                    
+                    <Separator className="my-4" />
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <ProfileFeatureCard
+                            icon={CalendarDays}
+                            label="Member Since"
+                            value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
+                        />
+                        <ProfileFeatureCard
+                            icon={Package}
+                            label="Active Listings"
+                            value={`${activeListings.length} items`}
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Card>
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary/30">
@@ -681,6 +688,8 @@ export default function ProfilePage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
+        <ProfileHeader />
+
         {/* Mobile View */}
         <div className="md:hidden">
             {renderMobileContent()}
@@ -688,49 +697,7 @@ export default function ProfilePage() {
 
         {/* Desktop View */}
         <div className="hidden md:block">
-            <Card>
-                <div className="p-6">
-                    <div className="grid grid-cols-12 gap-6">
-                        <div className="col-span-12 sm:col-span-5 md:col-span-4 lg:col-span-3">
-                             <Avatar className="h-full w-full rounded-lg">
-                                <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
-                                <AvatarFallback className="rounded-lg text-4xl">{getInitials(displayName)}</AvatarFallback>
-                            </Avatar>
-                        </div>
-                        <div className="col-span-12 sm:col-span-7 md:col-span-8 lg:col-span-9 space-y-4">
-                            <div>
-                                <h1 className="text-3xl font-bold">{displayName}</h1>
-                                <p className="text-muted-foreground">{profile?.email}</p>
-                            </div>
-                            
-                            <div className="flex flex-wrap items-center gap-2">
-                                {profile?.is_verified && (
-                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm py-1 px-3">
-                                        <ShieldCheck className="h-4 w-4" /> Verified
-                                    </Badge>
-                                )}
-                            </div>
-                            
-                            <Separator className="my-4" />
-                            
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <ProfileFeatureCard
-                                    icon={CalendarDays}
-                                    label="Member Since"
-                                    value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
-                                />
-                                <ProfileFeatureCard
-                                    icon={Package}
-                                    label="Active Listings"
-                                    value={`${activeListings.length} items`}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Card>
-
-            <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as DesktopTab)} className="w-full mt-6">
+            <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as DesktopTab)} className="w-full">
                 <div className="flex flex-col md:flex-row gap-8">
                     <div className="w-full md:w-64 flex-shrink-0">
                         <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-card rounded-lg border">
@@ -770,5 +737,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
