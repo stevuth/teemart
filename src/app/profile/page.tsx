@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
@@ -331,34 +332,9 @@ export default function ProfilePage() {
     return <Badge variant="outline" className={cn("capitalize", statusStyles[status])}>{status.replace(/_/g, ' ')}</Badge>;
   }
 
-  const PaymentStatusBadge = ({ status }: { status: Transaction['status'] }) => {
-    let text;
-    let style;
-    switch (status) {
-        case 'released':
-            text = 'Paid';
-            style = 'bg-green-100 text-green-800 border-green-300';
-            break;
-        case 'refunded':
-        case 'disputed':
-            text = 'On Hold';
-            style = 'bg-orange-100 text-orange-800 border-orange-300';
-            break;
-        default:
-            text = 'Held in Escrow';
-            style = 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    }
-    return (
-        <div className="flex flex-col items-end">
-            <p className="text-xs text-muted-foreground">Payment</p>
-            <Badge variant="outline" className={cn("capitalize", style)}>{text}</Badge>
-        </div>
-    );
-  }
-  
   const renderSales = () => (
     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle className="font-bold">Important Information for Sellers</AlertTitle>
@@ -366,64 +342,62 @@ export default function ProfilePage() {
             Only mark an order as "Confirm Delivery" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly. Use the "Chat with Buyer" button to send delivery updates.
           </AlertDescription>
       </Alert>
-      <Accordion type="single" collapsible className="w-full space-y-4">
+      <div className="space-y-4">
           {sales.map(t => (
-              <AccordionItem value={t.id} key={t.id} className="border-none">
-                  <Card>
-                      <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:border-b">
-                          <div className="flex flex-col sm:flex-row gap-4 items-start w-full text-left">
-                              <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                                  <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                                  <div className="flex-1">
-                                      <p className="font-bold">{t.product_details?.name}</p>
-                                      <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                                      <p className="text-lg font-bold text-primary pt-1">₦{t.product_price.toLocaleString()}</p>
-                                  </div>
-                              </div>
-                              <div className="flex flex-col items-end justify-between self-stretch gap-2">
-                                  <div className="flex flex-col items-end">
-                                  <p className="text-xs text-muted-foreground">Order Status</p>
-                                  <TransactionStatusBadge status={t.status} />
-                                  </div>
-                                  <PaymentStatusBadge status={t.status} />
-                              </div>
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                          <div className="p-4 flex flex-col sm:flex-row items-start justify-between gap-3 bg-secondary/30">
-                              <div className="text-sm text-muted-foreground space-y-2">
-                                  <h4 className="font-semibold text-sm text-foreground">Buyer & Delivery Information</h4>
-                                  <div className="flex items-center gap-2">
-                                      <User className="h-4 w-4 text-primary" />
-                                      <span>{t.product_details.buyer_name}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                      <Phone className="h-4 w-4 text-primary" />
-                                      <span>{t.product_details.customer_phone}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                      <Home className="h-4 w-4 text-primary" />
-                                      <p>{t.product_details.delivery_address}</p>
-                                  </div>
-                              </div>
-                              <div className="flex flex-col gap-2 w-full sm:w-auto">
-                                <Button onClick={() => startConversation(t.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
-                                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
-                                    Chat with Buyer
-                                </Button>
-                                {t.status === 'pending' && (
-                                    <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm" className="w-full sm:w-auto">
-                                        {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                        Confirm Delivery
-                                    </Button>
-                                )}
-                              </div>
-                          </div>
-                      </AccordionContent>
-                  </Card>
-              </AccordionItem>
+              <Card key={t.id} className="overflow-hidden">
+                <CardHeader className="p-4 bg-muted/30 border-b flex-wrap flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                    <div className="flex items-center gap-4 flex-grow">
+                        <Image src={t.product_details?.image[0] || ''} width={64} height={64} alt={t.product_details?.name || ''} className="rounded-md object-cover bg-secondary" />
+                        <div className="flex-1">
+                            <p className="font-bold">{t.product_details?.name}</p>
+                            <p className="text-sm text-muted-foreground">Order Date: {format(new Date(t.created_at), 'PPP')}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 self-end md:self-center">
+                        <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Order Status</p>
+                            <TransactionStatusBadge status={t.status} />
+                        </div>
+                         <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Sale Amount</p>
+                            <p className="font-bold text-lg">₦{t.product_price.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4">
+                    <div>
+                        <h4 className="font-semibold text-sm mb-2">Buyer & Delivery Information</h4>
+                        <div className="text-sm text-muted-foreground space-y-2">
+                             <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-primary" />
+                                <span>{t.product_details.buyer_name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-primary" />
+                                <span>{t.product_details.customer_phone}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Home className="h-4 w-4 text-primary" />
+                                <p>{t.product_details.delivery_address}</p>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter className="p-4 border-t bg-muted/30 flex justify-end gap-2">
+                    <Button onClick={() => startConversation(t.buyer_id)} disabled={isChatting} size="sm" variant="outline">
+                        {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                        Chat with Buyer
+                    </Button>
+                    {t.status === 'pending' && (
+                        <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm">
+                            {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                            Confirm Delivery
+                        </Button>
+                    )}
+                </CardFooter>
+              </Card>
           ))}
-      </Accordion>
+      </div>
     </div>
     : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>
   );
@@ -725,4 +699,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
