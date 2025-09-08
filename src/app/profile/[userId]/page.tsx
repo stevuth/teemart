@@ -226,7 +226,7 @@ export default function SellerProfilePage() {
             <Header />
             <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <BackButton className="-ml-4" />
-                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mt-4">
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mt-2">
                     <Avatar className="h-20 w-20 md:h-24 md:w-24 border">
                         <AvatarImage src={seller.avatar_url || ''} alt={seller.full_name || ''} className="object-cover" />
                         <AvatarFallback className="text-3xl">{getInitials(seller.full_name)}</AvatarFallback>
@@ -322,4 +322,5 @@ export default function SellerProfilePage() {
         </div>
     );
 }
+
 
