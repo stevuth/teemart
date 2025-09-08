@@ -192,7 +192,7 @@ export async function markAsDeliveredAction(transactionId: string) {
     }
     
     // Use an RPC function to ensure only the correct seller can update the status.
-    const { error } = await supabase.rpc('handle_mark_as_delivered', {
+    const { error } = await supabase.rpc('handle_mark_delivered', {
         p_transaction_id: transactionId,
         p_seller_id: user.id
     });
