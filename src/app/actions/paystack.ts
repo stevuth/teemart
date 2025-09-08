@@ -226,9 +226,9 @@ async function initiateTransfer(recipientCode: string, amount: number, reason: s
  */
 export async function releaseEscrowAction(transactionId: string) {
     // Environment variable check
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.PAYSTACK_SECRET_KEY) {
+    if (!process.env.PAYSTACK_SECRET_KEY) {
         const errorMessage = "Server is not configured for payments. Please contact support.";
-        console.error(`FATAL: Missing environment variables for escrow release. SUPABASE_SERVICE_ROLE_KEY: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}, PAYSTACK_SECRET_KEY: ${!!process.env.PAYSTACK_SECRET_KEY}`);
+        console.error(`FATAL: Missing PAYSTACK_SECRET_KEY environment variable.`);
         return { success: false, error: errorMessage };
     }
 
