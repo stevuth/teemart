@@ -64,7 +64,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       )
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('Real-time notification error:', err);
+          console.error(`Real-time notification error. Status: ${status}`, err || 'No error object provided.');
         }
       });
 
