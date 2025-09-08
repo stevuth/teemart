@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
@@ -15,14 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import type { Product, ReviewWithUser, Transaction } from '@/lib/types';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteProductDialog } from '@/components/delete-product-dialog';
-import { ReviewList } from '@/components/review-list';
+import { RaiseDisputeDialog } from '@/components/raise-dispute-dialog';
 import { BackButton } from '@/components/back-button';
 import { cn } from '@/lib/utils';
 import {
@@ -37,7 +35,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import Image from 'next/image';
 import { releaseEscrowAction, markAsDeliveredAction } from '@/app/actions/paystack';
-import { RaiseDisputeDialog } from '@/components/raise-dispute-dialog';
 import {
   Accordion,
   AccordionContent,
@@ -45,7 +42,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
-import { ProfileFeatureCard } from '@/components/profile-feature-card';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
     loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
@@ -57,9 +53,7 @@ const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-fo
     ssr: false,
 });
 
-type MobileView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
-type DesktopTab = 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
-
+type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
 
 export default function ProfilePage() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
@@ -80,9 +74,21 @@ export default function ProfilePage() {
   const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
   const [isChatting, setIsChatting] = useState(false);
   
-  const initialTab = (searchParams.get('tab') as DesktopTab) || 'listings';
-  const [activeTab, setActiveTab] = useState<DesktopTab>(initialTab);
-  const [mobileView, setMobileView] = useState<MobileView>(initialTab);
+  const initialView = (searchParams.get('view') as ActiveView) || 'menu';
+  const [activeView, setActiveView] = useState<ActiveView>(initialView);
+
+  const setView = (view: ActiveView) => {
+    setActiveView(view);
+    const newParams = new URLSearchParams(window.location.search);
+    if (view === 'menu') {
+        newParams.delete('view');
+    } else {
+        newParams.set('view', view);
+    }
+    const newUrl = `${window.location.pathname}?${newParams.toString()}`;
+    // Use replace to avoid polluting browser history for simple view changes
+    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+  };
 
 
   const fetchUserData = useCallback(async () => {
@@ -154,14 +160,6 @@ export default function ProfilePage() {
       fetchUserData();
     }
   }, [user, authLoading, router, fetchUserData, supabase]);
-
-   useEffect(() => {
-    const tabFromUrl = searchParams.get('tab') as DesktopTab | null;
-    if (tabFromUrl && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
-      setMobileView(tabFromUrl);
-    }
-  }, [searchParams, activeTab]);
   
   const handleMarkAsDelivered = async (transactionId: string) => {
     setIsConfirmingDelivery(transactionId);
@@ -215,19 +213,6 @@ export default function ProfilePage() {
     setTransactionToDispute(null);
     fetchUserData(); // Refetch data to show new "disputed" status
   }
-  
-  const renderProfileError = (tabName: string) => (
-    <div className="flex justify-center p-8">
-      <Alert variant="destructive" className="max-w-md">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Could Not Load {tabName} Details</AlertTitle>
-          <AlertDescription className="space-y-3">
-              <p>This is likely due to a database permission error. Please run the SQL script found in the README.md file in your Supabase SQL Editor to fix it.</p>
-              <Button size="sm" onClick={refetchProfile}><RotateCw className="mr-2 h-4 w-4" />Retry</Button>
-          </AlertDescription>
-      </Alert>
-    </div>
-  );
   
   const startConversation = async (otherParticipantId: string) => {
     if (!user) {
@@ -311,22 +296,6 @@ export default function ProfilePage() {
     )
   }
 
-  const displayName = profile?.full_name || user.user_metadata?.full_name;
-  const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
-  const creationTime = user.created_at;
-
-  const activityTabs = [
-    { value: "listings", label: "Active Listings", icon: Package, count: activeListings.length },
-    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
-    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length },
-    { value: "reviews", label: "Reviews Received", icon: Star, count: reviews.length },
-  ];
-
-  const settingsTabs = [
-    { value: "verification", label: "Verification", icon: ShieldCheck },
-    { value: "payment", label: "Payment Details", icon: Banknote },
-  ];
-  
   const renderListings = () => (
     loadingData ? (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div>
@@ -339,12 +308,8 @@ export default function ProfilePage() {
             isClickable={false} 
             actions={
               <>
-                <Button asChild size="sm" variant="outline" className="w-full">
-                  <Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link>
-                </Button>
-                <Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}>
-                  <Trash2 className="mr-2 h-4 w-4"/>Delete
-                </Button>
+                <Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button>
+                <Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
               </>
             }
           />
@@ -561,106 +526,164 @@ export default function ProfilePage() {
     };
   
   const renderVerification = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")
+    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : null
   );
   
   const renderPayment = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : renderProfileError("Payment Details")
+    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : null
   );
 
-  const mobileContentMap: Record<MobileView, { title: string; content: JSX.Element; }> = {
+  const displayName = profile?.full_name || user.user_metadata?.full_name;
+  const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
+  const creationTime = user.created_at;
+
+  const activityTabs = [
+    { value: "listings", label: "My Listings", icon: Package, count: activeListings.length },
+    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
+    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length },
+    { value: "reviews", label: "Reviews", icon: Star, count: reviews.length },
+  ];
+
+  const settingsTabs = [
+    { value: "verification", label: "Verification", icon: ShieldCheck },
+    { value: "payment", label: "Payment Details", icon: Banknote },
+  ];
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  }
+
+  const contentMap: Record<ActiveView, { title: string; content: JSX.Element; }> = {
     menu: { title: "", content: <></>}, // Should not be rendered
-    listings: { title: "Active Listings", content: renderListings() },
+    listings: { title: "My Listings", content: renderListings() },
     sales: { title: "My Sales", content: renderSales() },
     purchases: { title: "My Purchases", content: renderPurchases() },
     reviews: { title: "Reviews Received", content: renderReviews() },
     verification: { title: "Identity Verification", content: renderVerification() },
     payment: { title: "Payment Details", content: renderPayment() },
   };
-  
-  const renderMobileMenu = () => (
-    <div className="space-y-2">
-        <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase px-4 py-1">My Activity</p>
-            <div className="divide-y border-y bg-card rounded-lg">
-                {activityTabs.map(tab => (
-                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-3 text-left hover:bg-secondary/50">
-                        <div className="flex items-center gap-3">
-                            <tab.icon className="h-5 w-5 text-primary" />
-                            <span className="font-medium">{tab.label}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{tab.count}</Badge>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                    </button>
-                ))}
-            </div>
-        </div>
-        <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase px-4 py-1">Account Settings</p>
-            <div className="divide-y border-y bg-card rounded-lg">
-                {settingsTabs.map(tab => (
-                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-3 text-left hover:bg-secondary/50">
-                        <div className="flex items-center gap-3">
-                            <tab.icon className="h-5 w-5 text-primary" />
-                            <span className="font-medium">{tab.label}</span>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </button>
-                ))}
-            </div>
-        </div>
-    </div>
-  );
 
-  const renderMobileContent = () => {
-    if (mobileView === 'menu') {
-        return renderMobileMenu();
+  const renderContent = () => {
+    if (activeView === 'menu') {
+        return (
+            <>
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-6">
+                    <Avatar className="h-20 w-20 md:h-24 md:w-24 border">
+                        <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
+                        <AvatarFallback className="text-3xl">{getInitials(displayName)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow text-center md:text-left">
+                        <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
+                        <p className="text-muted-foreground">{profile?.email}</p>
+                        <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
+                        {profile?.is_verified && (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm">
+                            <ShieldCheck className="h-4 w-4" /> Verified
+                            </Badge>
+                        )}
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <CalendarDays className="h-4 w-4" />
+                            <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}</span>
+                        </div>
+                        </div>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Button asChild variant="outline">
+                           <Link href="/contact"><HelpCircle className="mr-2 h-4 w-4" />Contact Support</Link>
+                        </Button>
+                         <Button variant="outline" onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" /> Logout
+                        </Button>
+                    </div>
+                </div>
+                <Separator className="my-6" />
+
+                {/* Desktop Menu */}
+                <div className="hidden md:grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 className="font-bold text-lg mb-4">My Activity</h3>
+                        <div className="space-y-2">
+                            {activityTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary">{tab.count}</Badge>
+                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg mb-4">Account Settings</h3>
+                        <div className="space-y-2">
+                           {settingsTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                {/* Mobile Menu */}
+                <div className="md:hidden space-y-4">
+                     <div>
+                        <h3 className="font-bold text-lg mb-4">My Activity</h3>
+                        <div className="space-y-2">
+                            {activityTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary">{tab.count}</Badge>
+                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                     <div>
+                        <h3 className="font-bold text-lg mb-4">Account Settings</h3>
+                        <div className="space-y-2">
+                           {settingsTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </>
+        )
     }
-    
-    const { title, content } = mobileContentMap[mobileView];
+
+    const { title, content } = contentMap[activeView];
     return (
         <div>
-            <div className="flex items-center gap-2 mb-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMobileView('menu')}>
+            <div className="flex items-center gap-2 mb-4">
+                <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setView('menu')}>
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <h2 className="text-xl font-bold">{title}</h2>
+                <h2 className="text-2xl font-bold">{title}</h2>
             </div>
             {content}
         </div>
     );
   }
-  
-  const ProfileHeader = () => (
-    <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-6">
-      <Avatar className="h-20 w-20 md:h-24 md:w-24 border">
-        <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
-        <AvatarFallback className="text-3xl">{getInitials(displayName)}</AvatarFallback>
-      </Avatar>
-      <div className="flex-grow text-center md:text-left">
-        <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
-        <p className="text-muted-foreground">{profile?.email}</p>
-        <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
-          {profile?.is_verified && (
-            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm">
-              <ShieldCheck className="h-4 w-4" /> Verified
-            </Badge>
-          )}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CalendarDays className="h-4 w-4" />
-            <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}</span>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={() => router.push('/contact')}>
-          <HelpCircle className="mr-2 h-4 w-4" /> Contact Support
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary/30">
@@ -695,55 +718,11 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-2">
-        
-        <ProfileHeader />
-        <Separator className="mb-6" />
-
-        {/* Mobile View */}
-        <div className="md:hidden">
-            {renderMobileContent()}
-        </div>
-
-        {/* Desktop View */}
-        <div className="hidden md:block">
-            <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as DesktopTab)} className="w-full">
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-full md:w-60 flex-shrink-0">
-                        <TabsList className="flex flex-col h-auto items-start justify-start p-1 gap-1 bg-card rounded-lg border">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-1.5">My Activity</p>
-                            {activityTabs.map(tab => (
-                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-1.5">
-                                    <tab.icon className="h-5 w-5" />
-                                    <span>{tab.label}</span>
-                                    <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
-                                </TabsTrigger>
-                            ))}
-
-                            <Separator className="my-1" />
-
-                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-1.5">Account Settings</p>
-                            {settingsTabs.map(tab => (
-                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-1.5">
-                                    <tab.icon className="h-5 w-5" />
-                                    <span>{tab.label}</span>
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <TabsContent value="listings" className="mt-0">{renderListings()}</TabsContent>
-                        <TabsContent value="sales" className="mt-0">{renderSales()}</TabsContent>
-                        <TabsContent value="purchases" className="mt-0">{renderPurchases()}</TabsContent>
-                        <TabsContent value="reviews" className="mt-0">{renderReviews()}</TabsContent>
-                        <TabsContent value="verification" className="mt-0">{renderVerification()}</TabsContent>
-                        <TabsContent value="payment" className="mt-0">{renderPayment()}</TabsContent>
-                    </div>
-                </div>
-            </Tabs>
-        </div>
+      <main className="flex-grow container mx-auto px-4 py-8">
+        {renderContent()}
       </main>
       <Footer />
     </div>
   );
 }
+
