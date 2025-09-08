@@ -329,17 +329,7 @@ export default function ProfilePage() {
   
   const renderListings = () => (
     loadingData ? (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="flex flex-col space-y-3">
-            <Skeleton className="h-[125px] w-full rounded-xl" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </div>
-        ))}
-      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div>
     ) : activeListings.length > 0 ? (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {activeListings.map(product => (
@@ -361,14 +351,7 @@ export default function ProfilePage() {
         ))}
       </div>
     ) : (
-      <div className="text-center py-16 border-2 border-dashed rounded-lg">
-        <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 className="mt-4 text-xl font-medium">No active listings</h3>
-        <p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p>
-        <Button asChild className="mt-6" variant="default">
-          <a href="/sell">List an Item</a>
-        </Button>
-      </div>
+      <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>
     )
   );
 
@@ -651,47 +634,32 @@ export default function ProfilePage() {
   }
   
   const ProfileHeader = () => (
-    <Card className="mb-2">
-        <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                <div className="md:col-span-4 lg:col-span-3 flex justify-center">
-                     <Avatar className="h-24 w-24 rounded-lg border">
-                        <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
-                        <AvatarFallback className="rounded-lg text-4xl">{getInitials(displayName)}</AvatarFallback>
-                    </Avatar>
-                </div>
-                <div className="md:col-span-8 lg:col-span-9 space-y-2 text-center md:text-left">
-                    <div>
-                        <h1 className="text-2xl font-bold">{displayName}</h1>
-                        <p className="text-sm text-muted-foreground">{profile?.email}</p>
-                    </div>
-                    
-                    {profile?.is_verified && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm py-1 px-3">
-                            <ShieldCheck className="h-4 w-4" /> Verified
-                        </Badge>
-                    )}
-                    
-                    <Separator className="my-2" />
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <ProfileFeatureCard
-                            icon={CalendarDays}
-                            label="Member Since"
-                            value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
-                        />
-                         <ProfileFeatureCard
-                            icon={HelpCircle}
-                            label="Need help?"
-                            value="Contact our support team"
-                            buttonText="Get Help"
-                            onButtonClick={() => router.push('/contact')}
-                        />
-                    </div>
-                </div>
-            </div>
+    <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-6">
+      <Avatar className="h-20 w-20 md:h-24 md:w-24 border">
+        <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
+        <AvatarFallback className="text-3xl">{getInitials(displayName)}</AvatarFallback>
+      </Avatar>
+      <div className="flex-grow text-center md:text-left">
+        <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
+        <p className="text-muted-foreground">{profile?.email}</p>
+        <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
+          {profile?.is_verified && (
+            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm">
+              <ShieldCheck className="h-4 w-4" /> Verified
+            </Badge>
+          )}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <CalendarDays className="h-4 w-4" />
+            <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}</span>
+          </div>
         </div>
-    </Card>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={() => router.push('/contact')}>
+          <HelpCircle className="mr-2 h-4 w-4" /> Contact Support
+        </Button>
+      </div>
+    </div>
   );
 
   return (
@@ -730,6 +698,7 @@ export default function ProfilePage() {
       <main className="flex-grow container mx-auto px-4 py-2">
         
         <ProfileHeader />
+        <Separator className="mb-6" />
 
         {/* Mobile View */}
         <div className="md:hidden">
