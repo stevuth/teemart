@@ -250,8 +250,9 @@ export default function ProfilePage() {
         router.push(`/messages?conversationId=${data}`);
 
     } catch (error: any) {
-        console.error("Error starting conversation:", error);
-        toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
+        console.error("Detailed error object when starting conversation:", error);
+        console.error("Stringified error for more details:", JSON.stringify(error, null, 2));
+        toast({ title: "Error", description: "Could not start a conversation. Please try again. Check console for details.", variant: "destructive" });
     } finally {
         setIsChatting(false);
     }
@@ -787,3 +788,6 @@ export default function ProfilePage() {
 
     
 
+
+
+    
