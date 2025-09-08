@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -236,12 +235,6 @@ export default function SellerProfilePage() {
                             <h1 className="text-3xl font-bold">{seller.full_name}</h1>
                             <p className="text-muted-foreground">TeeMart Seller</p>
                         </div>
-                        {currentUser?.id !== seller.id && (
-                           <Button onClick={startConversation} disabled={isChatting} className="w-full">
-                                {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
-                                Chat with Seller
-                            </Button>
-                        )}
                     </div>
                     <div className="flex-grow w-full border-t md:border-t-0 md:border-l md:pl-8 pt-8 md:pt-0">
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 text-sm text-muted-foreground">
