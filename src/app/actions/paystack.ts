@@ -225,7 +225,6 @@ async function initiateTransfer(recipientCode: string, amount: number, reason: s
  * @returns An object with either a success status or an error message.
  */
 export async function releaseEscrowAction(transactionId: string) {
-    // Environment variable check
     if (!process.env.PAYSTACK_SECRET_KEY) {
         const errorMessage = "Server is not configured for payments. Please contact support.";
         console.error(`FATAL: Missing PAYSTACK_SECRET_KEY environment variable.`);
@@ -260,16 +259,14 @@ export async function releaseEscrowAction(transactionId: string) {
             return { success: false, error: `Cannot release payment. Order status is '${transaction.status}'.` };
         }
 
-        // Use admin client ONLY for fetching sensitive seller bank details
-        const supabaseAdmin = createSupabaseAdminClient();
-        const { data: sellerProfile, error: profileError } = await supabaseAdmin
-            .from('profiles')
-            .select('account_name, account_number, bank_code, recipient_code')
-            .eq('id', transaction.seller_id)
+        // Call the secure database function to get seller bank details
+        const { data: sellerProfile, error: profileError } = await supabase
+            .rpc('get_seller_payout_details_for_buyer', { p_transaction_id: transactionId })
             .single();
         
         if (profileError || !sellerProfile || !sellerProfile.account_number || !sellerProfile.bank_code) {
-             return { success: false, error: "Seller has not configured their bank details for payout." };
+             console.error("Error fetching seller payout details via RPC:", profileError);
+             return { success: false, error: "Seller has not configured their bank details for payout, or an error occurred." };
         }
 
         let recipientCode = sellerProfile.recipient_code;
@@ -277,11 +274,14 @@ export async function releaseEscrowAction(transactionId: string) {
         // Create transfer recipient if one doesn't exist
         if (!recipientCode) {
             recipientCode = await createTransferRecipient(
-                sellerProfile.account_name!,
-                sellerProfile.account_number!,
-                sellerProfile.bank_code!
+                sellerProfile.account_name,
+                sellerProfile.account_number,
+                sellerProfile.bank_code
             );
+            
             // Save the new recipient code to the seller's profile
+            // This requires an admin client as the user doesn't have write access to another user's profile
+            const supabaseAdmin = createSupabaseAdminClient();
             const { error: updateProfileError } = await supabaseAdmin
                 .from('profiles')
                 .update({ recipient_code: recipientCode })
@@ -307,8 +307,6 @@ export async function releaseEscrowAction(transactionId: string) {
             .eq('id', transactionId);
 
         if (updateError) {
-            // This is a critical issue. The transfer was initiated but the status failed to update.
-            // Requires manual intervention.
             console.error(`CRITICAL: Transfer initiated for transaction ${transactionId}, but DB update failed:`, updateError);
             return { success: false, error: "Transfer initiated but status update failed. Please contact support." };
         }
@@ -334,7 +332,6 @@ export async function markAsDeliveredAction(transactionId: string) {
         return { success: false, error: "You must be logged in as a seller." };
     }
     
-    // Using a direct update instead of a faulty RPC
     const { data: transaction, error: fetchError } = await supabase
         .from('transactions')
         .select('seller_id, status')
