@@ -234,7 +234,7 @@ export default function ProfilePage() {
         return;
     }
     if (!otherParticipantId) {
-        toast({ title: "Error", description: "Recipient ID is missing.", variant = "destructive" });
+        toast({ title: "Error", description: "Recipient ID is missing.", variant: "destructive" });
         return;
     }
 
@@ -251,7 +251,7 @@ export default function ProfilePage() {
 
     } catch (error: any) {
         console.error("Error starting conversation:", error);
-        toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant = "destructive" });
+        toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
     } finally {
         setIsChatting(false);
     }
@@ -786,3 +786,4 @@ export default function ProfilePage() {
 }
 
     
+
