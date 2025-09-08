@@ -84,6 +84,7 @@ export default function ProfilePage() {
   const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
   const [isChatting, setIsChatting] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
+  const [selectedPurchase, setSelectedPurchase] = useState<Transaction | null>(null);
   
   const initialView = (searchParams.get('view') as ActiveView) || 'menu';
   const [activeView, setActiveView] = useState<ActiveView>(initialView);
@@ -194,6 +195,7 @@ export default function ProfilePage() {
     if (success) {
         toast({ title: "Payment Released!", description: `Payment has been released to ${transactionToConfirm.product_details?.seller_name}.` });
         fetchUserData(); // Refetch all data to update the status
+        setSelectedPurchase(null);
     } else {
         toast({ title: "Action Failed", description: error, variant: "destructive" });
     }
@@ -232,7 +234,7 @@ export default function ProfilePage() {
         return;
     }
     if (!otherParticipantId) {
-        toast({ title: "Error", description: "Recipient ID is missing.", variant: "destructive" });
+        toast({ title: "Error", description: "Recipient ID is missing.", variant = "destructive" });
         return;
     }
 
@@ -249,7 +251,7 @@ export default function ProfilePage() {
 
     } catch (error: any) {
         console.error("Error starting conversation:", error);
-        toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
+        toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant = "destructive" });
     } finally {
         setIsChatting(false);
     }
@@ -384,7 +386,7 @@ export default function ProfilePage() {
   
   const renderPurchases = () => (
      loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? 
-     <div className="space-y-4">
+     <div className="space-y-6">
         <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle className="font-bold">Important Information for Buyers</AlertTitle>
@@ -392,42 +394,31 @@ export default function ProfilePage() {
             Only press "Confirm & Release Payment" after you have received your item and confirmed it is as described. Use the "Chat with Seller" button for updates on delivery. This ensures your payment remains secure with TeeMart escrow.
           </AlertDescription>
         </Alert>
-        <div className="space-y-4">{purchases.map(t => (
-          <Card key={t.id}>
-              <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
-                  <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                      <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                      <div className="flex-1">
-                          <p className="font-bold">{t.product_details?.name}</p>
-                          <p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p>
-                          <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                      </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto">
-                      <TransactionStatusBadge status={t.status} />
-                      <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
-                  </div>
-              </CardContent>
-              <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
-                  <Button onClick={() => startConversation(t.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
-                      {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
-                      Chat with Seller
-                  </Button>
-                  {t.status === 'delivered' && (
-                      <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
-                          {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-                          Confirm & Release Payment
-                      </Button>
-                  )}
-                  {(t.status === 'pending' || t.status === 'delivered') && (
-                      <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(t)}>
-                          <MessageCircleWarning className="mr-2 h-4 w-4" />
-                          Raise a Dispute
-                      </Button>
-                  )}
-              </CardFooter>
-          </Card>
-      ))}</div>
+        <div className="space-y-4">
+            {purchases.map(t => (
+                <Card key={t.id} className="overflow-hidden">
+                    <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                        <div className="flex items-center gap-4 flex-grow min-w-0">
+                            <Image src={t.product_details?.image[0] || ''} width={64} height={64} alt={t.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold truncate">{t.product_details?.name}</p>
+                                <p className="text-sm text-muted-foreground">From: {t.product_details.seller_name}</p>
+                                <p className="text-sm text-muted-foreground">On: {format(new Date(t.created_at), 'PPP')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 self-stretch sm:self-center flex-shrink-0 w-full sm:w-auto justify-between">
+                            <div className="flex flex-col items-start gap-1">
+                                <TransactionStatusBadge status={t.status} />
+                                <p className="font-bold text-lg">₦{t.product_price.toLocaleString()}</p>
+                            </div>
+                            <Button onClick={() => setSelectedPurchase(t)} size="sm" variant="outline">
+                                View Details
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
      </div>
      : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>
   );
@@ -670,6 +661,7 @@ export default function ProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
        <Dialog open={!!selectedSale} onOpenChange={(isOpen) => !isOpen && setSelectedSale(null)}>
         <DialogContent className="sm:max-w-md">
             {selectedSale && (
@@ -733,6 +725,56 @@ export default function ProfilePage() {
             )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!selectedPurchase} onOpenChange={(isOpen) => !isOpen && setSelectedPurchase(null)}>
+        <DialogContent className="sm:max-w-md">
+            {selectedPurchase && (
+                <>
+                    <DialogHeader>
+                        <DialogTitle>Purchase Details</DialogTitle>
+                        <DialogDescription>
+                            Order placed on {format(new Date(selectedPurchase.created_at), 'PPP')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                         <div className="flex items-center gap-4">
+                             <Image src={selectedPurchase.product_details?.image[0] || ''} width={64} height={64} alt={selectedPurchase.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div>
+                                <p className="font-bold">{selectedPurchase.product_details?.name}</p>
+                                <p className="font-bold text-lg">₦{selectedPurchase.product_price.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <Separator />
+                        <div>
+                            <h4 className="font-semibold text-sm mb-2">Seller Information</h4>
+                            <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                <User className="h-4 w-4 text-primary" />
+                                <span>{selectedPurchase.product_details.seller_name}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                        <Button onClick={() => startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                            {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
+                            Chat with Seller
+                        </Button>
+                        {selectedPurchase.status === 'delivered' && (
+                            <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                                {isReleasingPayment === selectedPurchase.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                                Confirm & Release Payment
+                            </Button>
+                        )}
+                        {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
+                            <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
+                                <MessageCircleWarning className="mr-2 h-4 w-4" />
+                                Raise a Dispute
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </>
+            )}
+        </DialogContent>
+      </Dialog>
       
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
@@ -742,3 +784,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
