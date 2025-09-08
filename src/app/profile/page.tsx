@@ -34,6 +34,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import Image from 'next/image';
 import { releaseEscrowAction, markAsDeliveredAction } from '@/app/actions/paystack';
 import {
@@ -74,6 +83,7 @@ export default function ProfilePage() {
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
   const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
   const [isChatting, setIsChatting] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
   
   const initialView = (searchParams.get('view') as ActiveView) || 'menu';
   const [activeView, setActiveView] = useState<ActiveView>(initialView);
@@ -168,6 +178,7 @@ export default function ProfilePage() {
     if (success) {
       toast({ title: "Order Updated", description: "You have marked this order as delivered." });
       fetchUserData(); // Refetch to update status
+      setSelectedSale(prev => prev ? {...prev, status: 'delivered'} : null);
     } else {
       toast({ title: "Error", description: error, variant: "destructive" });
     }
@@ -335,71 +346,38 @@ export default function ProfilePage() {
   const renderSales = () => (
     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
     <div className="space-y-6">
-      <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle className="font-bold">Important Information for Sellers</AlertTitle>
-          <AlertDescription>
-            Only mark an order as "Confirm Delivery" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly. Use the "Chat with Buyer" button to send delivery updates.
-          </AlertDescription>
-      </Alert>
-      <div className="space-y-4">
-          {sales.map(t => (
-              <Card key={t.id} className="overflow-hidden">
-                <CardHeader className="p-4 bg-muted/30 border-b">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle className="font-bold">Important Information for Sellers</AlertTitle>
+            <AlertDescription>
+                Only mark an order as "Delivered" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly. Use the "Chat with Buyer" button to send delivery updates.
+            </AlertDescription>
+        </Alert>
+        <div className="space-y-4">
+            {sales.map(t => (
+                <Card key={t.id} className="overflow-hidden">
+                    <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
                         <div className="flex items-center gap-4 flex-grow min-w-0">
                             <Image src={t.product_details?.image[0] || ''} width={64} height={64} alt={t.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold truncate">{t.product_details?.name}</p>
-                                <p className="text-sm text-muted-foreground">Order Date: {format(new Date(t.created_at), 'PPP')}</p>
+                                <p className="text-sm text-muted-foreground">To: {t.product_details.buyer_name}</p>
+                                <p className="text-sm text-muted-foreground">On: {format(new Date(t.created_at), 'PPP')}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 flex-shrink-0 self-end sm:self-center">
-                            <div className="text-right">
-                                <p className="text-xs text-muted-foreground">Order Status</p>
+                        <div className="flex items-center gap-4 self-stretch sm:self-center flex-shrink-0 w-full sm:w-auto justify-between">
+                            <div className="flex flex-col items-start gap-1">
                                 <TransactionStatusBadge status={t.status} />
-                            </div>
-                             <div className="text-right">
-                                <p className="text-xs text-muted-foreground">Sale Amount</p>
                                 <p className="font-bold text-lg">₦{t.product_price.toLocaleString()}</p>
                             </div>
+                            <Button onClick={() => setSelectedSale(t)} size="sm" variant="outline">
+                                View Details
+                            </Button>
                         </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                    <div>
-                        <h4 className="font-semibold text-sm mb-2">Buyer & Delivery Information</h4>
-                        <div className="text-sm text-muted-foreground space-y-2">
-                             <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-primary" />
-                                <span>{t.product_details.buyer_name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4 text-primary" />
-                                <span>{t.product_details.customer_phone}</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <Home className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                                <p>{t.product_details.delivery_address}</p>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-                <CardFooter className="p-4 border-t bg-muted/30 flex justify-end gap-2">
-                    <Button onClick={() => startConversation(t.buyer_id)} disabled={isChatting} size="sm" variant="outline">
-                        {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
-                        Chat with Buyer
-                    </Button>
-                    {t.status === 'pending' && (
-                        <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm">
-                            {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                            Confirm Delivery
-                        </Button>
-                    )}
-                </CardFooter>
-              </Card>
-          ))}
-      </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
     </div>
     : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>
   );
@@ -692,6 +670,69 @@ export default function ProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+       <Dialog open={!!selectedSale} onOpenChange={(isOpen) => !isOpen && setSelectedSale(null)}>
+        <DialogContent className="sm:max-w-md">
+            {selectedSale && (
+                <>
+                    <DialogHeader>
+                        <DialogTitle>Order Details</DialogTitle>
+                        <DialogDescription>
+                            Order placed on {format(new Date(selectedSale.created_at), 'PPP')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex items-center gap-4">
+                             <Image src={selectedSale.product_details?.image[0] || ''} width={64} height={64} alt={selectedSale.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div>
+                                <p className="font-bold">{selectedSale.product_details?.name}</p>
+                                <p className="font-bold text-lg">₦{selectedSale.product_price.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <Separator />
+                        <div>
+                            <h4 className="font-semibold text-sm mb-2">Buyer & Delivery Information</h4>
+                            <div className="text-sm text-muted-foreground space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-primary" />
+                                    <span>{selectedSale.product_details.buyer_name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4 text-primary" />
+                                    <span>{selectedSale.product_details.customer_phone}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <Home className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                                    <p>{selectedSale.product_details.delivery_address}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                        <Button onClick={() => startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                            {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                            Chat with Buyer
+                        </Button>
+                        {selectedSale.status === 'pending' && (
+                            <Button onClick={() => handleMarkAsDelivered(selectedSale.id)} disabled={isConfirmingDelivery === selectedSale.id} size="sm" className="w-full">
+                                {isConfirmingDelivery === selectedSale.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                Confirm Delivery
+                            </Button>
+                        )}
+                         {selectedSale.status === 'delivered' && (
+                             <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 w-full justify-center text-center">
+                                 Awaiting buyer's confirmation
+                            </Badge>
+                         )}
+                         {selectedSale.status === 'released' && (
+                             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 w-full justify-center text-center">
+                                 Payment has been released
+                            </Badge>
+                         )}
+                    </DialogFooter>
+                </>
+            )}
+        </DialogContent>
+      </Dialog>
       
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
@@ -701,3 +742,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
