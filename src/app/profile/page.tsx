@@ -689,7 +689,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         <Separator />
-                        <div>
+                        <div className="flex flex-col">
                             <h4 className="font-semibold text-sm mb-2">Buyer & Delivery Information</h4>
                             <div className="text-sm text-muted-foreground space-y-2">
                                 <div className="flex items-center gap-2">
@@ -742,4 +742,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
