@@ -137,36 +137,6 @@ export default function SellerProfilePage() {
         return (totalRating / reviews.length).toFixed(1);
     }, [reviews]);
 
-    const startConversation = async () => {
-        if (!currentUser) {
-            toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
-            return;
-        }
-        if (currentUser.id === userId) {
-            toast({ title: "Cannot chat with yourself", description: "You cannot start a conversation with yourself.", variant: "destructive" });
-            return;
-        }
-
-        setIsChatting(true);
-        try {
-            const { data, error } = await supabase.rpc('get_or_create_conversation', {
-                p_participant_one_id: currentUser.id,
-                p_participant_two_id: userId
-            });
-
-            if (error) throw error;
-            
-            router.push(`/messages?conversationId=${data}`);
-
-        } catch (error: any) {
-            console.error("Error starting conversation:", error);
-            toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
-        } finally {
-            setIsChatting(false);
-        }
-    };
-
-
     if (loading) {
         return (
             <div className="flex flex-col min-h-screen">
@@ -235,8 +205,8 @@ export default function SellerProfilePage() {
                         <h1 className="text-2xl md:text-3xl font-bold">{seller.full_name}</h1>
                         <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
                          {seller.is_verified ? (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm">
-                            <ShieldCheck className="h-4 w-4" /> Verified
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1">
+                                <ShieldCheck className="h-3 w-3" /> Verified
                             </Badge>
                         ) : (
                              <Badge variant="outline" className="gap-1 text-sm text-muted-foreground">
@@ -322,5 +292,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-
