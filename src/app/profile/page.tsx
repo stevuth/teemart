@@ -252,7 +252,7 @@ export default function ProfilePage() {
     } catch (error: any) {
         console.error("Detailed error object when starting conversation:", error);
         console.error("Stringified error for more details:", JSON.stringify(error, null, 2));
-        toast({ title: "Error", description: "Could not start a conversation. Please try again. Check console for details.", variant: "destructive" });
+        toast({ title: "Error starting conversation", description: "Could not start a conversation. Please try again. Check console for details.", variant: "destructive" });
     } finally {
         setIsChatting(false);
     }
@@ -701,7 +701,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-                        <Button onClick={() => startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                        <Button onClick={() => selectedSale && startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
                             {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
                             Chat with Buyer
                         </Button>
@@ -755,7 +755,7 @@ export default function ProfilePage() {
                         </div>
                     </div>
                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-                        <Button onClick={() => startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                        <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
                             {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                             Chat with Seller
                         </Button>
