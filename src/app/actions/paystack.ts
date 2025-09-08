@@ -240,11 +240,8 @@ export async function releaseEscrowAction(transactionId: string) {
     }
     
     try {
-        // Use admin client for sensitive operations
-        const supabaseAdmin = createSupabaseAdminClient();
-
-        // 1. Fetch the transaction
-        const { data: transaction, error: fetchError } = await supabaseAdmin
+        // Use standard client for user-specific data
+        const { data: transaction, error: fetchError } = await supabase
             .from('transactions')
             .select('*')
             .eq('id', transactionId)
@@ -255,7 +252,7 @@ export async function releaseEscrowAction(transactionId: string) {
             return { success: false, error: "Could not find the transaction." };
         }
 
-        // 2. Security checks
+        // Security checks
         if (transaction.buyer_id !== user.id) {
             return { success: false, error: "You are not authorized to release this payment." };
         }
@@ -263,7 +260,8 @@ export async function releaseEscrowAction(transactionId: string) {
             return { success: false, error: `Cannot release payment. Order status is '${transaction.status}'.` };
         }
 
-        // 3. Fetch seller's profile for bank details
+        // Use admin client ONLY for fetching sensitive seller bank details
+        const supabaseAdmin = createSupabaseAdminClient();
         const { data: sellerProfile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('account_name, account_number, bank_code, recipient_code')
@@ -276,7 +274,7 @@ export async function releaseEscrowAction(transactionId: string) {
 
         let recipientCode = sellerProfile.recipient_code;
 
-        // 4. Create transfer recipient if one doesn't exist
+        // Create transfer recipient if one doesn't exist
         if (!recipientCode) {
             recipientCode = await createTransferRecipient(
                 sellerProfile.account_name!,
@@ -295,14 +293,14 @@ export async function releaseEscrowAction(transactionId: string) {
             }
         }
         
-        // 5. Calculate payout amount (product price - seller fee)
+        // Calculate payout amount (product price - seller fee)
         const payoutAmount = transaction.product_price - transaction.seller_fee;
         const reason = `Payout for order: ${transaction.product_details?.name}`;
 
-        // 6. Initiate the transfer
+        // Initiate the transfer
         await initiateTransfer(recipientCode, payoutAmount, reason);
 
-        // 7. Update transaction status to 'released'
+        // Update transaction status to 'released'
         const { error: updateError } = await supabase
             .from('transactions')
             .update({ status: 'released' })
