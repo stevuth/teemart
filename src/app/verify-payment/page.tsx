@@ -10,37 +10,60 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
+import { verifyAndProcessTransaction } from '@/app/actions/paystack';
 
 function VerificationContent() {
     const searchParams = useSearchParams();
     const { clearCart } = useCart();
     
-    const status = searchParams.get('status');
-    const error = searchParams.get('error');
+    const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
+    const [error, setError] = useState<string | null>(null);
 
-    // This effect will run once when the component mounts with a success status.
     useEffect(() => {
-        if (status === 'success') {
-            clearCart();
-        }
-    }, [status, clearCart]);
+        const reference = searchParams.get('trxref') || searchParams.get('reference');
 
-    const isLoading = !status;
+        if (!reference) {
+            setStatus('failed');
+            setError('No transaction reference found. Your session might have expired.');
+            return;
+        }
+
+        const performVerification = async () => {
+            // This is a server action, so it's safe to call from the client.
+            const result = await verifyAndProcessTransaction(reference);
+
+            if (result.success) {
+                setStatus('success');
+                // Only clear the cart for successful 'order' type payments
+                if (result.type === 'order') {
+                    clearCart();
+                }
+            } else {
+                setStatus('failed');
+                setError(result.error || 'An unexpected error occurred during verification.');
+            }
+        };
+
+        performVerification();
+        // We disable the exhaustive-deps warning because we intend for this effect to run only once
+        // when the component mounts. `searchParams` and `clearCart` are stable.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-                {isLoading && <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />}
+                {status === 'verifying' && <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />}
                 {status === 'success' && <CheckCircle className="mx-auto h-12 w-12 text-green-500" />}
                 {status === 'failed' && <XCircle className="mx-auto h-12 w-12 text-destructive" />}
 
                 <CardTitle className="mt-4 text-2xl">
-                    {isLoading && 'Verifying Your Payment...'}
+                    {status === 'verifying' && 'Verifying Your Payment...'}
                     {status === 'success' && 'Order Successful!'}
                     {status === 'failed' && 'Verification Failed'}
                 </CardTitle>
                 <CardDescription>
-                    {isLoading && 'Please wait while we confirm your transaction. This may take a moment.'}
+                    {status === 'verifying' && 'Please wait while we confirm your transaction. This may take a moment.'}
                     {status === 'success' && 'Your payment was successful and your order has been placed.'}
                     {status === 'failed' && (error || 'We could not verify your payment. Please contact support if the amount was deducted.')}
                 </CardDescription>
@@ -76,5 +99,3 @@ export default function VerifyPaymentPage() {
         </div>
     );
 }
-
-    

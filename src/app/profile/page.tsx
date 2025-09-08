@@ -680,10 +680,12 @@ export default function ProfilePage() {
                             label="Member Since"
                             value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
                         />
-                        <ProfileFeatureCard
-                            icon={Package}
-                            label="Active Listings"
-                            value={`${activeListings.length} items`}
+                         <ProfileFeatureCard
+                            icon={HelpCircle}
+                            label="Need help?"
+                            value="Contact our support team"
+                            buttonText="Get Help"
+                            onButtonClick={() => router.push('/contact')}
                         />
                     </div>
                 </div>
@@ -776,5 +778,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
