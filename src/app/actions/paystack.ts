@@ -164,15 +164,34 @@ export async function releaseEscrowAction(transactionId: string) {
         return { success: false, error: "You must be logged in." };
     }
     
-    // Using an RPC function to handle the entire logic securely on the database side.
-    const { error } = await supabase.rpc('handle_escrow_release', {
-        p_transaction_id: transactionId,
-        p_buyer_id: user.id
-    });
+    // Using a direct update instead of a faulty RPC
+    const { data: transaction, error: fetchError } = await supabase
+        .from('transactions')
+        .select('buyer_id, status')
+        .eq('id', transactionId)
+        .single();
     
-    if (error) {
-        console.error("Escrow release error:", error);
-        return { success: false, error: error.message };
+    if (fetchError) {
+        console.error("Escrow release fetch error:", fetchError);
+        return { success: false, error: "Could not find the transaction." };
+    }
+
+    if (transaction.buyer_id !== user.id) {
+        return { success: false, error: "You are not authorized to release this payment." };
+    }
+
+    if (transaction.status !== 'delivered') {
+        return { success: false, error: `Cannot release payment. Order status is '${transaction.status}'.` };
+    }
+
+    const { error: updateError } = await supabase
+        .from('transactions')
+        .update({ status: 'released' })
+        .eq('id', transactionId);
+    
+    if (updateError) {
+        console.error("Escrow release update error:", updateError);
+        return { success: false, error: "Failed to update the transaction status." };
     }
     
     return { success: true };
