@@ -210,15 +210,33 @@ export async function markAsDeliveredAction(transactionId: string) {
         return { success: false, error: "You must be logged in as a seller." };
     }
     
-    // Use an RPC function to ensure only the correct seller can update the status.
-    const { error } = await supabase.rpc('handle_mark_delivered', {
-        p_transaction_id: transactionId,
-        p_seller_id: user.id
-    });
+    const { data: transaction, error: fetchError } = await supabase
+        .from('transactions')
+        .select('seller_id, status')
+        .eq('id', transactionId)
+        .single();
     
-    if (error) {
-        console.error("Mark as delivered error:", error);
-        return { success: false, error: error.message };
+    if (fetchError) {
+        console.error("Mark as delivered fetch error:", fetchError);
+        return { success: false, error: "Could not find the transaction." };
+    }
+
+    if (transaction.seller_id !== user.id) {
+        return { success: false, error: "You are not authorized to update this order." };
+    }
+
+    if (transaction.status !== 'pending') {
+        return { success: false, error: `Cannot mark as delivered. Order status is already '${transaction.status}'.` };
+    }
+
+    const { error: updateError } = await supabase
+        .from('transactions')
+        .update({ status: 'delivered' })
+        .eq('id', transactionId);
+    
+    if (updateError) {
+        console.error("Mark as delivered update error:", updateError);
+        return { success: false, error: "Failed to update the transaction status." };
     }
 
     return { success: true };
