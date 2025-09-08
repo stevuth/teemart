@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
@@ -328,13 +327,13 @@ export default function ProfilePage() {
   ];
   
   const renderListings = () => (
-    loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div> : 
+    loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>))}</div> : 
     activeListings.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{activeListings.map(product => <ProductCard key={product.id} product={product} isClickable={false} actions={<><Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button><Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></>}/>)}</div> : 
     <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>
   );
 
   const TransactionStatusBadge = ({ status }: { status: Transaction['status'] }) => {
-    const statusStyles: { [key in Transaction['status']]: string } = {
+    const statusStyles: { [key in Transaction['status']]: string = {
         pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
         delivered: 'bg-blue-100 text-blue-800 border-blue-300',
         released: 'bg-green-100 text-green-800 border-green-300',
@@ -557,15 +556,15 @@ export default function ProfilePage() {
   };
   
   const renderMobileMenu = () => (
-    <div className="space-y-4">
+    <div className="space-y-2">
         <div>
-            <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">My Activity</p>
+            <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-1">My Activity</p>
             <div className="divide-y border-y bg-card rounded-lg">
                 {activityTabs.map(tab => (
-                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
-                        <div className="flex items-center gap-4">
-                            <tab.icon className="h-6 w-6 text-primary" />
-                            <span className="text-base font-medium">{tab.label}</span>
+                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-3 text-left hover:bg-secondary/50">
+                        <div className="flex items-center gap-3">
+                            <tab.icon className="h-5 w-5 text-primary" />
+                            <span className="font-medium">{tab.label}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Badge variant="secondary">{tab.count}</Badge>
@@ -576,13 +575,13 @@ export default function ProfilePage() {
             </div>
         </div>
         <div>
-            <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">Account Settings</p>
+            <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-1">Account Settings</p>
             <div className="divide-y border-y bg-card rounded-lg">
                 {settingsTabs.map(tab => (
-                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
-                        <div className="flex items-center gap-4">
-                            <tab.icon className="h-6 w-6 text-primary" />
-                            <span className="text-base font-medium">{tab.label}</span>
+                    <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-3 text-left hover:bg-secondary/50">
+                        <div className="flex items-center gap-3">
+                            <tab.icon className="h-5 w-5 text-primary" />
+                            <span className="font-medium">{tab.label}</span>
                         </div>
                         <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </button>
@@ -600,7 +599,7 @@ export default function ProfilePage() {
     const { title, content } = mobileContentMap[mobileView];
     return (
         <div>
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMobileView('menu')}>
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
@@ -612,19 +611,19 @@ export default function ProfilePage() {
   }
   
   const ProfileHeader = () => (
-    <Card className="mb-6">
-        <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+    <Card className="mb-4">
+        <div className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                 <div className="md:col-span-4 lg:col-span-3 flex justify-center">
-                     <Avatar className="h-32 w-32 rounded-lg border">
+                     <Avatar className="h-24 w-24 rounded-lg border">
                         <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
                         <AvatarFallback className="rounded-lg text-4xl">{getInitials(displayName)}</AvatarFallback>
                     </Avatar>
                 </div>
-                <div className="md:col-span-8 lg:col-span-9 space-y-4 text-center md:text-left">
+                <div className="md:col-span-8 lg:col-span-9 space-y-2 text-center md:text-left">
                     <div>
-                        <h1 className="text-3xl font-bold">{displayName}</h1>
-                        <p className="text-muted-foreground">{profile?.email}</p>
+                        <h1 className="text-2xl font-bold">{displayName}</h1>
+                        <p className="text-sm text-muted-foreground">{profile?.email}</p>
                     </div>
                     
                     {profile?.is_verified && (
@@ -633,9 +632,9 @@ export default function ProfilePage() {
                         </Badge>
                     )}
                     
-                    <Separator className="my-4" />
+                    <Separator className="my-2" />
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <ProfileFeatureCard
                             icon={CalendarDays}
                             label="Member Since"
@@ -686,7 +685,7 @@ export default function ProfilePage() {
       </AlertDialog>
       
       <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-grow container mx-auto px-4 py-4">
         
         <ProfileHeader />
 
@@ -698,23 +697,23 @@ export default function ProfilePage() {
         {/* Desktop View */}
         <div className="hidden md:block">
             <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as DesktopTab)} className="w-full">
-                <div className="flex flex-col md:flex-row gap-8">
-                    <div className="w-full md:w-64 flex-shrink-0">
-                        <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-card rounded-lg border">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="w-full md:w-60 flex-shrink-0">
+                        <TabsList className="flex flex-col h-auto items-start justify-start p-1 gap-1 bg-card rounded-lg border">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-1.5">My Activity</p>
                             {activityTabs.map(tab => (
-                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-1.5">
                                     <tab.icon className="h-5 w-5" />
                                     <span>{tab.label}</span>
                                     <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
                                 </TabsTrigger>
                             ))}
 
-                            <Separator className="my-2" />
+                            <Separator className="my-1" />
 
-                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">Account Settings</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-1.5">Account Settings</p>
                             {settingsTabs.map(tab => (
-                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
+                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-1.5">
                                     <tab.icon className="h-5 w-5" />
                                     <span>{tab.label}</span>
                                 </TabsTrigger>
@@ -737,3 +736,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
