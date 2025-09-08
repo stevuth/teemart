@@ -345,22 +345,24 @@ export default function ProfilePage() {
       <div className="space-y-4">
           {sales.map(t => (
               <Card key={t.id} className="overflow-hidden">
-                <CardHeader className="p-4 bg-muted/30 border-b flex-wrap flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
-                    <div className="flex items-center gap-4 flex-grow">
-                        <Image src={t.product_details?.image[0] || ''} width={64} height={64} alt={t.product_details?.name || ''} className="rounded-md object-cover bg-secondary" />
-                        <div className="flex-1">
-                            <p className="font-bold">{t.product_details?.name}</p>
-                            <p className="text-sm text-muted-foreground">Order Date: {format(new Date(t.created_at), 'PPP')}</p>
+                <CardHeader className="p-4 bg-muted/30 border-b">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex items-center gap-4 flex-grow min-w-0">
+                            <Image src={t.product_details?.image[0] || ''} width={64} height={64} alt={t.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold truncate">{t.product_details?.name}</p>
+                                <p className="text-sm text-muted-foreground">Order Date: {format(new Date(t.created_at), 'PPP')}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-4 self-end md:self-center">
-                        <div className="text-right">
-                            <p className="text-sm text-muted-foreground">Order Status</p>
-                            <TransactionStatusBadge status={t.status} />
-                        </div>
-                         <div className="text-right">
-                            <p className="text-sm text-muted-foreground">Sale Amount</p>
-                            <p className="font-bold text-lg">₦{t.product_price.toLocaleString()}</p>
+                        <div className="flex items-center gap-4 flex-shrink-0 self-end sm:self-center">
+                            <div className="text-right">
+                                <p className="text-xs text-muted-foreground">Order Status</p>
+                                <TransactionStatusBadge status={t.status} />
+                            </div>
+                             <div className="text-right">
+                                <p className="text-xs text-muted-foreground">Sale Amount</p>
+                                <p className="font-bold text-lg">₦{t.product_price.toLocaleString()}</p>
+                            </div>
                         </div>
                     </div>
                 </CardHeader>
@@ -376,8 +378,8 @@ export default function ProfilePage() {
                                 <Phone className="h-4 w-4 text-primary" />
                                 <span>{t.product_details.customer_phone}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Home className="h-4 w-4 text-primary" />
+                            <div className="flex items-start gap-2">
+                                <Home className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                                 <p>{t.product_details.delivery_address}</p>
                             </div>
                         </div>
