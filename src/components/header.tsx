@@ -61,7 +61,7 @@ export function Header() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/logo.png" alt="TeeMart Logo" width={56} height={56} />
+              <Image src="/logo.png" alt="TeeMart Logo" width={48} height={48} />
             </Link>
             
             <div className="flex items-center gap-1">
