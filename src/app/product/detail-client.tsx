@@ -1,24 +1,28 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
-import { Product, ProductWithSeller } from '@/lib/types';
-import { ShoppingCart, MessageCircle, MapPin, Truck, ShieldCheck, Star } from 'lucide-react';
+import { ProductWithSeller } from '@/lib/types';
+import { ShoppingCart, MapPin, Truck, ShieldCheck, Star, Store, MessageSquare } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { ProductCard } from '@/components/product-card';
-import { recommendProducts, RecommendProductsInput } from '@/ai/flows/product-recommendations';
 import { useCart } from '@/hooks/use-cart';
-import { Skeleton } from './ui/skeleton';
-import { useAuth } from '@/hooks/use-auth';
 import { BackButton } from './back-button';
+import { ProductCard } from './product-card';
+import { Skeleton } from './ui/skeleton';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { recommendProducts, RecommendProductsInput, RecommendProductsOutput } from '@/ai/flows/product-recommendations';
+import { Product } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { Loader } from '@/components/ui/loader';
 
 type ProductDetailClientProps = {
   product: ProductWithSeller;
@@ -26,13 +30,16 @@ type ProductDetailClientProps = {
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
     const { addToCart } = useCart();
-    const { supabase } = useAuth();
+    const { user, supabase } = useAuth();
+    const router = useRouter();
+    const { toast } = useToast();
     
     const [recommended, setRecommended] = useState<Product[]>([]);
     const [recommending, setRecommending] = useState(true);
+    const [isChatting, setIsChatting] = useState(false);
 
     useEffect(() => {
-        if(product) {
+        if(product && supabase) {
             const fetchRecommendations = async () => {
                 setRecommending(true);
                 try {
@@ -41,11 +48,17 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         productDescription: product.description,
                         productCategory: product.category,
                     };
-                    const { recommendedProducts } = await recommendProducts(input);
+                    const result: RecommendProductsOutput = await recommendProducts(input);
+                    const recommendedProducts = result.recommendedProducts;
+
+                    if (recommendedProducts.length === 0) {
+                      setRecommended([]);
+                      return;
+                    }
 
                     const { data: realProducts, error } = await supabase
-                        .from('products')
-                        .select('*, seller:profiles(id, full_name, avatar_url, is_verified)')
+                        .from('products_with_sellers')
+                        .select('*')
                         .in('name', recommendedProducts.map(p => p.name))
                         .neq('id', product.id)
                         .limit(3);
@@ -57,12 +70,25 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         image: item.image_url || [],
                         postedDate: item.created_at,
                         deliveryFee: item.delivery_fee,
-                        seller: item.seller,
+                        price: item.price || 0,
+                        category: item.category || '',
+                        location: item.location || '',
+                        city: item.city || '',
+                        condition: item.condition || 'Used',
+                        description: item.description || '',
+                        user_id: item.user_id,
+                        seller: {
+                            id: item.user_id,
+                            full_name: item.seller_name,
+                            avatar_url: item.seller_avatar_url,
+                            is_verified: item.seller_is_verified
+                        }
                     })) as Product[];
                     setRecommended(transformed);
 
                 } catch(e) {
                     console.error("Failed to get recommendations", e);
+                    setRecommended([]);
                 } finally {
                     setRecommending(false);
                 }
@@ -75,6 +101,37 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         if (!name) return 'S';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
+    
+    const startConversation = async (otherParticipantId: string) => {
+        if (!user) {
+            toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
+            return;
+        }
+        if (!otherParticipantId) {
+            toast({ title: "Error", description: "Recipient ID is missing.", variant: "destructive" });
+            return;
+        }
+
+        setIsChatting(true);
+        try {
+            const { data, error } = await supabase.rpc('get_or_create_conversation', {
+                p_participant_one_id: user.id,
+                p_participant_two_id: otherParticipantId
+            });
+
+            if (error) throw error;
+            
+            router.push(`/chat/${data}`);
+
+        } catch (error: any) {
+            console.error("Detailed error object when starting conversation:", error);
+            console.error("Stringified error for more details:", JSON.stringify(error, null, 2));
+            toast({ title: "Error starting conversation", description: "Could not start a conversation. Please try again. Check console for details.", variant: "destructive" });
+        } finally {
+            setIsChatting(false);
+        }
+    };
+
 
     const images = Array.isArray(product.image) ? product.image : [product.image];
 
@@ -152,23 +209,19 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                                             <p className="font-bold text-lg">{product.seller.full_name}</p>
                                             {product.seller.is_verified && <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>}
                                         </div>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <div className="flex items-center gap-0.5">
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                                <Star className="w-4 h-4 text-gray-300" />
-                                            </div>
-                                            <span className="text-sm text-muted-foreground">(125)</span>
-                                        </div>
                                     </div>
                                 </div>
-                                 <Button asChild className="w-full mt-4">
-                                    <Link href={`/profile/${product.seller.id}`}>
-                                        <MessageCircle className="mr-2 h-4 w-4"/> View Profile & Chat
-                                    </Link>
-                                </Button>
+                                 <div className="grid grid-cols-2 gap-2 mt-4">
+                                     <Button asChild className="w-full">
+                                        <Link href={`/profile/${product.seller.id}`}>
+                                            <Store className="mr-2 h-4 w-4"/> Visit Store
+                                        </Link>
+                                    </Button>
+                                    <Button onClick={() => startConversation(product.seller.id)} disabled={isChatting} className="w-full">
+                                        {isChatting ? <Loader variant="dots" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                                        Chat Now
+                                    </Button>
+                                 </div>
                             </div>
 
 
@@ -180,8 +233,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         </div>
                     </div>
                 </div>
-
-                {/* Recommended Products */}
+                 {/* Recommended Products */}
                 <div className="mt-16 sm:mt-24">
                     <Separator />
                     <div className="py-12">
@@ -209,9 +261,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                         )}
                     </div>
                 </div>
-
             </main>
             <Footer />
         </div>
     );
 }
+
+    

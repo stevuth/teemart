@@ -50,8 +50,12 @@ serve(async (req) => {
   // 2. Create a Supabase client with the service_role_key to bypass RLS.
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SERVICE_ROLE_KEY") ?? "", // Use the new secret name here
-    { auth: { persistSession: false } }
+    Deno.env.get("SERVICE_ROLE_KEY") ?? "",
+    {
+      auth: { persistSession: false },
+      // This is the fix: explicitly set the schema to 'public'
+      db: { schema: 'public' }
+    }
   );
 
   const { data: profile, error: profileError } = await supabase
@@ -95,7 +99,7 @@ serve(async (req) => {
             link: url || Deno.env.get("NEXT_PUBLIC_BASE_URL"),
           },
           notification: {
-            icon: `${Deno.env.get("NEXT_PUBLIC_BASE_URL") || ''}/logo.png`,
+            icon: `${Deno.env.get("NEXT_PUBLIC_BASE_URL") || ''}/favicon.ico`,
           }
         },
       },

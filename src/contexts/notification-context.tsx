@@ -7,11 +7,13 @@ import { useAuth } from '@/hooks/use-auth';
 interface NotificationContextType {
   notificationCount: number;
   decrementCount: (amount: number) => void;
+  fetchUnreadCount: () => Promise<void>;
 }
 
 export const NotificationContext = createContext<NotificationContextType>({
   notificationCount: 0,
   decrementCount: () => {},
+  fetchUnreadCount: async () => {},
 });
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
@@ -24,11 +26,15 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     try {
-      const { data, error } = await supabase.rpc('get_unread_message_count', { p_user_id: user.id });
-      if (error) throw error;
+      // This RPC function is now called without parameters
+      const { data, error } = await supabase.rpc('get_unread_message_count');
+
+      if (error) {
+        throw error;
+      }
       setNotificationCount(data);
-    } catch (error) {
-      console.error("Error fetching unread message count:", error);
+    } catch (error: any) {
+      console.error("Error fetching unread message count:", error.message || JSON.stringify(error));
       setNotificationCount(0);
     }
   }, [user, supabase]);
@@ -53,32 +59,30 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
           filter: `recipient_id=eq.${user.id}` 
         },
         (payload) => {
-          fetchUnreadCount();
+          // Increment count instead of re-fetching for better performance
+          setNotificationCount(prev => prev + 1);
         }
       )
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('Real-time notification error:', err);
+          const errorMessage = err ? JSON.stringify(err) : 'No error object provided.';
+          console.error(`Real-time notification error. Status: ${status}`, errorMessage);
         }
       });
 
-    // Cleanup function to remove the channel subscription when the component unmounts or dependencies change
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user, supabase, fetchUnreadCount]);
   
   const decrementCount = useCallback((amount: number) => {
-    if (amount === 0) {
-        fetchUnreadCount();
-    } else {
-        setNotificationCount(prev => Math.max(0, prev - amount));
-    }
-  }, [fetchUnreadCount]);
+    setNotificationCount(prev => Math.max(0, prev - amount));
+  }, []);
 
   const value = {
     notificationCount,
     decrementCount,
+    fetchUnreadCount,
   };
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;

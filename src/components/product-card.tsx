@@ -117,7 +117,7 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
                 <span>{product.city}, {product.location}</span>
                 </div>
             </div>
-            <div className="w-full flex flex-col sm:flex-row gap-2">
+            <div className="w-full flex flex-col md:flex-row gap-2">
             {actions ? (
                 actions
             ) : (

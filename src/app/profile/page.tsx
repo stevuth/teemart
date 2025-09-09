@@ -2,7 +2,7 @@
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/header';
@@ -10,19 +10,19 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info, List, BarChart } from 'lucide-react';
+import { MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info, List, BarChart } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductCard } from '@/components/product-card';
 import type { Product, ReviewWithUser, Transaction } from '@/lib/types';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteProductDialog } from '@/components/delete-product-dialog';
-import { ReviewList } from '@/components/review-list';
+import { RaiseDisputeDialog } from '@/components/raise-dispute-dialog';
 import { BackButton } from '@/components/back-button';
 import { cn } from '@/lib/utils';
 import {
@@ -35,9 +35,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
 import Image from 'next/image';
 import { releaseEscrowAction, markAsDeliveredAction } from '@/app/actions/paystack';
-import { RaiseDisputeDialog } from '@/components/raise-dispute-dialog';
 import {
   Accordion,
   AccordionContent,
@@ -45,25 +53,25 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
-import { NotificationToggle } from '@/components/notification-toggle';
-import { ProfileFeatureCard } from '@/components/profile-feature-card';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
-    loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    loading: () => <div className="flex justify-center p-8"><Loader /></div>,
     ssr: false,
 });
 
 const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form'), {
-    loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    loading: () => <div className="flex justify-center p-8"><Loader /></div>,
     ssr: false,
 });
 
-type MobileView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
+type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
 
 export default function ProfilePage() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  
   const [activeListings, setActiveListings] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [sales, setSales] = useState<Transaction[]>([]);
@@ -75,8 +83,25 @@ export default function ProfilePage() {
   const [isConfirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [transactionToConfirm, setTransactionToConfirm] = useState<Transaction | null>(null);
   const [transactionToDispute, setTransactionToDispute] = useState<Transaction | null>(null);
-  const [mobileView, setMobileView] = useState<MobileView>('menu');
   const [isChatting, setIsChatting] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<Transaction | null>(null);
+  const [selectedPurchase, setSelectedPurchase] = useState<Transaction | null>(null);
+  
+  const initialView = (searchParams.get('view') as ActiveView) || 'menu';
+  const [activeView, setActiveView] = useState<ActiveView>(initialView);
+
+  const setView = (view: ActiveView) => {
+    setActiveView(view);
+    const newParams = new URLSearchParams(window.location.search);
+    if (view === 'menu') {
+        newParams.delete('view');
+    } else {
+        newParams.set('view', view);
+    }
+    const newUrl = `${window.location.pathname}?${newParams.toString()}`;
+    // Use replace to avoid polluting browser history for simple view changes
+    window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+  };
 
 
   const fetchUserData = useCallback(async () => {
@@ -151,12 +176,13 @@ export default function ProfilePage() {
   
   const handleMarkAsDelivered = async (transactionId: string) => {
     setIsConfirmingDelivery(transactionId);
-    const result = await markAsDeliveredAction(transactionId);
-    if (result.success) {
+    const { success, error } = await markAsDeliveredAction(transactionId);
+    if (success) {
       toast({ title: "Order Updated", description: "You have marked this order as delivered." });
       fetchUserData(); // Refetch to update status
+      setSelectedSale(prev => prev ? {...prev, status: 'delivered'} : null);
     } else {
-      toast({ title: "Error", description: result.error, variant: "destructive" });
+      toast({ title: "Error", description: error, variant: "destructive" });
     }
     setIsConfirmingDelivery(null);
   };
@@ -165,13 +191,14 @@ export default function ProfilePage() {
     if (!transactionToConfirm) return;
     setIsReleasingPayment(transactionToConfirm.id);
     
-    const result = await releaseEscrowAction(transactionToConfirm.id);
+    const { success, error } = await releaseEscrowAction(transactionToConfirm.id);
 
-    if (result.success) {
+    if (success) {
         toast({ title: "Payment Released!", description: `Payment has been released to ${transactionToConfirm.product_details?.seller_name}.` });
         fetchUserData(); // Refetch all data to update the status
+        setSelectedPurchase(null);
     } else {
-        toast({ title: "Action Failed", description: result.error, variant: "destructive" });
+        toast({ title: "Action Failed", description: error, variant: "destructive" });
     }
     
     setIsReleasingPayment(null);
@@ -202,19 +229,6 @@ export default function ProfilePage() {
     fetchUserData(); // Refetch data to show new "disputed" status
   }
   
-  const renderProfileError = (tabName: string) => (
-    <div className="flex justify-center p-8">
-      <Alert variant="destructive" className="max-w-md">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Could Not Load {tabName} Details</AlertTitle>
-          <AlertDescription className="space-y-3">
-              <p>This is likely due to a database permission error. Please run the SQL script found in the README.md file in your Supabase SQL Editor to fix it.</p>
-              <Button size="sm" onClick={refetchProfile}><RotateCw className="mr-2 h-4 w-4" />Retry</Button>
-          </AlertDescription>
-      </Alert>
-    </div>
-  );
-  
   const startConversation = async (otherParticipantId: string) => {
     if (!user) {
         toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
@@ -227,28 +241,39 @@ export default function ProfilePage() {
 
     setIsChatting(true);
     try {
-        const { data, error } = await supabase.rpc('get_or_create_conversation', {
+        const { data: conversationId, error } = await supabase.rpc('get_or_create_conversation', {
             p_participant_one_id: user.id,
-            p_participant_two_id: otherParticipantId
+            p_participant_two_id: otherParticipantId,
         });
 
-        if (error) throw error;
-        
-        router.push(`/messages?conversationId=${data}`);
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        if (conversationId) {
+            router.push(`/chat/${conversationId}`);
+        } else {
+            throw new Error("Failed to get a conversation ID.");
+        }
 
     } catch (error: any) {
         console.error("Error starting conversation:", error);
-        toast({ title: "Error", description: "Could not start a conversation. Please try again.", variant: "destructive" });
+        toast({ 
+            title: "Error starting chat", 
+            description: "Could not start a conversation. Please try again or contact support.", 
+            variant: "destructive" 
+        });
     } finally {
         setIsChatting(false);
     }
-};
+  };
+
 
   if (authLoading) {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
-            <div className="flex-grow flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
+            <div className="flex-grow flex justify-center items-center"><Loader /></div>
             <Footer />
         </div>
     );
@@ -297,26 +322,28 @@ export default function ProfilePage() {
     )
   }
 
-  const displayName = profile?.full_name || user.user_metadata?.full_name;
-  const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
-  const creationTime = user.created_at;
-
-  const activityTabs = [
-    { value: "listings", label: "Active Listings", icon: Package, count: activeListings.length },
-    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
-    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length },
-    { value: "reviews", label: "Reviews Received", icon: Star, count: reviews.length },
-  ];
-
-  const settingsTabs = [
-    { value: "verification", label: "Verification", icon: ShieldCheck },
-    { value: "payment", label: "Payment Details", icon: Banknote },
-  ];
-  
   const renderListings = () => (
-    loadingData ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div> : 
-    activeListings.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{activeListings.map(product => <ProductCard key={product.id} product={product} isClickable={false} actions={<><Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button><Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button></>}/>)}</div> : 
-    <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>
+    loadingData ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">{[...Array(4)].map((_, i) => (<div key={i} className="flex flex-col space-y-3"><Skeleton className="h-[125px] w-full rounded-xl" /><div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div></div>))}</div>
+    ) : activeListings.length > 0 ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {activeListings.map(product => (
+          <ProductCard 
+            key={product.id} 
+            product={product} 
+            isClickable={false} 
+            actions={
+              <>
+                <Button asChild size="sm" variant="outline" className="w-full"><Link href={`/product/edit/${product.id}`}><Pencil className="mr-2 h-4 w-4"/>Edit</Link></Button>
+                <Button size="sm" variant="destructive" className="w-full" onClick={() => setProductToDelete(product)}><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
+              </>
+            }
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-16 border-2 border-dashed rounded-lg"><Package className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No active listings</h3><p className="mt-2 text-muted-foreground">You haven't listed any items for sale yet.</p><Button asChild className="mt-6" variant="default"><a href="/sell">List an Item</a></Button></div>
+    )
   );
 
   const TransactionStatusBadge = ({ status }: { status: Transaction['status'] }) => {
@@ -330,106 +357,48 @@ export default function ProfilePage() {
     return <Badge variant="outline" className={cn("capitalize", statusStyles[status])}>{status.replace(/_/g, ' ')}</Badge>;
   }
 
-  const PaymentStatusBadge = ({ status }: { status: Transaction['status'] }) => {
-    let text;
-    let style;
-    switch (status) {
-        case 'released':
-            text = 'Paid';
-            style = 'bg-green-100 text-green-800 border-green-300';
-            break;
-        case 'refunded':
-        case 'disputed':
-            text = 'On Hold';
-            style = 'bg-orange-100 text-orange-800 border-orange-300';
-            break;
-        default:
-            text = 'Held in Escrow';
-            style = 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    }
-    return (
-        <div className="flex flex-col items-end">
-            <p className="text-xs text-muted-foreground">Payment</p>
-            <Badge variant="outline" className={cn("capitalize", style)}>{text}</Badge>
-        </div>
-    );
-  }
-  
   const renderSales = () => (
-    loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
-    <div className="space-y-4">
-      <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle className="font-bold">Important Information for Sellers</AlertTitle>
-          <AlertDescription>
-            Only mark an order as "Confirm Delivery" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly. Use the "Chat with Buyer" button to send delivery updates.
-          </AlertDescription>
-      </Alert>
-      <Accordion type="single" collapsible className="w-full space-y-4">
-          {sales.map(t => (
-              <AccordionItem value={t.id} key={t.id} className="border-none">
-                  <Card>
-                      <AccordionTrigger className="p-4 hover:no-underline [&[data-state=open]]:border-b">
-                          <div className="flex flex-col sm:flex-row gap-4 items-start w-full text-left">
-                              <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                                  <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                                  <div className="flex-1">
-                                      <p className="font-bold">{t.product_details?.name}</p>
-                                      <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                                      <p className="text-lg font-bold text-primary pt-1">₦{t.product_price.toLocaleString()}</p>
-                                  </div>
-                              </div>
-                              <div className="flex flex-col items-end justify-between self-stretch gap-2">
-                                  <div className="flex flex-col items-end">
-                                  <p className="text-xs text-muted-foreground">Order Status</p>
-                                  <TransactionStatusBadge status={t.status} />
-                                  </div>
-                                  <PaymentStatusBadge status={t.status} />
-                              </div>
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                          <div className="p-4 flex flex-col sm:flex-row items-start justify-between gap-3 bg-secondary/30">
-                              <div className="text-sm text-muted-foreground space-y-2">
-                                  <h4 className="font-semibold text-sm text-foreground">Buyer & Delivery Information</h4>
-                                  <div className="flex items-center gap-2">
-                                      <User className="h-4 w-4 text-primary" />
-                                      <span>{t.product_details.buyer_name}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                      <Phone className="h-4 w-4 text-primary" />
-                                      <span>{t.product_details.customer_phone}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                      <Home className="h-4 w-4 text-primary" />
-                                      <p>{t.product_details.delivery_address}</p>
-                                  </div>
-                              </div>
-                              <div className="flex flex-col gap-2 w-full sm:w-auto">
-                                <Button onClick={() => startConversation(t.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
-                                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
-                                    Chat with Buyer
-                                </Button>
-                                {t.status === 'pending' && (
-                                    <Button onClick={() => handleMarkAsDelivered(t.id)} disabled={isConfirmingDelivery === t.id} size="sm" className="w-full sm:w-auto">
-                                        {isConfirmingDelivery === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                                        Confirm Delivery
-                                    </Button>
-                                )}
-                              </div>
-                          </div>
-                      </AccordionContent>
-                  </Card>
-              </AccordionItem>
-          ))}
-      </Accordion>
+    loadingData ? <div className="flex justify-center p-8"><Loader /></div> : sales.length > 0 ? 
+    <div className="space-y-6">
+        <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle className="font-bold">Important Information for Sellers</AlertTitle>
+            <AlertDescription>
+                Only mark an order as "Delivered" after the buyer has physically received the item. This is a crucial step to ensure payment is released correctly. Use the "Chat with Buyer" button to send delivery updates.
+            </AlertDescription>
+        </Alert>
+        <div className="space-y-4">
+            {sales.map(t => (
+                <Card key={t.id} className="overflow-hidden">
+                    <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                        <div className="flex items-center gap-4 flex-grow min-w-0">
+                            <Image src={t.product_details?.image[0] || ''} width={64} height={64} alt={t.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold truncate">{t.product_details?.name}</p>
+                                <p className="text-sm text-muted-foreground">To: {t.product_details.buyer_name}</p>
+                                <p className="text-sm text-muted-foreground">On: {format(new Date(t.created_at), 'PPP')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 self-stretch sm:self-center flex-shrink-0 w-full sm:w-auto justify-between">
+                            <div className="flex flex-col items-start gap-1">
+                                <TransactionStatusBadge status={t.status} />
+                                <p className="font-bold text-lg">₦{t.product_price.toLocaleString()}</p>
+                            </div>
+                            <Button onClick={() => setSelectedSale(t)} size="sm" variant="outline">
+                                View Details
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
     </div>
     : <div className="text-center py-16 border-2 border-dashed rounded-lg"><ShoppingBag className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Sales Yet</h3><p className="mt-2 text-muted-foreground">This section will show orders you've received from buyers.</p></div>
   );
   
   const renderPurchases = () => (
-     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? 
-     <div className="space-y-4">
+     loadingData ? <div className="flex justify-center p-8"><Loader /></div> : purchases.length > 0 ? 
+     <div className="space-y-6">
         <Alert>
           <Info className="h-4 w-4" />
           <AlertTitle className="font-bold">Important Information for Buyers</AlertTitle>
@@ -437,49 +406,38 @@ export default function ProfilePage() {
             Only press "Confirm & Release Payment" after you have received your item and confirmed it is as described. Use the "Chat with Seller" button for updates on delivery. This ensures your payment remains secure with TeeMart escrow.
           </AlertDescription>
         </Alert>
-        <div className="space-y-4">{purchases.map(t => (
-          <Card key={t.id}>
-              <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start">
-                  <div className="w-full sm:w-auto flex items-center gap-4 flex-1">
-                      <Image src={t.product_details?.image[0] || ''} width={80} height={80} alt={t.product_details?.name || ''} className="rounded-md object-cover" />
-                      <div className="flex-1">
-                          <p className="font-bold">{t.product_details?.name}</p>
-                          <p className="text-sm text-muted-foreground">Seller: {t.product_details.seller_name}</p>
-                          <p className="text-sm text-muted-foreground">Date: {format(new Date(t.created_at), 'PPP')}</p>
-                      </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 self-stretch justify-between w-full sm:w-auto">
-                      <TransactionStatusBadge status={t.status} />
-                      <p className="text-lg font-bold text-right">₦{t.product_price.toLocaleString()}</p>
-                  </div>
-              </CardContent>
-              <CardFooter className="p-4 border-t flex flex-wrap items-center justify-end gap-2">
-                  <Button onClick={() => startConversation(t.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full sm:w-auto">
-                      {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
-                      Chat with Seller
-                  </Button>
-                  {t.status === 'delivered' && (
-                      <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(t); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === t.id}>
-                          {isReleasingPayment === t.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-                          Confirm & Release Payment
-                      </Button>
-                  )}
-                  {(t.status === 'pending' || t.status === 'delivered') && (
-                      <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(t)}>
-                          <MessageCircleWarning className="mr-2 h-4 w-4" />
-                          Raise a Dispute
-                      </Button>
-                  )}
-              </CardFooter>
-          </Card>
-      ))}</div>
+        <div className="space-y-4">
+            {purchases.map(t => (
+                <Card key={t.id} className="overflow-hidden">
+                    <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                        <div className="flex items-center gap-4 flex-grow min-w-0">
+                            <Image src={t.product_details?.image[0] || ''} width={64} height={64} alt={t.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold truncate">{t.product_details?.name}</p>
+                                <p className="text-sm text-muted-foreground">From: {t.product_details.seller_name}</p>
+                                <p className="text-sm text-muted-foreground">On: {format(new Date(t.created_at), 'PPP')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 self-stretch sm:self-center flex-shrink-0 w-full sm:w-auto justify-between">
+                            <div className="flex flex-col items-start gap-1">
+                                <TransactionStatusBadge status={t.status} />
+                                <p className="font-bold text-lg">₦{t.product_price.toLocaleString()}</p>
+                            </div>
+                            <Button onClick={() => setSelectedPurchase(t)} size="sm" variant="outline">
+                                View Details
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
      </div>
      : <div className="text-center py-16 border-2 border-dashed rounded-lg"><History className="mx-auto h-12 w-12 text-muted-foreground" /><h3 className="mt-4 text-xl font-medium">No Purchase History</h3><p className="mt-2 text-muted-foreground">This section will show items you've purchased.</p><Button asChild className="mt-6" variant="default"><Link href="/">Start Shopping</Link></Button></div>
   );
   
     const renderReviews = () => {
         if (loadingData) {
-            return <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+            return <div className="flex justify-center items-center py-16"><Loader className="text-muted-foreground" /></div>;
         }
 
         if (reviews.length === 0) {
@@ -525,16 +483,37 @@ export default function ProfilePage() {
     };
   
   const renderVerification = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : renderProfileError("Verification")
+    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <VerificationForm /> : null
   );
   
   const renderPayment = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : renderProfileError("Payment Details")
+    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <PaymentDetailsForm /> : null
   );
 
-  const mobileContentMap: Record<MobileView, { title: string; content: JSX.Element; }> = {
+  const displayName = profile?.full_name || user.user_metadata?.full_name;
+  const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
+  const creationTime = user.created_at;
+
+  const activityTabs = [
+    { value: "listings", label: "My Listings", icon: Package, count: activeListings.length },
+    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
+    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length },
+    { value: "reviews", label: "Reviews", icon: Star, count: reviews.length },
+  ];
+
+  const settingsTabs = [
+    { value: "verification", label: "Verification", icon: ShieldCheck },
+    { value: "payment", label: "Payment Details", icon: Banknote },
+  ];
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  }
+
+  const contentMap: Record<ActiveView, { title: string; content: JSX.Element; }> = {
     menu: { title: "", content: <></>}, // Should not be rendered
-    listings: { title: "Active Listings", content: renderListings() },
+    listings: { title: "My Listings", content: renderListings() },
     sales: { title: "My Sales", content: renderSales() },
     purchases: { title: "My Purchases", content: renderPurchases() },
     reviews: { title: "Reviews Received", content: renderReviews() },
@@ -542,54 +521,124 @@ export default function ProfilePage() {
     payment: { title: "Payment Details", content: renderPayment() },
   };
 
-  const renderMobileContent = () => {
-    if (mobileView === 'menu') {
+  const renderContent = () => {
+    if (activeView === 'menu') {
         return (
-            <div className="space-y-4">
-                <div>
-                    <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">My Activity</p>
-                    <div className="divide-y border-y">
-                        {activityTabs.map(tab => (
-                            <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
-                                <div className="flex items-center gap-4">
-                                    <tab.icon className="h-6 w-6 text-primary" />
-                                    <span className="text-base font-medium">{tab.label}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="secondary">{tab.count}</Badge>
+            <>
+                <BackButton className="-ml-4 mb-4" />
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-6">
+                    <Avatar className="h-20 w-20 md:h-24 md:w-24 border">
+                        <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
+                        <AvatarFallback className="text-3xl">{getInitials(displayName)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow text-center md:text-left">
+                        <h1 className="text-2xl md:text-3xl font-bold">{displayName}</h1>
+                        <p className="text-muted-foreground">{profile?.email}</p>
+                        <div className="flex items-center justify-center md:justify-start gap-4 mt-2">
+                        {profile?.is_verified && (
+                            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1 text-sm">
+                            <ShieldCheck className="h-4 w-4" /> Verified
+                            </Badge>
+                        )}
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <CalendarDays className="h-4 w-4" />
+                            <span>Member since {creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}</span>
+                        </div>
+                        </div>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Button asChild variant="outline">
+                           <Link href="/contact"><HelpCircle className="mr-2 h-4 w-4" />Contact Support</Link>
+                        </Button>
+                         <Button variant="outline" onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" /> Logout
+                        </Button>
+                    </div>
+                </div>
+                <Separator className="my-6" />
+
+                {/* Desktop Menu */}
+                <div className="hidden md:grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 className="font-bold text-lg mb-4">My Activity</h3>
+                        <div className="space-y-2">
+                            {activityTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary">{tab.count}</Badge>
+                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg mb-4">Account Settings</h3>
+                        <div className="space-y-2">
+                           {settingsTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
                                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                </div>
-                            </button>
-                        ))}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <p className="text-sm font-semibold text-muted-foreground uppercase px-4 py-2">Account Settings</p>
-                    <div className="divide-y border-y">
-                        {settingsTabs.map(tab => (
-                            <button key={tab.value} onClick={() => setMobileView(tab.value as MobileView)} className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/50">
-                                <div className="flex items-center gap-4">
-                                    <tab.icon className="h-6 w-6 text-primary" />
-                                    <span className="text-base font-medium">{tab.label}</span>
-                                </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </button>
-                        ))}
+                {/* Mobile Menu */}
+                <div className="md:hidden space-y-4">
+                     <div>
+                        <h3 className="font-bold text-lg mb-4">My Activity</h3>
+                        <div className="space-y-2">
+                            {activityTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary">{tab.count}</Badge>
+                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                     <div>
+                        <h3 className="font-bold text-lg mb-4">Account Settings</h3>
+                        <div className="space-y-2">
+                           {settingsTabs.map(tab => (
+                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                    <div className="flex items-center gap-3">
+                                        <tab.icon className="h-5 w-5 text-primary" />
+                                        <span className="font-medium">{tab.label}</span>
+                                    </div>
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
+            </>
+        )
     }
-    
-    const { title, content } = mobileContentMap[mobileView];
+
+    const { title, content } = contentMap[activeView];
     return (
         <div>
-            <div className="flex items-center gap-2 mb-6">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMobileView('menu')}>
-                    <ArrowLeft className="h-5 w-5" />
+            <div className="flex items-center gap-2 mb-4">
+                <Button variant="ghost" size="sm" className="-ml-2" onClick={() => setView('menu')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Menu
                 </Button>
-                <h2 className="text-xl font-bold">{title}</h2>
             </div>
+             <h2 className="text-2xl font-bold mb-4">{title}</h2>
             {content}
         </div>
     );
@@ -620,93 +669,130 @@ export default function ProfilePage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleReleasePayment} disabled={isReleasingPayment === transactionToConfirm?.id}>
-              {isReleasingPayment === transactionToConfirm?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isReleasingPayment === transactionToConfirm?.id && <Loader variant="spinner" className="mr-2" />}
               Yes, Release Payment
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
-      <Header />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        
-        {/* Mobile View */}
-        <div className="md:hidden">
-            {renderMobileContent()}
-        </div>
 
-        {/* Desktop View */}
-        <div className="hidden md:block">
-            <Card>
-                <div className="p-4 sm:p-6 bg-primary/5 rounded-t-lg">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <Avatar className="h-24 w-24 border-4 border-background ring-2 ring-primary rounded-lg">
-                            <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
-                            <AvatarFallback className="rounded-md">{getInitials(displayName)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-grow">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <h1 className="text-2xl font-bold">{displayName}</h1>
-                                <NotificationToggle />
+       <Dialog open={!!selectedSale} onOpenChange={(isOpen) => !isOpen && setSelectedSale(null)}>
+        <DialogContent className="sm:max-w-md">
+            {selectedSale && (
+                <>
+                    <DialogHeader>
+                        <DialogTitle>Order Details</DialogTitle>
+                        <DialogDescription>
+                            Order placed on {format(new Date(selectedSale.created_at), 'PPP')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="flex items-center gap-4">
+                             <Image src={selectedSale.product_details?.image[0] || ''} width={64} height={64} alt={selectedSale.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div>
+                                <p className="font-bold">{selectedSale.product_details?.name}</p>
+                                <p className="font-bold text-lg">₦{selectedSale.product_price.toLocaleString()}</p>
                             </div>
-                            <p className="text-muted-foreground">{profile?.email}</p>
-                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
-                                {profile?.is_verified && (
-                                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300 gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>
-                                )}
+                        </div>
+                        <Separator />
+                        <div className="flex flex-col">
+                            <h4 className="font-semibold text-sm mb-2">Buyer & Delivery Information</h4>
+                            <div className="text-sm text-muted-foreground space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4 text-primary" />
+                                    <span>{selectedSale.product_details.buyer_name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4 text-primary" />
+                                    <span>{selectedSale.product_details.customer_phone}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <Home className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                                    <p className="break-all">{selectedSale.product_details.delivery_address}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 p-4 sm:p-6 border-t gap-4">
-                    <ProfileFeatureCard
-                        icon={CalendarDays}
-                        label="Member Since"
-                        value={creationTime ? format(new Date(creationTime), 'MMMM yyyy') : 'N/A'}
-                    />
-                     <ProfileFeatureCard
-                        icon={Package}
-                        label="Active Listings"
-                        value={`${activeListings.length} items`}
-                    />
-                </div>
-            </Card>
+                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                        <Button onClick={() => selectedSale && startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                            {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                            Chat with Buyer
+                        </Button>
+                        {selectedSale.status === 'pending' && (
+                            <Button onClick={() => handleMarkAsDelivered(selectedSale.id)} disabled={isConfirmingDelivery === selectedSale.id} size="sm" className="w-full">
+                                {isConfirmingDelivery === selectedSale.id ? <Loader variant="spinner" className="mr-2" /> : <Check className="mr-2 h-4 w-4" />}
+                                Confirm Delivery
+                            </Button>
+                        )}
+                         {selectedSale.status === 'delivered' && (
+                             <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 w-full justify-center text-center">
+                                 Awaiting buyer's confirmation
+                            </Badge>
+                         )}
+                         {selectedSale.status === 'released' && (
+                             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 w-full justify-center text-center">
+                                 Payment has been released
+                            </Badge>
+                         )}
+                    </DialogFooter>
+                </>
+            )}
+        </DialogContent>
+      </Dialog>
 
-            <Tabs defaultValue="listings" className="w-full mt-6">
-                <div className="flex flex-col md:flex-row gap-8">
-                    <div className="w-full md:w-64 flex-shrink-0">
-                        <TabsList className="flex flex-col h-auto items-start justify-start p-2 gap-1 bg-card rounded-lg border">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">My Activity</p>
-                            {activityTabs.map(tab => (
-                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
-                                    <tab.icon className="h-5 w-5" />
-                                    <span>{tab.label}</span>
-                                    <Badge variant="secondary" className="ml-auto">{tab.count}</Badge>
-                                </TabsTrigger>
-                            ))}
-
-                            <Separator className="my-2" />
-
-                            <p className="text-xs font-semibold text-muted-foreground uppercase px-3 py-2">Account Settings</p>
-                            {settingsTabs.map(tab => (
-                                <TabsTrigger key={tab.value} value={tab.value} className="w-full justify-start text-base gap-3 px-3 py-2">
-                                    <tab.icon className="h-5 w-5" />
-                                    <span>{tab.label}</span>
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
+      <Dialog open={!!selectedPurchase} onOpenChange={(isOpen) => !isOpen && setSelectedPurchase(null)}>
+        <DialogContent className="sm:max-w-md">
+            {selectedPurchase && (
+                <>
+                    <DialogHeader>
+                        <DialogTitle>Purchase Details</DialogTitle>
+                        <DialogDescription>
+                            Order placed on {format(new Date(selectedPurchase.created_at), 'PPP')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                         <div className="flex items-center gap-4">
+                             <Image src={selectedPurchase.product_details?.image[0] || ''} width={64} height={64} alt={selectedPurchase.product_details?.name || ''} className="rounded-md object-cover bg-secondary flex-shrink-0" />
+                            <div>
+                                <p className="font-bold">{selectedPurchase.product_details?.name}</p>
+                                <p className="font-bold text-lg">₦{selectedPurchase.product_price.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <Separator />
+                        <div>
+                            <h4 className="font-semibold text-sm mb-2">Seller Information</h4>
+                            <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                <User className="h-4 w-4 text-primary" />
+                                <span>{selectedPurchase.product_details.seller_name}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <TabsContent value="listings" className="mt-0">{renderListings()}</TabsContent>
-                        <TabsContent value="sales" className="mt-0">{renderSales()}</TabsContent>
-                        <TabsContent value="purchases" className="mt-0">{renderPurchases()}</TabsContent>
-                        <TabsContent value="reviews" className="mt-0">{renderReviews()}</TabsContent>
-                        <TabsContent value="verification" className="mt-0">{renderVerification()}</TabsContent>
-                        <TabsContent value="payment" className="mt-0">{renderPayment()}</TabsContent>
-                    </div>
-                </div>
-            </Tabs>
-        </div>
+                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                        <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                            {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
+                            Chat with Seller
+                        </Button>
+                        {selectedPurchase.status === 'delivered' && (
+                            <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                                {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                                Confirm & Release Payment
+                            </Button>
+                        )}
+                        {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
+                            <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
+                                <MessageCircleWarning className="mr-2 h-4 w-4" />
+                                Raise a Dispute
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </>
+            )}
+        </DialogContent>
+      </Dialog>
+      
+      <Header />
+      <main className="flex-grow container mx-auto px-4 py-8">
+        {renderContent()}
       </main>
       <Footer />
     </div>

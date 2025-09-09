@@ -5,14 +5,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, Paperclip, X, ArrowLeft } from 'lucide-react';
+import { Send, Paperclip, X, ArrowLeft } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useNotifications } from '@/hooks/use-notifications';
 import Image from 'next/image';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useNotifications } from '@/hooks/use-notifications';
 
 type Message = {
     id: string;
@@ -48,18 +49,6 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const markMessagesAsRead = useCallback(async () => {
-        if (!user || !conversationId) return;
-        const { error } = await supabase.rpc('mark_messages_as_read', {
-            p_conversation_id: conversationId,
-            p_user_id: user.id
-        });
-        if (error) {
-            console.error("Error marking messages as read:", error);
-        } else {
-             decrementCount(0); // This tells the provider to refetch the count
-        }
-    }, [conversationId, user, supabase, decrementCount]);
     
     useEffect(() => {
         const fetchMessages = async () => {
@@ -75,7 +64,6 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 toast({ title: "Error", description: "Failed to load messages.", variant: "destructive" });
             } else {
                 setMessages(data);
-                markMessagesAsRead();
             }
             setLoading(false);
         };
@@ -83,7 +71,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
         if (conversationId) {
             fetchMessages();
         }
-    }, [conversationId, toast, markMessagesAsRead, supabase]);
+    }, [conversationId, toast, supabase]);
     
      useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -101,23 +89,31 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                   table: 'messages', 
                   filter: `conversation_id=eq.${conversationId}` 
                 },
-                (payload) => {
+                async (payload) => {
                     const newMessagePayload = payload.new as Message;
                     if (newMessagePayload.sender_id !== user?.id) {
                          setMessages(currentMessages => {
                             if (currentMessages.some(m => m.id === newMessagePayload.id)) return currentMessages;
                             return [...currentMessages, newMessagePayload]
                          });
-                         markMessagesAsRead();
+                         // Mark as read immediately since the user is viewing the chat
+                         await supabase.rpc('mark_conversation_as_read', { p_conversation_id: conversationId });
+                         decrementCount(1);
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status, err) => {
+                if (status === 'CHANNEL_ERROR') {
+                    console.error('Realtime Channel Error:', err);
+                } else if (status === 'TIMED_OUT') {
+                    console.warn('Realtime Channel Timed Out');
+                }
+            });
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId, user?.id, markMessagesAsRead, supabase]);
+    }, [conversationId, user?.id, supabase, decrementCount]);
     
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -177,14 +173,19 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                 image_url: imageUrl,
             }).select().single();
 
-            if (error) throw error;
-            
-            // The database trigger will now handle sending the notification.
+            if (error) {
+                throw error;
+            }
             
             setMessages(current => current.map(m => m.id === optimisticId ? (data as Message) : m));
 
         } catch (error: any) {
-            toast({ title: 'Error', description: 'Failed to send message.', variant: 'destructive' });
+            console.error("Message send error:", error.message || error);
+            toast({ 
+                title: 'Error Sending Message', 
+                description: error.message || 'An unexpected error occurred.', 
+                variant: 'destructive' 
+            });
             setMessages(current => current.filter(m => m.id !== optimisticId));
             setNewMessage(content); 
         } finally {
@@ -227,7 +228,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
             <div className="flex-grow p-4 overflow-y-auto">
                 {loading ? (
                     <div className="flex justify-center items-center h-full">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        <Loader className="text-muted-foreground" />
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -263,7 +264,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                                                 <Image src={message.image_url} alt="Sent image" layout="fill" className="rounded-md object-cover transition-transform group-hover:scale-105" />
                                                  {message.id.startsWith('temp-') && (
                                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                        <Loader2 className="h-6 w-6 animate-spin text-white" />
+                                                        <Loader variant="spinner" className="h-6 w-6 text-white" />
                                                     </div>
                                                 )}
                                             </button>
@@ -312,7 +313,7 @@ export function ChatInterface({ conversationId, recipient, onBack }: ChatInterfa
                         className="flex-grow"
                     />
                     <Button type="submit" size="icon" disabled={(!newMessage.trim() && !imageFile) || isSending}>
-                        {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        {isSending ? <Loader variant="spinner" className="h-4 w-4" /> : <Send className="h-4 w-4" />}
                     </Button>
                 </form>
             </div>

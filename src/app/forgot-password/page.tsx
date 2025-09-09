@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Image src="/public/logo.png" alt="TeeMart Logo" width={48} height={48} className="mx-auto mb-4" />
+            <Image src="/logo.png" alt="TeeMart Logo" width={48} height={48} className="mx-auto mb-4" />
           <CardTitle className="text-2xl">Forgot Password</CardTitle>
           <CardDescription>
             {isSubmitted 
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
                         )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSubmitting && <Loader className="mr-2" />}
                         Send Reset Link
                     </Button>
                     </form>

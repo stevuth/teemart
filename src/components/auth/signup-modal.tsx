@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { useAuth } from "@/hooks/use-auth";
 import Image from "next/image";
 
@@ -75,10 +76,10 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-            <Image src="/public/logo.png" alt="TeeMart Logo" width={64} height={64} />
+            <Image src="/logo.png" alt="TeeMart Logo" width={48} height={48} />
           </div>
           <DialogTitle>Join TeeMart</DialogTitle>
           <DialogDescription>
@@ -139,7 +140,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute inset-y-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                          className="absolute inset-y-0 right-0 h-full px-3 py-2 text-primary-foreground hover:text-primary-foreground/80"
                           onClick={() => setShowPassword(!showPassword)}
                        >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -150,14 +151,14 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full !mt-6" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Account"}
+            <Button type="submit" variant="secondary" className="w-full !mt-6" disabled={isSubmitting}>
+                {isSubmitting ? <Loader className="mr-2" /> : "Create Account"}
             </Button>
           </form>
         </Form>
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-sm text-primary-foreground/80">
           Already have an account?{" "}
-          <Button variant="link" onClick={onSwitchToLogin} className="p-0 h-auto">
+          <Button variant="link" onClick={onSwitchToLogin} className="p-0 h-auto text-primary-foreground hover:text-primary-foreground/80">
             Login
           </Button>
         </div>

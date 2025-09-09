@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader } from './ui/loader';
 import {
   Select,
   SelectContent,
@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
-import { resolveAccountNumberAction, getBankListAction } from '@/app/actions/paystack';
+import { resolveAccountNumberAction, getBankListAction } from '@/app/actions/banks';
 
 type Bank = {
   id: number;
@@ -216,7 +216,7 @@ export default function PaymentDetailsForm() {
                         />
                         {isVerifying && (
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                <Loader variant="spinner" className="h-4 w-4 text-muted-foreground" />
                             </div>
                         )}
                    </div>
@@ -225,7 +225,7 @@ export default function PaymentDetailsForm() {
               </div>
 
               <Button type="submit" className="w-full" disabled={isSaving || isVerifying || !accountName || loadingBanks || !hasChanges}>
-                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving && <Loader variant="spinner" className="mr-2" />}
                 {isSaving ? 'Saving...' : 'Save Details'}
               </Button>
             </form>

@@ -33,20 +33,20 @@ export default function CartPage() {
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <BackButton className="-ml-4" />
-        <div className="flex items-center gap-4 my-8">
+        <div className="flex items-center gap-4 my-6">
             <ShoppingCart className="h-8 w-8" />
             <h1 className="text-3xl font-bold tracking-tight">Your Shopping Cart</h1>
         </div>
         
         {cartItems.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
                 <div className="lg:col-span-2">
                     <div className="border-b">
                         {cartItems.map((item, index) => (
                             <div key={item.id}>
-                                <div className="py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                                    <div className="flex items-center gap-6 flex-1">
-                                        <Image src={Array.isArray(item.image) ? item.image[0] : item.image} alt={item.name} width={120} height={120} className="rounded-lg object-cover" data-ai-hint={item['data-ai-hint']} />
+                                <div className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4 flex-1">
+                                        <Image src={Array.isArray(item.image) ? item.image[0] : item.image} alt={item.name} width={100} height={100} className="rounded-lg object-cover" data-ai-hint={item['data-ai-hint']} />
                                         <div className="flex-grow">
                                             <p className="font-semibold text-lg">{item.name}</p>
                                             <p className="text-muted-foreground mt-1">₦{item.price.toLocaleString()}</p>
@@ -82,7 +82,7 @@ export default function CartPage() {
                 <div className="lg:col-span-1">
                     <div className="sticky top-24 p-6 rounded-lg bg-background border">
                         <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <div className="flex justify-between text-muted-foreground">
                                 <span>Subtotal</span>
                                 <span>₦{subtotal.toLocaleString()}</span>
@@ -91,12 +91,12 @@ export default function CartPage() {
                                 <span>Shipping</span>
                                 <span>{shipping > 0 ? `₦${shipping.toLocaleString()}` : 'Free'}</span>
                             </div>
-                            <Separator />
+                            <Separator className="!my-4" />
                             <div className="flex justify-between font-bold text-xl">
                                 <span>Total</span>
                                 <span>₦{total.toLocaleString()}</span>
                             </div>
-                            <Button asChild className="w-full" size="lg">
+                            <Button asChild className="w-full !mt-6" size="lg">
                                 <Link href="/checkout">Proceed to Checkout</Link>
                             </Button>
                         </div>

@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, X } from "lucide-react";
+import { Loader } from "@/components/ui/loader";
+import { X } from "lucide-react";
 import { categories, conditions, Product } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
@@ -425,7 +426,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
                 )}
 
                 <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditMode ? "Update Listing" : "Create Listing" }
+                {isSubmitting ? <Loader variant="spinner" className="mr-2" /> : isEditMode ? "Update Listing" : "Create Listing" }
                 </Button>
             </form>
             </Form>

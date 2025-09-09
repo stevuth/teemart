@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { useAuth } from "@/hooks/use-auth";
 import Link from 'next/link';
 import Image from "next/image";
@@ -100,10 +101,10 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-             <Image src="/public/logo.png" alt="TeeMart Logo" width={64} height={64} />
+             <Image src="/logo.png" alt="TeeMart Logo" width={48} height={48} />
           </div>
           <DialogTitle>Welcome Back</DialogTitle>
            <DialogDescription>
@@ -132,7 +133,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                 <FormItem>
                     <div className="flex items-center">
                         <FormLabel>Password</FormLabel>
-                         <Link href="/forgot-password" onClick={handleForgotPasswordClick} className="ml-auto inline-block text-sm underline">
+                         <Link href="/forgot-password" onClick={handleForgotPasswordClick} className="ml-auto inline-block text-sm underline text-primary-foreground/80 hover:text-primary-foreground">
                              Forgot password?
                         </Link>
                     </div>
@@ -143,7 +144,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute inset-y-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                          className="absolute inset-y-0 right-0 h-full px-3 py-2 text-primary-foreground hover:text-primary-foreground/80"
                           onClick={() => setShowPassword(!showPassword)}
                        >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -154,14 +155,14 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
+            <Button type="submit" variant="secondary" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? <Loader className="mr-2" /> : "Login"}
             </Button>
           </form>
         </Form>
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-sm text-primary-foreground/80">
           Don't have an account?{" "}
-          <Button variant="link" onClick={onSwitchToSignup} className="p-0 h-auto">
+          <Button variant="link" onClick={onSwitchToSignup} className="p-0 h-auto text-primary-foreground hover:text-primary-foreground/80">
             Sign up
           </Button>
         </div>

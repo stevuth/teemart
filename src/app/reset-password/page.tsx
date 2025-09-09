@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
+import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -79,7 +80,7 @@ function ResetPasswordComponent() {
     <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Image src="/public/logo.png" alt="TeeMart Logo" width={48} height={48} className="mx-auto mb-4" />
+            <Image src="/logo.png" alt="TeeMart Logo" width={48} height={48} className="mx-auto mb-4" />
           <CardTitle className="text-2xl">Reset Your Password</CardTitle>
           <CardDescription>
             Enter a new password for your account below.
@@ -125,7 +126,7 @@ function ResetPasswordComponent() {
                     )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSubmitting && <Loader className="mr-2" />}
                     Set New Password
                 </Button>
                 </form>
