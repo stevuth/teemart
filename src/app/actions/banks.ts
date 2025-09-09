@@ -48,7 +48,7 @@ export async function getBankListAction(): Promise<{ success: boolean; data?: Ba
                 },
                 params: {
                     country: 'nigeria',
-                    pay_with_bank: true,
+                    use_cursor: false, // Ensure we use page-based pagination
                     perPage: 100, // Fetch 100 per page
                     page: currentPage,
                 }
@@ -60,8 +60,11 @@ export async function getBankListAction(): Promise<{ success: boolean; data?: Ba
                 allBanks = [...allBanks, ...data];
             }
 
-            if (meta) {
-                totalPages = meta.pageCount || 1;
+            if (meta && meta.pageCount) {
+                totalPages = meta.pageCount;
+            } else {
+                // If pageCount is not available, we assume we got everything in one go.
+                totalPages = currentPage;
             }
 
             currentPage++;
