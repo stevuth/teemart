@@ -36,15 +36,13 @@ export async function getBankListAction(): Promise<{ success: boolean; data?: Ba
         return { success: false, error: 'Payment provider not configured.' };
     }
     try {
-        const response = await axios.get(`${PAYSTACK_API_URL}/bank`, {
+        // Construct the URL with query parameters manually for reliability
+        const requestUrl = `${PAYSTACK_API_URL}/bank?country=nigeria&pay_with_bank=true&perPage=100`;
+        
+        const response = await axios.get(requestUrl, {
             headers: {
                 Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
             },
-            params: {
-                country: 'nigeria',
-                pay_with_bank: true,
-                perPage: 100 // Fetch a good number of banks
-            }
         });
         return { success: true, data: response.data.data };
     } catch (error: any) {
