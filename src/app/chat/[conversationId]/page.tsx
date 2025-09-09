@@ -124,7 +124,13 @@ function ChatPageContent() {
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status, err) => {
+                if (status === 'CHANNEL_ERROR') {
+                    console.error('Realtime Channel Error:', err || 'An unknown channel error occurred');
+                } else if (status === 'TIMED_OUT') {
+                    console.warn('Realtime Channel Timed Out');
+                }
+            });
 
         return () => {
             supabase.removeChannel(channel);
