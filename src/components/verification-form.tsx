@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, Upload, CreditCard, UserCheck, PartyPopper, Camera } from 'lucide-react';
+import { CheckCircle, Upload, CreditCard, UserCheck, PartyPopper, Camera } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -166,7 +167,7 @@ export function VerificationForm() {
                         <h3 className="text-xl font-bold">One-Time Fee: ₦1,000</h3>
                         <p className="text-muted-foreground mb-6">Complete the payment to proceed with verification.</p>
                         <Button onClick={handlePayment} disabled={isPaying} size="lg">
-                            {isPaying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isPaying && <Loader variant="spinner" className="mr-2" />}
                             Pay Now
                         </Button>
                     </div>
@@ -220,7 +221,7 @@ export function VerificationForm() {
                         </div>
                         
                         <Button onClick={handleSubmitVerification} disabled={isSubmitting || !ninImageFile || !selfieDataUrl} className="w-full" size="lg">
-                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isSubmitting && <Loader variant="spinner" className="mr-2" />}
                             Submit for Verification
                         </Button>
                     </div>

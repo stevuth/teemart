@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { useAuth } from "@/hooks/use-auth";
 import Link from 'next/link';
 import Image from "next/image";
@@ -155,7 +156,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
               )}
             />
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
+              {isSubmitting ? <Loader variant="spinner" className="mr-2" /> : "Login"}
             </Button>
           </form>
         </Form>

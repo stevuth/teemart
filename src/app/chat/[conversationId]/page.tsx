@@ -6,7 +6,8 @@ import { useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send, Paperclip, X, ArrowLeft } from 'lucide-react';
+import { Send, Paperclip, X, ArrowLeft } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -264,7 +265,7 @@ function ChatPageContent() {
         <div className="flex-grow p-4 overflow-y-auto">
             {loading ? (
                 <div className="flex justify-center items-center h-full">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    <Loader className="text-muted-foreground" />
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -300,7 +301,7 @@ function ChatPageContent() {
                                             <Image src={message.image_url} alt="Sent image" layout="fill" className="rounded-md object-cover transition-transform group-hover:scale-105" />
                                                 {message.id.startsWith('temp-') && (
                                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                    <Loader2 className="h-6 w-6 animate-spin text-white" />
+                                                    <Loader variant="spinner" className="h-6 w-6 text-white" />
                                                 </div>
                                             )}
                                         </button>
@@ -351,7 +352,7 @@ function ChatPageContent() {
                         className="flex-grow"
                     />
                     <Button type="submit" size="icon" disabled={(!newMessage.trim() && !imageFile) || isSending}>
-                        {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        {isSending ? <Loader variant="spinner" className="h-4 w-4" /> : <Send className="h-4 w-4" />}
                     </Button>
                 </form>
             </div>
@@ -394,7 +395,7 @@ export default function ChatPage() {
                             <Skeleton className="h-6 w-32" />
                         </div>
                         <div className="flex justify-center items-center h-full">
-                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                            <Loader className="text-muted-foreground" />
                         </div>
                     </div>
                 }>

@@ -6,7 +6,8 @@ import { Footer } from '@/components/footer';
 import { CheckoutForm } from '@/components/checkout-form';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2 } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import Link from 'next/link';
 import { BackButton } from '@/components/back-button';
 import { useAuth } from '@/hooks/use-auth';
@@ -36,7 +37,7 @@ export default function CheckoutPage() {
     if (authLoading) {
       return (
         <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <Loader />
         </div>
       );
     }

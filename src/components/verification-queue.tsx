@@ -6,7 +6,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
@@ -27,7 +28,7 @@ function VerificationImage({ url }: { url: string | null }) {
 
     return (
         <a href={url} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative group">
-            {loading && <div className="absolute inset-0 flex items-center justify-center bg-secondary rounded-md"><Loader2 className="h-5 w-5 animate-spin" /></div>}
+            {loading && <div className="absolute inset-0 flex items-center justify-center bg-secondary rounded-md"><Loader /></div>}
             <Image
                 src={url}
                 alt="Verification Document"
@@ -100,7 +101,7 @@ export function VerificationQueue() {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+          <div className="flex justify-center p-8"><Loader /></div>
         ) : profiles.length === 0 ? (
           <p className="text-center text-muted-foreground p-8">No pending verification requests.</p>
         ) : (
@@ -134,7 +135,7 @@ export function VerificationQueue() {
                     onClick={() => handleVerification(profile.id, false)}
                     disabled={updatingId === profile.id}
                   >
-                    {updatingId === profile.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                    {updatingId === profile.id ? <Loader variant="spinner" className="mr-2" /> : <XCircle className="mr-2 h-4 w-4" />}
                     Reject
                   </Button>
                   <Button
@@ -143,7 +144,7 @@ export function VerificationQueue() {
                     onClick={() => handleVerification(profile.id, true)}
                     disabled={updatingId === profile.id}
                   >
-                    {updatingId === profile.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                    {updatingId === profile.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                     Approve
                   </Button>
                 </CardFooter>

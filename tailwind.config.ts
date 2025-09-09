@@ -114,7 +114,17 @@ export default {
         "scroll-left": {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
-        }
+        },
+        "bounce": {
+          "0%, 100%": {
+              transform: "translateY(-25%)",
+              animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)"
+          },
+          "50%": {
+              transform: "translateY(0)",
+              animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)"
+          }
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -123,6 +133,7 @@ export default {
         "fade-out": "fade-out 1s ease-in-out",
         "carousel-rotate": "carousel-rotate 25s linear infinite",
         "scroll-left": "scroll-left 40s linear infinite",
+        "bounce": "bounce 1s infinite",
       },
     },
   },

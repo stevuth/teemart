@@ -8,7 +8,8 @@ import * as z from 'zod';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { ShieldCheck, ArrowRight } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/use-cart';
@@ -192,7 +193,7 @@ export function CheckoutForm({ subtotal, shippingFee, cartItems, userProfile }: 
                              </div>
 
                             <Button type="submit" className="w-full" size="lg" disabled={calculations.subtotalNum <= 0 || isSubmitting || isProcessing}>
-                                {(isSubmitting || isProcessing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {(isSubmitting || isProcessing) && <Loader variant="spinner" className="mr-2" />}
                                 Pay {formatCurrency(calculations.totalPayable)}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>

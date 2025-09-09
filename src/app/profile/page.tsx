@@ -10,7 +10,8 @@ import { Footer } from '@/components/footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info, List, BarChart } from 'lucide-react';
+import { MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info, List, BarChart } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -54,12 +55,12 @@ import {
 import { StarRatingDisplay } from '@/components/star-rating-display';
 
 const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
-    loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    loading: () => <div className="flex justify-center p-8"><Loader /></div>,
     ssr: false,
 });
 
 const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form'), {
-    loading: () => <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>,
+    loading: () => <div className="flex justify-center p-8"><Loader /></div>,
     ssr: false,
 });
 
@@ -272,7 +273,7 @@ export default function ProfilePage() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
-            <div className="flex-grow flex justify-center items-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
+            <div className="flex-grow flex justify-center items-center"><Loader /></div>
             <Footer />
         </div>
     );
@@ -357,7 +358,7 @@ export default function ProfilePage() {
   }
 
   const renderSales = () => (
-    loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : sales.length > 0 ? 
+    loadingData ? <div className="flex justify-center p-8"><Loader /></div> : sales.length > 0 ? 
     <div className="space-y-6">
         <Alert>
             <Info className="h-4 w-4" />
@@ -396,7 +397,7 @@ export default function ProfilePage() {
   );
   
   const renderPurchases = () => (
-     loadingData ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : purchases.length > 0 ? 
+     loadingData ? <div className="flex justify-center p-8"><Loader /></div> : purchases.length > 0 ? 
      <div className="space-y-6">
         <Alert>
           <Info className="h-4 w-4" />
@@ -436,7 +437,7 @@ export default function ProfilePage() {
   
     const renderReviews = () => {
         if (loadingData) {
-            return <div className="flex justify-center items-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+            return <div className="flex justify-center items-center py-16"><Loader className="text-muted-foreground" /></div>;
         }
 
         if (reviews.length === 0) {
@@ -482,11 +483,11 @@ export default function ProfilePage() {
     };
   
   const renderVerification = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <VerificationForm /> : null
+    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <VerificationForm /> : null
   );
   
   const renderPayment = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div> : profile ? <PaymentDetailsForm /> : null
+    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <PaymentDetailsForm /> : null
   );
 
   const displayName = profile?.full_name || user.user_metadata?.full_name;
@@ -666,7 +667,7 @@ export default function ProfilePage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleReleasePayment} disabled={isReleasingPayment === transactionToConfirm?.id}>
-              {isReleasingPayment === transactionToConfirm?.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isReleasingPayment === transactionToConfirm?.id && <Loader variant="spinner" className="mr-2" />}
               Yes, Release Payment
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -712,12 +713,12 @@ export default function ProfilePage() {
                     </div>
                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
                         <Button onClick={() => selectedSale && startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
-                            {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                            {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4" />}
                             Chat with Buyer
                         </Button>
                         {selectedSale.status === 'pending' && (
                             <Button onClick={() => handleMarkAsDelivered(selectedSale.id)} disabled={isConfirmingDelivery === selectedSale.id} size="sm" className="w-full">
-                                {isConfirmingDelivery === selectedSale.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                {isConfirmingDelivery === selectedSale.id ? <Loader variant="spinner" className="mr-2" /> : <Check className="mr-2 h-4 w-4" />}
                                 Confirm Delivery
                             </Button>
                         )}
@@ -766,12 +767,12 @@ export default function ProfilePage() {
                     </div>
                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
                         <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
-                            {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
+                            {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                             Chat with Seller
                         </Button>
                         {selectedPurchase.status === 'delivered' && (
                             <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
-                                {isReleasingPayment === selectedPurchase.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                                {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
                                 Confirm & Release Payment
                             </Button>
                         )}
