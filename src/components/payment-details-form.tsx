@@ -213,7 +213,7 @@ export default function PaymentDetailsForm() {
                             readOnly
                             placeholder="Account name will appear here"
                             required
-                            className="bg-secondary/50"
+                            className="bg-secondary/50 placeholder:text-muted-foreground/80"
                         />
                         {isVerifying && (
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
