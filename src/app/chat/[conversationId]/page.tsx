@@ -84,7 +84,7 @@ function ChatPageContent() {
             setMessages(messagesData);
 
         } catch (error: any) {
-            console.error("Error fetching conversation details:", error);
+            console.error("Error fetching conversation details:", JSON.stringify(error, null, 2));
             toast({ title: "Error", description: "Failed to load chat.", variant: "destructive" });
         } finally {
             setLoading(false);
