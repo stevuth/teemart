@@ -230,41 +230,40 @@ export default function ProfilePage() {
   
   const startConversation = async (otherParticipantId: string) => {
     if (!user) {
-      toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
-      return;
+        toast({ title: "Please log in", description: "You need to be logged in to start a chat.", variant: "destructive" });
+        return;
     }
     if (!otherParticipantId) {
-      toast({ title: "Error", description: "Recipient ID is missing.", variant: "destructive" });
-      return;
+        toast({ title: "Error", description: "Recipient ID is missing.", variant: "destructive" });
+        return;
     }
 
     setIsChatting(true);
     try {
-      const { data: conversationId, error } = await supabase.rpc('get_or_create_conversation', {
-        p_participant_one_id: user.id,
-        p_participant_two_id: otherParticipantId,
-      });
+        const { data: conversationId, error } = await supabase.rpc('get_or_create_conversation', {
+            p_participant_one_id: user.id,
+            p_participant_two_id: otherParticipantId,
+        });
 
-      if (error) {
-        console.error("Error from get_or_create_conversation RPC:", JSON.stringify(error, null, 2));
-        throw new Error(error.message);
-      }
+        if (error) {
+            throw new Error(error.message);
+        }
 
-      if (conversationId) {
-        router.push(`/messages?conversationId=${conversationId}`);
-      } else {
-        throw new Error("Failed to get a conversation ID.");
-      }
+        if (conversationId) {
+            router.push(`/chat/${conversationId}`);
+        } else {
+            throw new Error("Failed to get a conversation ID.");
+        }
 
     } catch (error: any) {
-      console.error("Error starting conversation:", error);
-      toast({ 
-        title: "Error starting chat", 
-        description: "Could not start a conversation. Please try again or contact support.", 
-        variant: "destructive" 
-      });
+        console.error("Error starting conversation:", error);
+        toast({ 
+            title: "Error starting chat", 
+            description: "Could not start a conversation. Please try again or contact support.", 
+            variant: "destructive" 
+        });
     } finally {
-      setIsChatting(false);
+        setIsChatting(false);
     }
   };
 
