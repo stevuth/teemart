@@ -133,7 +133,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                 <FormItem>
                     <div className="flex items-center">
                         <FormLabel>Password</FormLabel>
-                         <Link href="/forgot-password" onClick={handleForgotPasswordClick} className="ml-auto inline-block text-sm underline">
+                         <Link href="/forgot-password" onClick={handleForgotPasswordClick} className="ml-auto inline-block text-sm underline text-primary-foreground/80 hover:text-primary-foreground">
                              Forgot password?
                         </Link>
                     </div>
@@ -144,7 +144,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute inset-y-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                          className="absolute inset-y-0 right-0 h-full px-3 py-2 text-foreground hover:text-foreground/80"
                           onClick={() => setShowPassword(!showPassword)}
                        >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -155,14 +155,14 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" variant="secondary" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? <Loader className="mr-2" /> : "Login"}
             </Button>
           </form>
         </Form>
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-sm text-primary-foreground/80">
           Don't have an account?{" "}
-          <Button variant="link" onClick={onSwitchToSignup} className="p-0 h-auto">
+          <Button variant="link" onClick={onSwitchToSignup} className="p-0 h-auto text-primary-foreground hover:text-primary-foreground/80">
             Sign up
           </Button>
         </div>
