@@ -84,7 +84,8 @@ function ChatPageContent() {
             setMessages(messagesData);
 
         } catch (error: any) {
-            console.error("Error fetching conversation details:", JSON.stringify(error, null, 2));
+            const errorMessage = typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error);
+            console.error("Error fetching conversation details:", errorMessage);
             toast({ title: "Error", description: `Failed to load chat: ${error.message || 'Unknown database error.'}`, variant: "destructive" });
         } finally {
             setLoading(false);
@@ -126,7 +127,8 @@ function ChatPageContent() {
             )
             .subscribe((status, err) => {
                 if (status === 'CHANNEL_ERROR') {
-                    console.error('Realtime Channel Error:', err || 'An unknown channel error occurred');
+                    const errorMessage = err ? JSON.stringify(err) : 'An unknown channel error occurred';
+                    console.error('Realtime Channel Error:', errorMessage);
                 } else if (status === 'TIMED_OUT') {
                     console.warn('Realtime Channel Timed Out');
                 }
