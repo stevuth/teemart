@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
@@ -14,6 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { useScrollToTop } from '@/hooks/use-scroll-to-top';
 import { useNotifications } from '@/hooks/use-notifications';
+import Link from 'next/link';
 
 type Conversation = {
     id: string;
@@ -31,14 +31,11 @@ type Conversation = {
 function MessagingPage() {
     useScrollToTop();
     const { user, loading: authLoading, supabase } = useAuth();
-    const searchParams = useSearchParams();
     const router = useRouter();
-    const pathname = usePathname();
-    const { fetchUnreadCount, notificationCount, decrementCount } = useNotifications();
+    const { decrementCount } = useNotifications();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
-    const selectedConversationId = searchParams.get('conversationId');
 
     const fetchConversations = useCallback(async () => {
         if (!user) return;
@@ -60,25 +57,16 @@ function MessagingPage() {
         }
     }, [user, authLoading, fetchConversations]);
 
-    const handleSelectConversation = async (conversationId: string) => {
-        const conversation = conversations.find(c => c.id === conversationId);
-        if (conversation && conversation.unread_count > 0) {
-            const { error } = await supabase.rpc('mark_conversation_as_read', { p_conversation_id: conversationId });
+    const handleSelectConversation = async (conversation: Conversation) => {
+        if (conversation.unread_count > 0) {
+            const { error } = await supabase.rpc('mark_conversation_as_read', { p_conversation_id: conversation.id });
             if (!error) {
                 decrementCount(conversation.unread_count);
                 // Refresh local state to hide unread indicator
-                setConversations(convos => convos.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+                setConversations(convos => convos.map(c => c.id === conversation.id ? { ...c, unread_count: 0 } : c));
             }
         }
-        const newParams = new URLSearchParams(searchParams.toString());
-        newParams.set('conversationId', conversationId);
-        router.push(`${pathname}?${newParams.toString()}`);
-    }
-
-    const handleBackToList = () => {
-        const newParams = new URLSearchParams(searchParams.toString());
-        newParams.delete('conversationId');
-        router.push(`${pathname}?${newParams.toString()}`);
+        router.push(`/chat/${conversation.id}`);
     }
 
     const getInitials = (name?: string | null) => {
@@ -105,21 +93,7 @@ function MessagingPage() {
             </div>
          );
     }
-    
-    const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
-    // If a conversation is selected, only render the chat interface.
-    if (selectedConversationId && selectedConversation) {
-        return (
-            <ChatInterface
-                conversationId={selectedConversation.id}
-                recipient={selectedConversation.other_participant}
-                onBack={handleBackToList}
-            />
-        );
-    }
-
-    // Otherwise, render the conversation list in a full-page layout.
     return (
         <div className="flex flex-col min-h-screen bg-background">
             <Header />
@@ -144,7 +118,7 @@ function MessagingPage() {
                         conversations.map(convo => (
                             <div
                                 key={convo.id}
-                                onClick={() => handleSelectConversation(convo.id)}
+                                onClick={() => handleSelectConversation(convo)}
                                 className="flex items-center gap-3 p-4 cursor-pointer hover:bg-accent border-b"
                             >
                                 <Avatar className="h-12 w-12">

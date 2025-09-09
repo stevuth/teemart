@@ -59,7 +59,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
           filter: `recipient_id=eq.${user.id}` 
         },
         (payload) => {
-          fetchUnreadCount();
+          // Increment count instead of re-fetching for better performance
+          setNotificationCount(prev => prev + 1);
         }
       )
       .subscribe((status, err) => {
