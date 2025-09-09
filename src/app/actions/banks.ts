@@ -42,8 +42,8 @@ export async function getBankListAction(): Promise<{ success: boolean; data?: Ba
             },
             params: {
                 country: 'nigeria',
-                'pay_with_bank': true,
-                'perPage': 100 // Fetch a good number of banks
+                pay_with_bank: true,
+                perPage: 100 // Fetch a good number of banks
             }
         });
         return { success: true, data: response.data.data };
