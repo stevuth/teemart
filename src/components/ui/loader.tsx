@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 
 const BouncingDots = ({ className }: { className?: string }) => (
   <div className={cn("flex items-center justify-center gap-1.5", className)}>
-    <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></div>
-    <div className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></div>
-    <div className="h-2 w-2 rounded-full bg-primary animate-bounce"></div>
+    <div className="h-2 w-2 rounded-full bg-primary-foreground animate-bounce [animation-delay:-0.3s]"></div>
+    <div className="h-2 w-2 rounded-full bg-primary-foreground animate-bounce [animation-delay:-0.15s]"></div>
+    <div className="h-2 w-2 rounded-full bg-primary-foreground animate-bounce"></div>
   </div>
 );
 
