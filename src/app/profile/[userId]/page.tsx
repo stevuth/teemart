@@ -254,12 +254,6 @@ export default function SellerProfilePage() {
                     </div>
                     <div className="flex-shrink-0">
                          <div className="flex items-center gap-4">
-                            {currentUser && currentUser.id !== seller.id && (
-                                 <Button onClick={() => startConversation(seller.id)} disabled={isChatting} size="lg">
-                                    {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
-                                    Chat with Seller
-                                </Button>
-                            )}
                             {averageRating ? (
                                 <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
                                     <Star className="h-5 w-5 text-primary" />
@@ -331,5 +325,3 @@ export default function SellerProfilePage() {
         </div>
     );
 }
-
-    
