@@ -110,7 +110,7 @@ export default function LoginPage() {
               </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading || !supabase}>
-              {loading && <Loader variant="spinner" className="mr-2 h-4 w-4" />}
+              {loading && <Loader className="mr-2 h-4 w-4" />}
               Login
             </Button>
           </form>

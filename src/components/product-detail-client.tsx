@@ -22,7 +22,7 @@ import { recommendProducts, RecommendProductsInput, RecommendProductsOutput } fr
 import { Product } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 
 type ProductDetailClientProps = {
   product: ProductWithSeller;
@@ -121,7 +121,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
             if (error) throw error;
             
-            router.push(`/messages?conversationId=${data}`);
+            router.push(`/chat/${data}`);
 
         } catch (error: any) {
             console.error("Detailed error object when starting conversation:", error);
@@ -218,7 +218,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                                         </Link>
                                     </Button>
                                     <Button onClick={() => startConversation(product.seller.id)} disabled={isChatting} className="w-full">
-                                        {isChatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MessageSquare className="mr-2 h-4 w-4" />}
+                                        {isChatting ? <Loader className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4" />}
                                         Chat Now
                                     </Button>
                                  </div>

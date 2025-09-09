@@ -156,7 +156,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
               )}
             />
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? <Loader variant="spinner" className="mr-2" /> : "Login"}
+              {isSubmitting ? <Loader className="mr-2" /> : "Login"}
             </Button>
           </form>
         </Form>

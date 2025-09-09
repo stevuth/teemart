@@ -152,7 +152,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
               )}
             />
             <Button type="submit" className="w-full !mt-6" disabled={isSubmitting}>
-                {isSubmitting ? <Loader variant="spinner" className="mr-2" /> : "Create Account"}
+                {isSubmitting ? <Loader className="mr-2" /> : "Create Account"}
             </Button>
           </form>
         </Form>

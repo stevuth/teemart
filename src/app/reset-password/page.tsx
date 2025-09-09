@@ -126,7 +126,7 @@ function ResetPasswordComponent() {
                     )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting && <Loader variant="spinner" className="mr-2" />}
+                    {isSubmitting && <Loader className="mr-2" />}
                     Set New Password
                 </Button>
                 </form>
