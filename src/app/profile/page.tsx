@@ -525,6 +525,7 @@ export default function ProfilePage() {
     if (activeView === 'menu') {
         return (
             <>
+                <BackButton className="-ml-4 mb-4" />
                 <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-6">
                     <Avatar className="h-20 w-20 md:h-24 md:w-24 border">
                         <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} className="object-cover" />
@@ -632,11 +633,12 @@ export default function ProfilePage() {
     return (
         <div>
             <div className="flex items-center gap-2 mb-4">
-                <Button variant="ghost" size="icon" className="h-9 w-9 -ml-2" onClick={() => setView('menu')}>
-                    <ArrowLeft className="h-5 w-5" />
+                <Button variant="ghost" size="sm" className="-ml-2" onClick={() => setView('menu')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Menu
                 </Button>
-                <h2 className="text-2xl font-bold">{title}</h2>
             </div>
+             <h2 className="text-2xl font-bold mb-4">{title}</h2>
             {content}
         </div>
     );
@@ -796,5 +798,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
