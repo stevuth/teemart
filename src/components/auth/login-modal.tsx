@@ -144,7 +144,7 @@ export function LoginModal({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute inset-y-0 right-0 h-full px-3 py-2 text-foreground hover:text-foreground/80"
+                          className="absolute inset-y-0 right-0 h-full px-3 py-2 text-primary-foreground hover:text-primary-foreground/80"
                           onClick={() => setShowPassword(!showPassword)}
                        >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
