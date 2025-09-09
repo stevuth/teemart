@@ -39,7 +39,7 @@ function ChatPageContent() {
 
     const { user, supabase } = useAuth();
     const { toast } = useToast();
-    const { decrementCount } = useNotifications();
+    const { fetchUnreadCount } = useNotifications();
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [recipient, setRecipient] = useState<Recipient | null>(null);
@@ -58,7 +58,13 @@ function ChatPageContent() {
         setLoading(true);
 
         try {
-            // New Robust Fetch Logic:
+            // Mark conversation as read on load
+            const { error: markAsReadError } = await supabase.rpc('mark_conversation_as_read', { p_conversation_id: conversationId });
+            if(markAsReadError) console.error("Error marking as read", markAsReadError.message);
+
+            // Refetch total unread count for the header badge
+            fetchUnreadCount();
+
             // 1. Fetch the conversation record itself to identify the other participant.
             const { data: convoData, error: convoError } = await supabase
                 .from('conversations')
@@ -100,7 +106,7 @@ function ChatPageContent() {
         } finally {
             setLoading(false);
         }
-    }, [conversationId, user, supabase, toast]);
+    }, [conversationId, user, supabase, toast, fetchUnreadCount]);
 
     useEffect(() => {
         fetchConversationDetails();
@@ -131,7 +137,7 @@ function ChatPageContent() {
                          });
                          // Mark as read immediately since the user is viewing the chat
                          await supabase.rpc('mark_conversation_as_read', { p_conversation_id: conversationId });
-                         decrementCount(1);
+                         // No need to decrement count here, as the total is refetched on load.
                     }
                 }
             )
@@ -147,7 +153,7 @@ function ChatPageContent() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [conversationId, user?.id, supabase, decrementCount]);
+    }, [conversationId, user?.id, supabase]);
     
     const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -399,5 +405,3 @@ export default function ChatPage() {
         </>
     );
 }
-
-    
