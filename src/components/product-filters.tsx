@@ -196,12 +196,12 @@ export function ProductFilters({ filters: initialFilters, onApply, onClear, onCl
           </div>
         </div>
       </ScrollArea>
-      <div className="p-6 pt-4 border-t flex flex-col sm:flex-row gap-2 justify-between mt-auto">
-            <Button variant="secondary" onClick={handleReset} className="w-full sm:w-auto mb-2 sm:mb-0">
+      <div className="p-6 pt-4 border-t grid grid-cols-2 gap-2 mt-auto">
+            <Button variant="secondary" onClick={handleReset}>
                 <RotateCcw className="mr-2 h-4 w-4"/>
-                Reset Filters
+                Reset
             </Button>
-            <Button onClick={() => onApply(currentFilters)} className="w-full sm:w-auto">
+            <Button onClick={() => onApply(currentFilters)}>
                 Apply Filters
             </Button>
       </div>
