@@ -58,22 +58,32 @@ function ChatPageContent() {
         setLoading(true);
 
         try {
-            // Fetch the other participant's details
-            const { data: participantsData, error: participantsError } = await supabase
-                .from('conversation_participants')
-                .select('user:profiles(id, full_name, avatar_url)')
-                .eq('conversation_id', conversationId)
-                .neq('user_id', user.id)
+            // New Robust Fetch Logic:
+            // 1. Fetch the conversation record itself to identify the other participant.
+            const { data: convoData, error: convoError } = await supabase
+                .from('conversations')
+                .select('participant_one_id, participant_two_id')
+                .eq('id', conversationId)
+                .single();
+
+            if (convoError) throw convoError;
+
+            const otherParticipantId = convoData.participant_one_id === user.id 
+                ? convoData.participant_two_id 
+                : convoData.participant_one_id;
+
+            // 2. Fetch the profile of the other participant.
+            const { data: recipientData, error: recipientError } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url')
+                .eq('id', otherParticipantId)
                 .single();
             
-            if (participantsError) throw participantsError;
-            if (participantsData?.user) {
-                setRecipient(participantsData.user as Recipient);
-            } else {
-                 throw new Error("Could not find the other chat participant.");
-            }
+            if (recipientError) throw recipientError;
+            setRecipient(recipientData as Recipient);
 
-            // Fetch messages
+
+            // 3. Fetch messages (this part was already working).
             const { data: messagesData, error: messagesError } = await supabase
                 .from('messages')
                 .select('*')
@@ -86,7 +96,7 @@ function ChatPageContent() {
         } catch (error: any) {
             const errorMessage = typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error);
             console.error("Error fetching conversation details:", errorMessage);
-            toast({ title: "Error", description: `Failed to load chat: ${error.message || 'Unknown database error.'}`, variant: "destructive" });
+            toast({ title: "Error", description: `Failed to load chat. The database returned an error.`, variant: "destructive" });
         } finally {
             setLoading(false);
         }
