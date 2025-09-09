@@ -94,9 +94,9 @@ function ChatPageContent() {
             setMessages(messagesData);
 
         } catch (error: any) {
-            const errorMessage = typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error);
+            const errorMessage = typeof error === 'object' && error !== null ? JSON.stringify(error, null, 2) : String(error);
             console.error("Error fetching conversation details:", errorMessage);
-            toast({ title: "Error", description: `Failed to load chat. The database returned an error.`, variant: "destructive" });
+            toast({ title: "Error Loading Chat", description: `Could not load chat details. Please check the console for the database error.`, variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -399,3 +399,5 @@ export default function ChatPage() {
         </>
     );
 }
+
+    
