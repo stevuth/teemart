@@ -1,26 +1,13 @@
 
 import { NextResponse } from "next/server";
-import { verifyAndProcessTransaction } from "@/app/actions/paystack";
+
+// This route is deprecated and no longer used.
+// The logic has been moved to client-side components calling server actions directly.
+// See /verify-payment/page.tsx and /verify-verification-payment/page.tsx
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const reference = searchParams.get("reference");
-  const redirectUrl = new URL('/verify-payment', req.url)
-
-  if (!reference) {
-    redirectUrl.searchParams.set('status', 'failed');
-    redirectUrl.searchParams.set('error', 'No payment reference provided.');
+    const redirectUrl = new URL('/', req.url);
+    redirectUrl.searchParams.set('error', 'deprecated_route');
+    redirectUrl.searchParams.set('error_description', 'This verification endpoint is no longer in use.');
     return NextResponse.redirect(redirectUrl);
-  }
-
-  const result = await verifyAndProcessTransaction(reference);
-
-  if (result.success) {
-      redirectUrl.searchParams.set('status', 'success');
-      return NextResponse.redirect(redirectUrl);
-  } else {
-      redirectUrl.searchParams.set('status', 'failed');
-      redirectUrl.searchParams.set('error', result.error || 'Verification failed.');
-      return NextResponse.redirect(redirectUrl);
-  }
 }
