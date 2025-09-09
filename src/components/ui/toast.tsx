@@ -30,7 +30,7 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-accent bg-accent text-accent-foreground",
+        default: "border-primary bg-primary text-primary-foreground [&>svg]:text-primary-foreground",
         destructive:
           "border-destructive bg-destructive text-destructive-foreground [&>svg]:text-destructive-foreground",
       },
@@ -54,7 +54,7 @@ const Toast = React.forwardRef<
     >
        {variant === 'destructive' ? 
         <AlertCircle className="h-6 w-6 shrink-0" /> : 
-        <CheckCircle className="h-6 w-6 shrink-0 text-accent-foreground" />
+        <CheckCircle className="h-6 w-6 shrink-0" />
        }
       {props.children}
     </ToastPrimitives.Root>
@@ -70,6 +70,7 @@ const ToastAction = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      "text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/10",
       className
     )}
     {...props}
@@ -84,8 +85,9 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-accent-foreground/50 opacity-0 transition-opacity hover:text-accent-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
-       "group-[.destructive]:text-destructive-foreground/50 group-[.destructive]:hover:text-destructive-foreground",
+      "absolute right-2 top-2 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
+      "text-primary-foreground/80 hover:text-primary-foreground",
+      "group-[.destructive]:text-destructive-foreground/80 group-[.destructive]:hover:text-destructive-foreground",
       className
     )}
     toast-close=""
