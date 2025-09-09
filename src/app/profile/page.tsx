@@ -706,7 +706,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div className="flex items-start gap-2">
                                     <Home className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                                    <p>{selectedSale.product_details.delivery_address}</p>
+                                    <p className="break-all">{selectedSale.product_details.delivery_address}</p>
                                 </div>
                             </div>
                         </div>
@@ -796,3 +796,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
