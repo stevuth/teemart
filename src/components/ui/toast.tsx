@@ -30,9 +30,9 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-primary bg-background text-foreground",
+        default: "border-accent bg-accent text-accent-foreground",
         destructive:
-          "border-destructive bg-background text-destructive [&>svg]:text-destructive",
+          "border-destructive bg-destructive text-destructive-foreground [&>svg]:text-destructive-foreground",
       },
     },
     defaultVariants: {
@@ -54,7 +54,7 @@ const Toast = React.forwardRef<
     >
        {variant === 'destructive' ? 
         <AlertCircle className="h-6 w-6 shrink-0" /> : 
-        <CheckCircle className="h-6 w-6 shrink-0 text-primary" />
+        <CheckCircle className="h-6 w-6 shrink-0 text-accent-foreground" />
        }
       {props.children}
     </ToastPrimitives.Root>
@@ -84,7 +84,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
+      "absolute right-2 top-2 rounded-md p-1 text-accent-foreground/50 opacity-0 transition-opacity hover:text-accent-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
        "group-[.destructive]:text-destructive-foreground/50 group-[.destructive]:hover:text-destructive-foreground",
       className
     )}
