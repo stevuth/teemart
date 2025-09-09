@@ -140,7 +140,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute inset-y-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                          className="absolute inset-y-0 right-0 h-full px-3 py-2 text-primary-foreground hover:text-primary-foreground/80"
                           onClick={() => setShowPassword(!showPassword)}
                        >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -151,14 +151,14 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full !mt-6" disabled={isSubmitting}>
+            <Button type="submit" variant="secondary" className="w-full !mt-6" disabled={isSubmitting}>
                 {isSubmitting ? <Loader className="mr-2" /> : "Create Account"}
             </Button>
           </form>
         </Form>
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-sm text-primary-foreground/80">
           Already have an account?{" "}
-          <Button variant="link" onClick={onSwitchToLogin} className="p-0 h-auto">
+          <Button variant="link" onClick={onSwitchToLogin} className="p-0 h-auto text-primary-foreground hover:text-primary-foreground/80">
             Login
           </Button>
         </div>
