@@ -2,7 +2,6 @@
 'use server';
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
-import { createSupabaseAdminClient } from "@/utils/supabase/admin";
 import axios from "axios";
 import { revalidatePath } from "next/cache";
 
@@ -60,6 +59,7 @@ export async function initializeTransactionAction(email: string, amount: number,
 /**
  * Verifies a standard order transaction with Paystack and records it.
  * This function is secure and intended to be called from a client-side context (e.g., a page component).
+ * It uses the standard Supabase client, NOT the admin client.
  * @param reference - The transaction reference from Paystack.
  * @returns An object with either a success status or an error message.
  */
@@ -80,6 +80,7 @@ export async function verifyOrderTransaction(reference: string) {
         }
 
         // Call the database function to securely handle the transaction processing.
+        // This RPC runs with the permissions of the database owner, not the user.
         const { error: rpcError } = await supabase.rpc('handle_successful_order_payment', {
             p_paystack_ref: reference,
             p_metadata: data.metadata,
@@ -102,6 +103,7 @@ export async function verifyOrderTransaction(reference: string) {
 /**
  * Verifies a verification fee transaction with Paystack and updates the user's profile.
  * This function is secure and intended to be called from a client-side context.
+ * It uses the standard Supabase client, NOT the admin client.
  * @param reference - The transaction reference from Paystack.
  * @returns An object with either a success status or an error message.
  */
@@ -122,6 +124,7 @@ export async function verifyVerificationFeeTransaction(reference: string) {
         }
 
         // Call the database function to securely handle the payment processing.
+        // This RPC runs with the permissions of the database owner, not the user.
         const { error: rpcError } = await supabase.rpc('handle_successful_verification_payment', {
             p_paystack_ref: reference,
             p_amount: data.amount / 100, // Convert from kobo
