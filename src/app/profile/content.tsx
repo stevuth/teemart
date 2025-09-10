@@ -55,17 +55,12 @@ import {
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
 
-const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
-    loading: () => <div className="flex justify-center p-8"><Loader /></div>,
-    ssr: false,
-});
-
 const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form'), {
     loading: () => <div className="flex justify-center p-8"><Loader /></div>,
     ssr: false,
 });
 
-type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
+type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'payment';
 
 export function ProfilePageContent() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
@@ -483,10 +478,6 @@ export function ProfilePageContent() {
         );
     };
   
-  const renderVerification = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <VerificationForm /> : null
-  );
-  
   const renderPayment = () => (
     authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <PaymentDetailsForm /> : null
   );
@@ -496,15 +487,15 @@ export function ProfilePageContent() {
   const creationTime = user.created_at;
 
   const activityTabs = [
-    { value: "listings", label: "My Listings", icon: Package, count: activeListings.length },
-    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
-    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length },
-    { value: "reviews", label: "Reviews", icon: Star, count: reviews.length },
+    { value: "listings", label: "My Listings", icon: Package, count: activeListings.length, action: () => setView('listings') },
+    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length, action: () => setView('sales') },
+    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length, action: () => setView('purchases') },
+    { value: "reviews", label: "Reviews", icon: Star, count: reviews.length, action: () => setView('reviews') },
   ];
 
   const settingsTabs = [
-    { value: "verification", label: "Verification", icon: ShieldCheck },
-    { value: "payment", label: "Payment Details", icon: Banknote },
+    { value: "verification", label: "Verification", icon: ShieldCheck, action: () => router.push('/profile/verify') },
+    { value: "payment", label: "Payment Details", icon: Banknote, action: () => setView('payment') },
   ];
 
   const handleLogout = async () => {
@@ -518,7 +509,6 @@ export function ProfilePageContent() {
     sales: { title: "My Sales", content: renderSales() },
     purchases: { title: "My Purchases", content: renderPurchases() },
     reviews: { title: "Reviews Received", content: renderReviews() },
-    verification: { title: "Identity Verification", content: renderVerification() },
     payment: { title: "Payment Details", content: renderPayment() },
   };
 
@@ -564,7 +554,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">My Activity</h3>
                         <div className="space-y-2">
                             {activityTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
@@ -581,7 +571,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">Account Settings</h3>
                         <div className="space-y-2">
                            {settingsTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
@@ -598,7 +588,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">My Activity</h3>
                         <div className="space-y-2">
                             {activityTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
@@ -615,7 +605,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">Account Settings</h3>
                         <div className="space-y-2">
                            {settingsTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
