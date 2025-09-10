@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
@@ -54,17 +55,12 @@ import {
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
 
-const VerificationForm = dynamic(() => import('@/components/verification-form').then(mod => mod.VerificationForm), {
-    loading: () => <div className="flex justify-center p-8"><Loader /></div>,
-    ssr: false,
-});
-
 const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form'), {
     loading: () => <div className="flex justify-center p-8"><Loader /></div>,
     ssr: false,
 });
 
-type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'verification' | 'payment';
+type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews';
 
 export function ProfilePageContent() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
@@ -482,28 +478,20 @@ export function ProfilePageContent() {
         );
     };
   
-  const renderVerification = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <VerificationForm /> : null
-  );
-  
-  const renderPayment = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <PaymentDetailsForm /> : null
-  );
-
   const displayName = profile?.full_name || user.user_metadata?.full_name;
   const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
   const creationTime = user.created_at;
 
   const activityTabs = [
-    { value: "listings", label: "My Listings", icon: Package, count: activeListings.length },
-    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length },
-    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length },
-    { value: "reviews", label: "Reviews", icon: Star, count: reviews.length },
+    { value: "listings", label: "My Listings", icon: Package, count: activeListings.length, action: () => setView('listings') },
+    { value: "sales", label: "My Sales", icon: ShoppingBag, count: sales.length, action: () => setView('sales') },
+    { value: "purchases", label: "My Purchases", icon: History, count: purchases.length, action: () => setView('purchases') },
+    { value: "reviews", label: "Reviews", icon: Star, count: reviews.length, action: () => setView('reviews') },
   ];
 
   const settingsTabs = [
-    { value: "verification", label: "Verification", icon: ShieldCheck },
-    { value: "payment", label: "Payment Details", icon: Banknote },
+    { value: "verification", label: "Verification", icon: ShieldCheck, action: () => router.push('/profile/verify') },
+    { value: "payment", label: "Payment Details", icon: Banknote, action: () => router.push('/profile/payment') },
   ];
 
   const handleLogout = async () => {
@@ -517,8 +505,6 @@ export function ProfilePageContent() {
     sales: { title: "My Sales", content: renderSales() },
     purchases: { title: "My Purchases", content: renderPurchases() },
     reviews: { title: "Reviews Received", content: renderReviews() },
-    verification: { title: "Identity Verification", content: renderVerification() },
-    payment: { title: "Payment Details", content: renderPayment() },
   };
 
   const renderContent = () => {
@@ -563,7 +549,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">My Activity</h3>
                         <div className="space-y-2">
                             {activityTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
@@ -580,7 +566,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">Account Settings</h3>
                         <div className="space-y-2">
                            {settingsTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
@@ -597,7 +583,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">My Activity</h3>
                         <div className="space-y-2">
                             {activityTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
@@ -614,7 +600,7 @@ export function ProfilePageContent() {
                         <h3 className="font-bold text-lg mb-4">Account Settings</h3>
                         <div className="space-y-2">
                            {settingsTabs.map(tab => (
-                                <button key={tab.value} onClick={() => setView(tab.value as ActiveView)} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
+                                <button key={tab.value} onClick={tab.action} className="w-full flex items-center justify-between p-3 text-left rounded-lg bg-secondary/40 hover:bg-secondary/60">
                                     <div className="flex items-center gap-3">
                                         <tab.icon className="h-5 w-5 text-primary" />
                                         <span className="font-medium">{tab.label}</span>
@@ -692,6 +678,9 @@ export function ProfilePageContent() {
                             <div>
                                 <p className="font-bold">{selectedSale.product_details?.name}</p>
                                 <p className="font-bold text-lg">₦{selectedSale.product_price.toLocaleString()}</p>
+                                <div className="mt-1">
+                                  <TransactionStatusBadge status={selectedSale.status} />
+                                </div>
                             </div>
                         </div>
                         <Separator />
@@ -714,12 +703,12 @@ export function ProfilePageContent() {
                         </div>
                     </div>
                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-                        <Button onClick={() => selectedSale && startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                        <Button onClick={() => selectedSale && startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="secondary" className="w-full">
                             {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4" />}
                             Chat with Buyer
                         </Button>
                         {selectedSale.status === 'pending' && (
-                            <Button onClick={() => handleMarkAsDelivered(selectedSale.id)} disabled={isConfirmingDelivery === selectedSale.id} size="sm" className="w-full">
+                            <Button onClick={() => handleMarkAsDelivered(selectedSale.id)} disabled={isConfirmingDelivery === selectedSale.id} size="sm" variant="secondary" className="w-full">
                                 {isConfirmingDelivery === selectedSale.id ? <Loader variant="spinner" className="mr-2" /> : <Check className="mr-2 h-4 w-4" />}
                                 Confirm Delivery
                             </Button>
@@ -767,19 +756,21 @@ export function ProfilePageContent() {
                             </div>
                         </div>
                     </div>
-                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-                        <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
-                            {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
-                            Chat with Seller
-                        </Button>
-                        {selectedPurchase.status === 'delivered' && (
-                            <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
-                                {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-                                Confirm & Release Payment
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-between sm:items-center">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
+                             <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary" className="flex-1">
+                                {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
+                                Chat
                             </Button>
-                        )}
-                        {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
-                            <Button variant="outline" className="w-full sm:w-auto" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
+                            {selectedPurchase.status === 'delivered' && (
+                                <Button className="flex-1" size="sm" variant="secondary" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                                    {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                                    Confirm
+                                </Button>
+                            )}
+                        </div>
+                         {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
+                            <Button variant="outline" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
                                 <MessageCircleWarning className="mr-2 h-4 w-4" />
                                 Raise a Dispute
                             </Button>

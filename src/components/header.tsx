@@ -52,7 +52,6 @@ export function Header() {
   }
 
   const displayName = user?.user_metadata?.full_name;
-  const userEmail = user?.email;
   const userAvatar = user?.user_metadata?.avatar_url;
 
   return (
@@ -98,37 +97,14 @@ export function Header() {
                )}
 
               {user ? (
-                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                 <Button asChild variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Link href="/profile">
                        <Avatar>
                         <AvatarImage src={userAvatar || ''} alt={displayName || 'User'} />
                         <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                       </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{displayName}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {userEmail}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile">
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span>My Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </Link>
+                </Button>
               ) : (
                 <Button onClick={openLoginModal} size="icon" variant="ghost" aria-label="Profile">
                     <User className="h-5 w-5" />
