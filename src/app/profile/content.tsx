@@ -693,6 +693,9 @@ export function ProfilePageContent() {
                             <div>
                                 <p className="font-bold">{selectedSale.product_details?.name}</p>
                                 <p className="font-bold text-lg">₦{selectedSale.product_price.toLocaleString()}</p>
+                                <div className="mt-1">
+                                  <TransactionStatusBadge status={selectedSale.status} />
+                                </div>
                             </div>
                         </div>
                         <Separator />
