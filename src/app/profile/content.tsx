@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
@@ -719,7 +720,7 @@ export function ProfilePageContent() {
                             Chat with Buyer
                         </Button>
                         {selectedSale.status === 'pending' && (
-                            <Button onClick={() => handleMarkAsDelivered(selectedSale.id)} disabled={isConfirmingDelivery === selectedSale.id} size="sm" className="w-full">
+                            <Button onClick={() => handleMarkAsDelivered(selectedSale.id)} disabled={isConfirmingDelivery === selectedSale.id} size="sm" variant="secondary" className="w-full">
                                 {isConfirmingDelivery === selectedSale.id ? <Loader variant="spinner" className="mr-2" /> : <Check className="mr-2 h-4 w-4" />}
                                 Confirm Delivery
                             </Button>
@@ -773,7 +774,7 @@ export function ProfilePageContent() {
                             Chat with Seller
                         </Button>
                         {selectedPurchase.status === 'delivered' && (
-                            <Button className="w-full sm:w-auto" size="sm" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                            <Button className="w-full sm:w-auto" size="sm" variant="secondary" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
                                 {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
                                 Confirm & Release Payment
                             </Button>
