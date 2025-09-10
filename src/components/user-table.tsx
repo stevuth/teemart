@@ -133,9 +133,9 @@ export function UserTable() {
                          <AlertDialogAction onClick={() => handleBanUser(user.id, null)}>Unban User</AlertDialogAction>
                     ) : (
                         <div className="flex flex-col sm:flex-row gap-2">
-                             <AlertDialogAction onClick={() => handleBanUser(user.id, 7)}>Ban for 7 Days</AlertDialogAction>
-                             <AlertDialogAction onClick={() => handleBanUser(user.id, 30)}>Ban for 30 Days</AlertDialogAction>
-                             <AlertDialogAction onClick={() => handleBanUser(user.id, 36500)}>Ban Permanently</AlertDialogAction>
+                             <AlertDialogAction onClick={() => handleBanUser(user.id, 7)}>7 Days</AlertDialogAction>
+                             <AlertDialogAction onClick={() => handleBanUser(user.id, 30)}>30 Days</AlertDialogAction>
+                             <AlertDialogAction onClick={() => handleBanUser(user.id, 36500)}>Permanently</AlertDialogAction>
                         </div>
                     )}
                 </AlertDialogFooter>
