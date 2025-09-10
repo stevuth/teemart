@@ -4,6 +4,7 @@
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 import axios from "axios";
 import { revalidatePath } from "next/cache";
+import type { Transaction, ProductSnapshot } from "@/lib/types";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
@@ -55,11 +56,9 @@ export async function initializeTransactionAction(email: string, amount: number,
     }
 }
 
-
 /**
  * Verifies a standard order transaction with Paystack and records it.
- * This function is secure and intended to be called from a client-side context (e.g., a page component).
- * It uses the standard Supabase client, NOT the admin client.
+ * This action uses the user's session and relies on RLS policies to insert data.
  * @param reference - The transaction reference from Paystack.
  * @returns An object with either a success status or an error message.
  */
@@ -68,6 +67,11 @@ export async function verifyOrderTransaction(reference: string) {
         return { success: false, error: 'Payment provider not configured.' };
     }
     const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: 'User is not authenticated.' };
+    }
 
     try {
         const response = await axios.get(`${PAYSTACK_API_URL}/transaction/verify/${reference}`, {
@@ -78,17 +82,43 @@ export async function verifyOrderTransaction(reference: string) {
         if (data.status !== 'success') {
             return { success: false, error: `Payment not successful. Status: ${data.status}` };
         }
+        
+        const metadata = data.metadata;
+        const cartItem = metadata.cartItems?.[0]; // Assuming one seller per transaction for now
+        
+        if (!cartItem) {
+             return { success: false, error: 'Cart information is missing from the transaction metadata.' };
+        }
 
-        // Call the database function to securely handle the transaction processing.
-        // This RPC runs with the permissions of the database owner, not the user.
-        const { error: rpcError } = await supabase.rpc('handle_successful_order_payment', {
-            p_paystack_ref: reference,
-            p_metadata: data.metadata,
-        });
+        const productDetails: ProductSnapshot = {
+            name: cartItem.name,
+            image: cartItem.image,
+            buyer_name: metadata.customer_name,
+            seller_name: cartItem.seller.full_name,
+            customer_phone: metadata.customer_phone,
+            delivery_address: metadata.delivery_address,
+        };
+        
+        const transactionData: Omit<Transaction, 'id' | 'created_at'> = {
+            buyer_id: user.id,
+            seller_id: cartItem.user_id,
+            product_id: cartItem.id,
+            product_price: cartItem.price * cartItem.quantity,
+            shipping_fee: metadata.shipping_fee,
+            buyer_fee: (cartItem.price * cartItem.quantity) * 0.03,
+            seller_fee: (cartItem.price * cartItem.quantity) * 0.02,
+            paystack_ref: reference,
+            status: 'pending',
+            product_details: productDetails,
+        };
 
-        if (rpcError) {
-            console.error("RPC handle_successful_order_payment error:", rpcError);
-            throw new Error(rpcError.message);
+        const { error: insertError } = await supabase
+            .from('transactions')
+            .insert(transactionData);
+
+        if (insertError) {
+            console.error("Supabase insert error:", insertError);
+            throw new Error(`Failed to save transaction: ${insertError.message}`);
         }
 
         revalidatePath('/profile');
@@ -99,6 +129,7 @@ export async function verifyOrderTransaction(reference: string) {
         return { success: false, error: error.message || 'An unexpected server error occurred during verification.' };
     }
 }
+
 
 /**
  * Verifies a verification fee transaction with Paystack and updates the user's profile.
@@ -270,40 +301,28 @@ export async function releaseEscrowAction(transactionId: string) {
                 sellerDetails.bank_code
             );
             
-            // Save the new recipient code to the seller's profile
-            // This is an admin-like operation but we will attempt it with the standard client,
-            // assuming an appropriate RLS policy or if the user has special permissions.
-            // A more secure pattern would involve another RPC function.
-            // For now, we rely on RLS. A failure here is non-critical.
             const { error: updateProfileError } = await supabase
                 .from('profiles')
                 .update({ recipient_code: recipientCode })
                 .eq('id', transaction.seller_id);
             
             if (updateProfileError) {
-                // This is not a fatal error; the transfer can still proceed. Log it for monitoring.
                 console.error(`Failed to save new recipient code for seller ${transaction.seller_id}:`, updateProfileError);
             }
         }
         
-        // Calculate payout amount (product price - seller fee)
         const payoutAmount = transaction.product_price - transaction.seller_fee;
         const reason = `Payout for order: ${transaction.product_details?.name}`;
 
-        // Initiate the transfer via Paystack
         await initiateTransfer(recipientCode, payoutAmount, reason);
 
-        // Update transaction status to 'released'
         const { error: updateError } = await supabase
             .from('transactions')
             .update({ status: 'released' })
             .eq('id', transactionId);
 
         if (updateError) {
-            // This is a critical situation: a transfer was initiated but the DB status failed to update.
-            // This requires manual intervention.
             console.error(`CRITICAL: Transfer initiated for transaction ${transactionId}, but DB update failed:`, updateError);
-            // Return a specific error message for the user.
             return { success: false, error: "Transfer initiated but status update failed. Please contact support immediately with your order details." };
         }
     

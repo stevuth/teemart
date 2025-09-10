@@ -29,7 +29,6 @@ function VerificationContent() {
         }
 
         const performVerification = async () => {
-            // This is a server action, so it's safe to call from the client.
             const result = await verifyOrderTransaction(reference);
 
             if (result.success) {
@@ -42,8 +41,6 @@ function VerificationContent() {
         };
 
         performVerification();
-        // We disable the exhaustive-deps warning because we intend for this effect to run only once
-        // when the component mounts. `searchParams` and `clearCart` are stable.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
