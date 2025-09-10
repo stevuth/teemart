@@ -10,7 +10,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
-import { verifyAndProcessTransaction } from '@/app/actions/paystack';
+import { verifyOrderTransaction } from '@/app/actions/paystack';
 
 function VerificationContent() {
     const searchParams = useSearchParams();
@@ -29,15 +29,11 @@ function VerificationContent() {
         }
 
         const performVerification = async () => {
-            // This is a server action, so it's safe to call from the client.
-            const result = await verifyAndProcessTransaction(reference);
+            const result = await verifyOrderTransaction(reference);
 
             if (result.success) {
                 setStatus('success');
-                // Only clear the cart for successful 'order' type payments
-                if (result.type === 'order') {
-                    clearCart();
-                }
+                clearCart();
             } else {
                 setStatus('failed');
                 setError(result.error || 'An unexpected error occurred during verification.');
@@ -45,8 +41,6 @@ function VerificationContent() {
         };
 
         performVerification();
-        // We disable the exhaustive-deps warning because we intend for this effect to run only once
-        // when the component mounts. `searchParams` and `clearCart` are stable.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -72,7 +66,7 @@ function VerificationContent() {
                 <div className="flex w-full justify-center gap-4">
                      {status === 'success' && (
                         <Button asChild className="w-full">
-                            <Link href="/profile?tab=purchases">View My Orders</Link>
+                            <Link href="/profile?view=purchases">View My Orders</Link>
                         </Button>
                     )}
                      {status === 'failed' && (

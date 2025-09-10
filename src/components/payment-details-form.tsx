@@ -45,11 +45,12 @@ export default function PaymentDetailsForm() {
       const result = await getBankListAction();
       if (result.success && result.data) {
         // Filter out duplicates based on the 'code' property
-        const uniqueBanks = result.data.filter((bank, index, self) =>
-            index === self.findIndex((b) => (
-                b.code === bank.code
-            ))
-        );
+        const uniqueBanks = result.data.reduce((acc: Bank[], current) => {
+            if (!acc.some(bank => bank.code === current.code)) {
+                acc.push({ id: current.id, name: current.name, code: current.code });
+            }
+            return acc;
+        }, []);
         setBanks(uniqueBanks);
       } else {
         toast({
@@ -212,7 +213,7 @@ export default function PaymentDetailsForm() {
                             readOnly
                             placeholder="Account name will appear here"
                             required
-                            className="bg-secondary/50"
+                            className="bg-secondary/50 placeholder:text-muted-foreground/80"
                         />
                         {isVerifying && (
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3">

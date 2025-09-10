@@ -2,18 +2,17 @@
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { verifyAndProcessTransaction } from '@/app/actions/paystack';
+import { verifyVerificationFeeTransaction } from '@/app/actions/paystack';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 
 function VerificationContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { refetchProfile } = useAuth();
     
@@ -30,7 +29,7 @@ function VerificationContent() {
         }
 
         async function verify() {
-            const result = await verifyAndProcessTransaction(reference!);
+            const result = await verifyVerificationFeeTransaction(reference!);
             if (result.success) {
                 setStatus('success');
                 // Refetch profile to update verification status UI immediately
@@ -68,7 +67,7 @@ function VerificationContent() {
                 <div className="flex w-full justify-center gap-4">
                      {status === 'success' && (
                         <Button asChild className="w-full">
-                            <Link href="/profile?tab=verification">Continue Verification</Link>
+                            <Link href="/profile?view=verification">Continue Verification</Link>
                         </Button>
                     )}
                      {status === 'failed' && (

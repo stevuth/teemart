@@ -28,25 +28,51 @@ type Bank = {
 }
 
 /**
- * Fetches the list of supported banks from Paystack.
+ * Fetches the list of supported banks from Paystack, handling pagination to get all results.
  * @returns An object with either the list of banks or an error message.
  */
 export async function getBankListAction(): Promise<{ success: boolean; data?: Bank[]; error?: string; }> {
     if (!PAYSTACK_SECRET_KEY) {
         return { success: false, error: 'Payment provider not configured.' };
     }
+
+    let allBanks: Bank[] = [];
+    let currentPage = 1;
+    let totalPages = 1;
+
     try {
-        const response = await axios.get(`${PAYSTACK_API_URL}/bank`, {
-            headers: {
-                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-            },
-            params: {
-                country: 'nigeria',
-                'pay_with_bank': true,
-                'perPage': 100 // Fetch a good number of banks
+        do {
+            const response = await axios.get(`${PAYSTACK_API_URL}/bank`, {
+                headers: {
+                    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+                },
+                params: {
+                    country: 'nigeria',
+                    use_cursor: false, // Ensure we use page-based pagination
+                    perPage: 100, // Fetch 100 per page
+                    page: currentPage,
+                }
+            });
+            
+            const { data, meta } = response.data;
+            
+            if (data && Array.isArray(data)) {
+                allBanks = [...allBanks, ...data];
             }
-        });
-        return { success: true, data: response.data.data };
+
+            if (meta && meta.pageCount) {
+                totalPages = meta.pageCount;
+            } else {
+                // If pageCount is not available, we assume we got everything in one go.
+                totalPages = currentPage;
+            }
+
+            currentPage++;
+
+        } while (currentPage <= totalPages);
+        
+        return { success: true, data: allBanks };
+
     } catch (error: any) {
         console.error('Paystack Bank List Error:', error.response?.data || error.message);
         return { success: false, error: error.response?.data?.message || 'Failed to fetch bank list.' };
