@@ -718,7 +718,7 @@ export function ProfilePageContent() {
                         </div>
                     </div>
                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-                        <Button onClick={() => selectedSale && startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                        <Button onClick={() => selectedSale && startConversation(selectedSale.buyer_id)} disabled={isChatting} size="sm" variant="secondary" className="w-full">
                             {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4" />}
                             Chat with Buyer
                         </Button>
@@ -772,7 +772,7 @@ export function ProfilePageContent() {
                         </div>
                     </div>
                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-                        <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="outline" className="w-full">
+                        <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary" className="w-full">
                             {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                             Chat with Seller
                         </Button>
