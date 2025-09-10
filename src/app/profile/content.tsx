@@ -60,7 +60,7 @@ const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-fo
     ssr: false,
 });
 
-type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews' | 'payment';
+type ActiveView = 'menu' | 'listings' | 'sales' | 'purchases' | 'reviews';
 
 export function ProfilePageContent() {
   const { user, loading: authLoading, profile, supabase, refetchProfile } = useAuth();
@@ -478,10 +478,6 @@ export function ProfilePageContent() {
         );
     };
   
-  const renderPayment = () => (
-    authLoading ? <div className="flex justify-center p-8"><Loader /></div> : profile ? <PaymentDetailsForm /> : null
-  );
-
   const displayName = profile?.full_name || user.user_metadata?.full_name;
   const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url;
   const creationTime = user.created_at;
@@ -495,7 +491,7 @@ export function ProfilePageContent() {
 
   const settingsTabs = [
     { value: "verification", label: "Verification", icon: ShieldCheck, action: () => router.push('/profile/verify') },
-    { value: "payment", label: "Payment Details", icon: Banknote, action: () => setView('payment') },
+    { value: "payment", label: "Payment Details", icon: Banknote, action: () => router.push('/profile/payment') },
   ];
 
   const handleLogout = async () => {
@@ -509,7 +505,6 @@ export function ProfilePageContent() {
     sales: { title: "My Sales", content: renderSales() },
     purchases: { title: "My Purchases", content: renderPurchases() },
     reviews: { title: "Reviews Received", content: renderReviews() },
-    payment: { title: "Payment Details", content: renderPayment() },
   };
 
   const renderContent = () => {
