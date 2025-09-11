@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -105,7 +106,7 @@ export function RaiseDisputeDialog({ transaction, isOpen, onClose, onDisputeRais
                             Cancel
                         </Button>
                     </DialogClose>
-                     <Button type="submit" disabled={isSubmitting}>
+                     <Button type="submit" variant="secondary" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Submit Dispute
                     </Button>
