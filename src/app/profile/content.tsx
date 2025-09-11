@@ -758,25 +758,25 @@ export function ProfilePageContent() {
                             </div>
                         </div>
                     </div>
-                    <DialogFooter className="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                             <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary">
+                    <DialogFooter className="flex-col gap-2">
+                        {selectedPurchase.status === 'delivered' && (
+                            <Button className="w-full" size="sm" variant="default" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                                {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                                Confirm Delivery & Release Payment
+                            </Button>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary">
                                 {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                                 Chat
                             </Button>
-                            {selectedPurchase.status === 'delivered' && (
-                                <Button className="flex-1" size="sm" variant="default" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
-                                    {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-                                    Confirm
+                            {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
+                                <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
+                                    <MessageCircleWarning className="mr-2 h-4 w-4" />
+                                    Dispute
                                 </Button>
                             )}
                         </div>
-                         {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
-                            <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
-                                <MessageCircleWarning className="mr-2 h-4 w-4" />
-                                Raise a Dispute
-                            </Button>
-                        )}
                     </DialogFooter>
                 </>
             )}
