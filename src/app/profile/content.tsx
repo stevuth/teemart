@@ -495,7 +495,9 @@ export function ProfilePageContent() {
   ];
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     router.push('/');
   }
 
@@ -758,7 +760,7 @@ export function ProfilePageContent() {
                     </div>
                     <DialogFooter className="flex flex-col sm:flex-row gap-2 justify-between items-center">
                         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                             <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary" className="flex-1">
+                             <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary">
                                 {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                                 Chat
                             </Button>
