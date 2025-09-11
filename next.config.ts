@@ -51,6 +51,18 @@ const nextConfig: NextConfig = {
         hostname: 'i.postimg.cc',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'freeimage.host',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.freeimage.host',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

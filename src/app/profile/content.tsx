@@ -399,7 +399,7 @@ export function ProfilePageContent() {
           <Info className="h-4 w-4" />
           <AlertTitle className="font-bold">Important Information for Buyers</AlertTitle>
           <AlertDescription>
-            Only press "Confirm & Release Payment" after you have received your item and confirmed it is as described. Use the "Chat with Seller" button for updates on delivery. This ensures your payment remains secure with TeeMart escrow.
+            Only press "Release Payment" after you have received your item and confirmed it is as described. Use the "Chat with Seller" button for updates on delivery. This ensures your payment remains secure with TeeMart escrow.
           </AlertDescription>
         </Alert>
         <div className="space-y-4">
@@ -649,7 +649,7 @@ export function ProfilePageContent() {
       <AlertDialog open={isConfirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm & Release Payment</AlertDialogTitle>
+            <AlertDialogTitle>Release Payment</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you have received "{transactionToConfirm?.product_details?.name}" and it is as described? This action cannot be undone and will release the payment to the seller.
             </AlertDialogDescription>
@@ -760,19 +760,19 @@ export function ProfilePageContent() {
                     </div>
                     <DialogFooter className="flex-col gap-2">
                         {selectedPurchase.status === 'delivered' && (
-                            <Button className="w-full" size="sm" variant="default" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                            <Button className="w-full" size="sm" variant="secondary" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
                                 {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
-                                Confirm Delivery & Release Payment
+                                Release Payment
                             </Button>
                         )}
-                        <div className="flex gap-2">
-                            <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary" className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary" className="flex-grow">
                                 {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                                 Chat
                             </Button>
                             {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
-                                <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)} className="flex-1">
-                                    <MessageCircleWarning className="mr-1.5 h-4 w-4" />
+                                <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)} className="flex-grow">
+                                    <MessageCircleWarning className="mr-1.5 h-4 w-4 shrink-0" />
                                     Dispute
                                 </Button>
                             )}
