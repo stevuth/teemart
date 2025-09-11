@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 function VerificationContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const { refetchProfile } = useAuth();
     
     const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
@@ -34,6 +35,7 @@ function VerificationContent() {
                 setStatus('success');
                 // Refetch profile to update verification status UI immediately
                 await refetchProfile();
+                router.push('/profile/verify');
             } else {
                 setError(result.error || "An unknown verification error occurred.");
                 setStatus('failed');
@@ -59,7 +61,7 @@ function VerificationContent() {
                 </CardTitle>
                 <CardDescription>
                     {status === 'verifying' && 'Please wait while we confirm your transaction. Do not close this page.'}
-                    {status === 'success' && 'Your payment for identity verification has been confirmed. Please proceed to your profile to complete the next steps.'}
+                    {status === 'success' && 'Your payment for identity verification has been confirmed. Redirecting...'}
                     {status === 'failed' && (error || 'We could not verify your payment. Please try again or contact support.')}
                 </CardDescription>
             </CardHeader>
