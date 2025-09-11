@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
@@ -759,7 +760,7 @@ export function ProfilePageContent() {
                     </div>
                     <DialogFooter className="flex-col gap-2">
                         {selectedPurchase.status === 'delivered' && (
-                            <Button className="w-full" size="sm" variant="default" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                            <Button className="w-full" size="sm" variant="secondary" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
                                 {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
                                 Release Payment
                             </Button>
