@@ -15,7 +15,7 @@ type CategoryShowcaseProps = {
 
 const categoryDetails: Record<Category, { icon: React.ElementType, image: string, hint: string }> = {
   Cars: { icon: Car, image: 'https://i.postimg.cc/4yWZLbcd/Whisk-tqwztm5oty.jpg', hint: 'modern car' },
-  Electronics: { icon: Laptop, image: 'https://freeimage.host/i/KIj4GO7', hint: 'various electronics' },
+  Electronics: { icon: Laptop, image: 'https://picsum.photos/seed/electronics/600/400', hint: 'various electronics' },
   'Real Estate': { icon: HomeIcon, image: 'https://i.postimg.cc/4yVVpyHB/Whisk-ty4mtiwmtg.jpg', hint: 'modern house' },
   Furniture: { icon: Lamp, image: 'https://i.postimg.cc/Hs3jRbmb/Whisk-tu0nzgyotc.jpg', hint: 'stylish furniture' },
   Phones: { icon: Phone, image: 'https://i.postimg.cc/XNkvB9pt/Whisk-tewmjbimdu.jpg', hint: 'smartphone screen' },
