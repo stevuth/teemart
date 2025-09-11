@@ -79,7 +79,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-            <Image src="/logo.png" alt="TeeMart Logo" width={64} height={64} />
+            <Image src="/logo.png" alt="TeeMart Logo" width={48} height={48} />
           </div>
           <DialogTitle>Join TeeMart</DialogTitle>
           <DialogDescription>
