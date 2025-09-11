@@ -102,11 +102,11 @@ export function RaiseDisputeDialog({ transaction, isOpen, onClose, onDisputeRais
                 />
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button type="button" variant="outline" disabled={isSubmitting}>
+                        <Button type="button" variant="secondary" disabled={isSubmitting}>
                             Cancel
                         </Button>
                     </DialogClose>
-                     <Button type="submit" variant="secondary" disabled={isSubmitting}>
+                     <Button type="submit" variant="default" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Submit Dispute
                     </Button>
