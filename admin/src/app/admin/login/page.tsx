@@ -123,8 +123,8 @@ export default function LoginPage() {
       </div>
       <div className="hidden bg-muted lg:block relative">
         <Image
-          src="https://i.postimg.cc/SxPC1bP6/Gemini-Generated-Image-r38x30r38x30r38x.png"
-          alt="Modern building architecture"
+          src="https://i.postimg.cc/jjTR9xMT/Gemini-Generated-Image-r38x30r38x30r38x.png"
+          alt="Modern architecture"
           data-ai-hint="modern architecture"
           fill
           className="object-cover"
