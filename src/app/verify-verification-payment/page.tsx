@@ -67,7 +67,7 @@ function VerificationContent() {
                 <div className="flex w-full justify-center gap-4">
                      {status === 'success' && (
                         <Button asChild className="w-full">
-                            <Link href="/profile?view=verification">Continue Verification</Link>
+                            <Link href="/profile/verify">Continue Verification</Link>
                         </Button>
                     )}
                      {status === 'failed' && (
