@@ -765,13 +765,13 @@ export function ProfilePageContent() {
                                 Confirm Delivery & Release Payment
                             </Button>
                         )}
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary">
+                        <div className="flex gap-2">
+                            <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary" className="flex-1">
                                 {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                                 Chat
                             </Button>
                             {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
-                                <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)} className="px-2">
+                                <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)} className="flex-1">
                                     <MessageCircleWarning className="mr-1.5 h-4 w-4" />
                                     Dispute
                                 </Button>
