@@ -771,8 +771,8 @@ export function ProfilePageContent() {
                                 Chat
                             </Button>
                             {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
-                                <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
-                                    <MessageCircleWarning className="mr-2 h-4 w-4" />
+                                <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)} className="px-2">
+                                    <MessageCircleWarning className="mr-1.5 h-4 w-4" />
                                     Dispute
                                 </Button>
                             )}
