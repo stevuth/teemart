@@ -756,21 +756,21 @@ export function ProfilePageContent() {
                             </div>
                         </div>
                     </div>
-                    <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-between sm:items-center">
-                        <div className="flex flex-col sm:flex-row gap-2 w-full">
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2 justify-between items-center">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                              <Button onClick={() => selectedPurchase && startConversation(selectedPurchase.seller_id)} disabled={isChatting} size="sm" variant="secondary" className="flex-1">
                                 {isChatting ? <Loader variant="spinner" className="mr-2" /> : <MessageSquare className="mr-2 h-4 w-4"/>}
                                 Chat
                             </Button>
                             {selectedPurchase.status === 'delivered' && (
-                                <Button className="flex-1" size="sm" variant="secondary" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
+                                <Button className="flex-1" size="sm" variant="default" onClick={() => { setTransactionToConfirm(selectedPurchase); setConfirmDialogOpen(true); }} disabled={isReleasingPayment === selectedPurchase.id}>
                                     {isReleasingPayment === selectedPurchase.id ? <Loader variant="spinner" className="mr-2" /> : <CheckCheck className="mr-2 h-4 w-4" />}
                                     Confirm
                                 </Button>
                             )}
                         </div>
                          {(selectedPurchase.status === 'pending' || selectedPurchase.status === 'delivered') && (
-                            <Button variant="outline" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
+                            <Button variant="secondary" size="sm" onClick={() => setTransactionToDispute(selectedPurchase)}>
                                 <MessageCircleWarning className="mr-2 h-4 w-4" />
                                 Raise a Dispute
                             </Button>
