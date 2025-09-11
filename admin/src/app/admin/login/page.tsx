@@ -123,9 +123,9 @@ export default function LoginPage() {
       </div>
       <div className="hidden bg-muted lg:block relative">
         <Image
-          src="https://placehold.co/1200x1800.png"
-          alt="Abstract geometric pattern"
-          data-ai-hint="geometric pattern"
+          src="https://i.postimg.cc/SxPC1bP6/Gemini-Generated-Image-r38x30r38x30r38x.png"
+          alt="Modern building architecture"
+          data-ai-hint="modern architecture"
           fill
           className="object-cover"
         />
