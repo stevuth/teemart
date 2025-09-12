@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from '@/utils/supabase/server';
  * Uploads images to Supabase storage. This action is authenticated and will
  * only work if the user is logged in.
  * @param formData - The FormData object containing the files to upload.
- * @returns An object with either an array of public URLs or an error message.
+ * @returns An object with either an array of image paths or an error message.
  */
 export async function uploadImagesAction(formData: FormData) {
   const supabase = createSupabaseServerClient();
@@ -32,7 +32,7 @@ export async function uploadImagesAction(formData: FormData) {
 
   const uploadResults = await Promise.all(uploadPromises);
 
-  const urls: string[] = [];
+  const paths: string[] = [];
   const errors: string[] = [];
 
   for (const result of uploadResults) {
@@ -40,8 +40,8 @@ export async function uploadImagesAction(formData: FormData) {
       console.error('Upload Error:', result.error);
       errors.push(result.error.message);
     } else {
-      const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(result.data.path);
-      urls.push(publicUrl);
+      // Return the path instead of the public URL
+      paths.push(result.data.path);
     }
   }
 
@@ -51,5 +51,5 @@ export async function uploadImagesAction(formData: FormData) {
     return { error: `Failed to upload ${errors.length} image(s): ${errors.join(', ')}` };
   }
 
-  return { urls };
+  return { paths };
 }

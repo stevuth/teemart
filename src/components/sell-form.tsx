@@ -89,9 +89,16 @@ export function SellForm({ existingProduct }: SellFormProps) {
   
   useEffect(() => {
     if (isEditMode && existingProduct?.image) {
-        setImagePreviews(existingProduct.image);
+        // In edit mode, existingProduct.image contains paths. We need to convert them to full URLs for preview.
+        const fullUrls = existingProduct.image.map(path => {
+            // Check if it's already a full URL
+            if (path.startsWith('http')) return path;
+            // Construct the full URL from the path
+            return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+        });
+        setImagePreviews(fullUrls);
     }
-  }, [existingProduct, isEditMode]);
+  }, [existingProduct, isEditMode, supabase]);
 
   const { isSubmitting } = form.formState;
   
@@ -149,20 +156,26 @@ export function SellForm({ existingProduct }: SellFormProps) {
         return;
     }
 
-    // Combine existing image URLs with newly uploaded file URLs
-    const existingImageUrls = imagePreviews.filter(p => !p.startsWith('blob:'));
+    // This gets existing images that are not local blob previews, by getting their paths.
+    const existingImagePaths = imagePreviews
+      .filter(p => !p.startsWith('blob:'))
+      .map(url => {
+        const urlParts = url.split('/');
+        return urlParts.slice(urlParts.indexOf('product-images') + 1).join('/');
+      });
+
     if (!isEditMode && imageFiles.length === 0) {
         form.setError("images", { type: "manual", message: "At least one image is required." });
         return;
     }
 
-    if ((existingImageUrls.length + imageFiles.length) === 0) {
+    if ((existingImagePaths.length + imageFiles.length) === 0) {
       form.setError("images", { type: "manual", message: "At least one image is required." });
       return;
     }
 
     try {
-        let newImageUrls: string[] = [];
+        let newImagePaths: string[] = [];
         
         if (imageFiles.length > 0) {
             const formData = new FormData();
@@ -175,12 +188,12 @@ export function SellForm({ existingProduct }: SellFormProps) {
             if (result.error) {
               throw new Error(result.error);
             }
-            if(result.urls) {
-                newImageUrls = result.urls;
+            if(result.paths) {
+                newImagePaths = result.paths;
             }
         }
         
-        const finalImageUrls = [...existingImageUrls, ...newImageUrls];
+        const finalImagePaths = [...existingImagePaths, ...newImagePaths];
 
         const productData = {
             user_id: user.id,
@@ -191,7 +204,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             condition: data.condition,
             location: data.location,
             city: data.city,
-            image_url: finalImageUrls,
+            image_url: finalImagePaths, // Save paths, not URLs
             delivery_fee: data.deliveryFee,
         };
 
