@@ -3,7 +3,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
-import { Users, Target, Eye, ShieldCheck } from 'lucide-react';
+import { Users, Target, Eye, ShieldCheck, MapPin } from 'lucide-react';
 import { BackButton } from '@/components/back-button';
 
 export default function AboutPage() {
@@ -60,7 +60,7 @@ export default function AboutPage() {
             </section>
             
             {/* Mission and Vision */}
-            <section className="grid md:grid-cols-2 gap-8">
+            <section className="grid md:grid-cols-3 gap-8">
                  <Card>
                     <CardHeader className="flex flex-row items-center gap-4">
                        <div className="p-3 bg-primary/10 rounded-lg"><Target className="h-8 w-8 text-primary" /></div>
@@ -77,6 +77,15 @@ export default function AboutPage() {
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground">To be the leading force in Nigeria's circular economy, fostering sustainable commerce and empowering millions to unlock the value in their pre-owned goods.</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center gap-4">
+                            <div className="p-3 bg-primary/10 rounded-lg"><MapPin className="h-8 w-8 text-primary" /></div>
+                        <CardTitle className="text-2xl">Our Location</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">George Akume Road, Makurdi, Benue State.</p>
                     </CardContent>
                 </Card>
             </section>
