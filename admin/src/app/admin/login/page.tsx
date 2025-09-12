@@ -55,8 +55,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12">
+    <div className="w-full min-h-screen flex items-center justify-center bg-muted/40">
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="grid gap-2 text-center">
             <Link href="/" className="flex justify-center mb-4">
@@ -120,17 +119,6 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-      </div>
-      <div className="hidden bg-muted lg:block relative">
-        <Image
-          src="https://i.postimg.cc/qR8fbXLk/Gemini-Generated-Image-r38x30r38x30r38x.png"
-          alt="Abstract art"
-          data-ai-hint="abstract art"
-          fill
-          className="object-cover"
-        />
-         <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent"></div>
-      </div>
     </div>
   )
 }
