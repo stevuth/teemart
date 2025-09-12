@@ -31,11 +31,16 @@ export default function CartPage() {
   }
 
   // Function to convert paths to full URLs if they are not already
-  const getImageUrl = (imagePath: string | string[] | null | undefined): string => {
+  const getImageUrl = (imagePath: any): string => {
+    if (!imagePath) return 'https://placehold.co/100x100.png';
+    
+    // Handle both array and string cases
     const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
-    if (!path) return 'https://placehold.co/100x100.png'; // Fallback image
+    
+    if (typeof path !== 'string') return 'https://placehold.co/100x100.png';
 
-    if (!supabase) return path; // Return path if supabase is not available
+    if (!supabase) return path;
+
     if (path.startsWith('http')) {
         return path; // It's already a full URL
     }

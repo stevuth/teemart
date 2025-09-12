@@ -37,18 +37,23 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
   }
   
   // Function to convert paths to full URLs if they are not already
-  const getImageUrls = (imagePaths: string[] | null | undefined): string[] => {
-      if (!imagePaths || !Array.isArray(imagePaths)) {
-        return [];
-      }
-      if (!supabase) return imagePaths; // Return paths if supabase is not available
-      return imagePaths.map(path => {
-          if (path.startsWith('http')) {
-              return path; // It's already a full URL
+  const getImageUrls = (imagePaths: any): string[] => {
+      if (!Array.isArray(imagePaths)) return ['https://placehold.co/600x400.png'];
+      if (!supabase) return imagePaths.filter(p => typeof p === 'string');
+      
+      const urls = imagePaths
+        .map(path => {
+          if (typeof path === 'string') {
+            if (path.startsWith('http')) {
+              return path;
+            }
+            return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
           }
-          // It's a path, so construct the full URL
-          return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
-      });
+          return null; // Ignore non-string elements
+        })
+        .filter(Boolean) as string[];
+
+      return urls.length > 0 ? urls : ['https://placehold.co/600x400.png'];
   };
 
   const images = getImageUrls(product.image);
