@@ -24,7 +24,7 @@ export async function initializeTransactionAction(email: string, amount: number,
     const isVerification = (metadata as any)?.type === 'verification_payment';
 
     const callback_url = isVerification 
-        ? `${process.env.NEXT_PUBLIC_BASE_URL}/verify-verification-payment`
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/profile/verify`
         : `${process.env.NEXT_PUBLIC_BASE_URL}/verify-payment`;
 
 

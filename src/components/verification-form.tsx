@@ -1,30 +1,34 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, Upload, CreditCard, UserCheck, PartyPopper, Camera } from 'lucide-react';
+import { CheckCircle, Upload, CreditCard, UserCheck, PartyPopper, Camera, Loader2, XCircle } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { SelfieCapture } from './selfie-capture';
 import { useRouter } from 'next/navigation';
-import { initializeTransactionAction } from '@/app/actions/paystack';
+import { initializeTransactionAction, verifyVerificationFeeTransaction } from '@/app/actions/paystack';
 import { uploadVerificationDocumentsAction } from '@/app/actions/verification';
 
 type VerificationStatus = 'unverified' | 'paid' | 'submitted' | 'verified';
 
-export function VerificationForm() {
+function VerificationFlow() {
     const { user, profile, refetchProfile, supabase } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
-    
+    const searchParams = useSearchParams();
+
     const [status, setStatus] = useState<VerificationStatus>('unverified');
+    const [pageState, setPageState] = useState<'idle' | 'verifying_payment' | 'verification_failed'>('idle');
+    const [verificationError, setVerificationError] = useState<string | null>(null);
 
     useEffect(() => {
         if (profile?.is_verified) setStatus('verified');
@@ -32,6 +36,28 @@ export function VerificationForm() {
         else if (profile?.verification_payment_status === 'paid') setStatus('paid');
         else setStatus('unverified');
     }, [profile]);
+    
+    // Effect to handle the return from Paystack
+    useEffect(() => {
+        const reference = searchParams.get('trxref') || searchParams.get('reference');
+
+        if (reference && status === 'unverified') {
+            setPageState('verifying_payment');
+            
+            const verify = async () => {
+                const result = await verifyVerificationFeeTransaction(reference);
+                if (result.success) {
+                    await refetchProfile(); // This will trigger the status state update
+                    router.replace('/profile/verify'); // Clean URL
+                } else {
+                    setVerificationError(result.error || "An unknown verification error occurred.");
+                    setPageState('verification_failed');
+                }
+            };
+            verify();
+        }
+    }, [searchParams, status, refetchProfile, router]);
+
 
     const [ninImageFile, setNinImageFile] = useState<File | null>(null);
     const [ninImagePreview, setNinImagePreview] = useState<string | null>(null);
@@ -138,106 +164,145 @@ export function VerificationForm() {
         )
     }
 
+    const renderPageContent = () => {
+        switch (pageState) {
+            case 'verifying_payment':
+                return (
+                    <div className="flex flex-col items-center justify-center text-center p-8">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                        <h3 className="text-xl font-bold">Verifying Payment...</h3>
+                        <p className="text-muted-foreground">Please wait while we confirm your transaction. Do not close this page.</p>
+                    </div>
+                );
+            case 'verification_failed':
+                 return (
+                    <div className="flex flex-col items-center justify-center text-center p-8">
+                        <XCircle className="h-12 w-12 text-destructive mb-4" />
+                        <h3 className="text-xl font-bold">Payment Verification Failed</h3>
+                        <p className="text-muted-foreground mb-6">{verificationError || "An unknown error occurred."}</p>
+                        <Button onClick={() => router.replace('/profile/verify')}>Try Again</Button>
+                    </div>
+                );
+            case 'idle':
+            default:
+                if (status === 'verified') {
+                    return (
+                        <Alert variant="default" className="bg-green-100 border-green-300 text-green-800">
+                           <UserCheck className="h-4 w-4 text-green-800" />
+                           <AlertTitle>You are Verified!</AlertTitle>
+                           <AlertDescription>
+                              A verified badge will now appear on your profile, increasing trust with buyers.
+                           </AlertDescription>
+                       </Alert>
+                   );
+                }
+                if (status === 'unverified') {
+                    return (
+                        <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg">
+                            <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+                            <h3 className="text-xl font-bold">One-Time Fee: ₦1,000</h3>
+                            <p className="text-muted-foreground mb-6">Complete the payment to proceed with verification.</p>
+                            <Button onClick={handlePayment} disabled={isPaying} size="lg">
+                                {isPaying && <Loader variant="spinner" className="mr-2" />}
+                                Pay Now
+                            </Button>
+                        </div>
+                    );
+                }
+                if (status === 'paid') {
+                     return (
+                        <div className="space-y-6">
+                            <Alert variant="default" className="bg-blue-100 border-blue-300 text-blue-800">
+                               <PartyPopper className="h-4 w-4 text-blue-800" />
+                               <AlertTitle>Payment Successful!</AlertTitle>
+                               <AlertDescription>Please submit your documents for review.</AlertDescription>
+                            </Alert>
+                            
+                            <div className="space-y-2">
+                                <Label>1. Upload NIN Slip/Card Image</Label>
+                                 <div 
+                                    className="relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                                    onClick={() => !isSubmitting && fileInputRef.current?.click()}
+                                >
+                                    <input ref={fileInputRef} type="file" accept="image/jpeg, image/png" onChange={handleNinImageChange} className="hidden" disabled={isSubmitting} />
+                                    {ninImagePreview ? (
+                                        <div className="relative h-40 w-full">
+                                            <Image src={ninImagePreview} alt="NIN Preview" fill className="object-contain rounded-md" />
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                            <Upload className="h-8 w-8" />
+                                            <span>Click to upload NIN document</span>
+                                            <span className="text-xs">PNG or JPG (max 2MB)</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>2. Take a Selfie</Label>
+                                <div className="border rounded-lg p-4 flex items-center justify-between">
+                                    {selfieDataUrl ? (
+                                        <div className="flex items-center gap-4">
+                                            <Image src={selfieDataUrl} alt="Selfie Preview" width={64} height={64} className="rounded-md" />
+                                            <p className="text-green-600 font-medium flex items-center gap-2"><CheckCircle className="h-5 w-5" /> Selfie captured!</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-muted-foreground">A clear selfie is required.</p>
+                                    )}
+                                    <Button variant="outline" onClick={() => setShowSelfieCapture(true)} disabled={isSubmitting}>
+                                        <Camera className="mr-2 h-4 w-4" />
+                                        {selfieDataUrl ? 'Retake Selfie' : 'Open Camera'}
+                                    </Button>
+                                </div>
+                            </div>
+                            
+                            <Button onClick={handleSubmitVerification} disabled={isSubmitting || !ninImageFile || !selfieDataUrl} className="w-full" size="lg">
+                                {isSubmitting && <Loader variant="spinner" className="mr-2" />}
+                                Submit for Verification
+                            </Button>
+                        </div>
+                    );
+                }
+                if (status === 'submitted') {
+                    return (
+                        <Alert>
+                           <UserCheck className="h-4 w-4" />
+                           <AlertTitle>Documents Submitted for Review</AlertTitle>
+                           <AlertDescription>
+                              Your verification is pending. We will notify you once the review is complete (usually within 24 hours).
+                           </AlertDescription>
+                       </Alert>
+                   );
+                }
+        }
+    }
+
+
     return (
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
                 <CardTitle>Identity Verification</CardTitle>
                 <CardDescription>
-                    {status === 'unverified' && 'A one-time fee of ₦1,000 is required to verify your identity.'}
-                    {status === 'paid' && 'Submit your NIN and a selfie to complete verification.'}
-                    {status === 'submitted' && 'Your documents have been submitted and are pending review.'}
-                    {status === 'verified' && 'Your identity has been successfully verified!'}
+                    {status === 'verified' ? 'Your identity has been successfully verified!' : 
+                     status === 'submitted' ? 'Your documents have been submitted and are pending review.' : 
+                     status === 'paid' ? 'Submit your NIN and a selfie to complete verification.' : 
+                     'A one-time fee of ₦1,000 is required to verify your identity.'}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-
-                {status === 'verified' && (
-                     <Alert variant="default" className="bg-green-100 border-green-300 text-green-800">
-                        <UserCheck className="h-4 w-4 text-green-800" />
-                        <AlertTitle>You are Verified!</AlertTitle>
-                        <AlertDescription>
-                           A verified badge will now appear on your profile, increasing trust with buyers.
-                        </AlertDescription>
-                    </Alert>
-                )}
-
-                {status === 'unverified' && (
-                    <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg">
-                        <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-xl font-bold">One-Time Fee: ₦1,000</h3>
-                        <p className="text-muted-foreground mb-6">Complete the payment to proceed with verification.</p>
-                        <Button onClick={handlePayment} disabled={isPaying} size="lg">
-                            {isPaying && <Loader variant="spinner" className="mr-2" />}
-                            Pay Now
-                        </Button>
-                    </div>
-                )}
-                
-                {status === 'paid' && (
-                    <div className="space-y-6">
-                        <Alert variant="default" className="bg-blue-100 border-blue-300 text-blue-800">
-                           <PartyPopper className="h-4 w-4 text-blue-800" />
-                           <AlertTitle>Payment Successful!</AlertTitle>
-                           <AlertDescription>Please submit your documents for review.</AlertDescription>
-                        </Alert>
-                        
-                        <div className="space-y-2">
-                            <Label>1. Upload NIN Slip/Card Image</Label>
-                             <div 
-                                className="relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
-                                onClick={() => !isSubmitting && fileInputRef.current?.click()}
-                            >
-                                <input ref={fileInputRef} type="file" accept="image/jpeg, image/png" onChange={handleNinImageChange} className="hidden" disabled={isSubmitting} />
-                                {ninImagePreview ? (
-                                    <div className="relative h-40 w-full">
-                                        <Image src={ninImagePreview} alt="NIN Preview" fill className="object-contain rounded-md" />
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                        <Upload className="h-8 w-8" />
-                                        <span>Click to upload NIN document</span>
-                                        <span className="text-xs">PNG or JPG (max 2MB)</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>2. Take a Selfie</Label>
-                            <div className="border rounded-lg p-4 flex items-center justify-between">
-                                {selfieDataUrl ? (
-                                    <div className="flex items-center gap-4">
-                                        <Image src={selfieDataUrl} alt="Selfie Preview" width={64} height={64} className="rounded-md" />
-                                        <p className="text-green-600 font-medium flex items-center gap-2"><CheckCircle className="h-5 w-5" /> Selfie captured!</p>
-                                    </div>
-                                ) : (
-                                    <p className="text-muted-foreground">A clear selfie is required.</p>
-                                )}
-                                <Button variant="outline" onClick={() => setShowSelfieCapture(true)} disabled={isSubmitting}>
-                                    <Camera className="mr-2 h-4 w-4" />
-                                    {selfieDataUrl ? 'Retake Selfie' : 'Open Camera'}
-                                </Button>
-                            </div>
-                        </div>
-                        
-                        <Button onClick={handleSubmitVerification} disabled={isSubmitting || !ninImageFile || !selfieDataUrl} className="w-full" size="lg">
-                            {isSubmitting && <Loader variant="spinner" className="mr-2" />}
-                            Submit for Verification
-                        </Button>
-                    </div>
-                )}
-
-                {status === 'submitted' && (
-                     <Alert>
-                        <UserCheck className="h-4 w-4" />
-                        <AlertTitle>Documents Submitted for Review</AlertTitle>
-                        <AlertDescription>
-                           Your verification is pending. We will notify you once the review is complete (usually within 24 hours).
-                        </AlertDescription>
-                    </Alert>
-                )}
-
+                {renderPageContent()}
             </CardContent>
         </Card>
     );
 }
+
+
+export function VerificationForm() {
+    return (
+        <Suspense fallback={<div className="flex justify-center p-8"><Loader /></div>}>
+            <VerificationFlow />
+        </Suspense>
+    );
+}
+
