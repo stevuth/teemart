@@ -1,0 +1,31 @@
+
+# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+#
+# To allow most search engines to crawl your site:
+# User-agent: *
+# Allow: /
+#
+# To block search engines from crawling your entire site:
+# User-agent: *
+# Disallow: /
+#
+# To allow crawling of everything except for a specific directory:
+# User-agent: *
+# Disallow: /private/
+#
+
+User-agent: *
+Allow: /
+
+# Disallow admin, auth, and user-specific pages
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /profile/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /messages
+Disallow: /verify-payment
+Disallow: /verify-verification-payment
+Disallow: /api/
+
+Sitemap: https://www.teemart.ng/sitemap.xml
