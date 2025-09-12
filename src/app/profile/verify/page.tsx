@@ -59,9 +59,9 @@ export default function VerificationPage() {
         <div className="max-w-3xl mx-auto">
             <div className="mb-8">
                 <BackButton />
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-left sm:text-center">
                     <h1 className="text-3xl font-bold tracking-tight">Identity Verification</h1>
-                    <p className="text-muted-foreground mt-2">Become a trusted seller on TeeMart by verifying your identity.</p>
+                    <p className="text-muted-foreground mt-2 text-sm sm:text-base">Become a trusted seller on TeeMart by verifying your identity.</p>
                 </div>
             </div>
             <VerificationForm />
