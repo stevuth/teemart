@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { uploadImagesAction } from "@/app/actions/upload";
+import { createOrUpdateProductAction } from "@/app/actions/product";
 
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
@@ -48,13 +48,7 @@ const formSchema = z.object({
   condition: z.enum(conditions, { errorMap: () => ({ message: "Please select a condition." }) }),
   location: z.string().min(1, { message: "Please select a location." }),
   city: z.string().min(2, { message: "City must be at least 2 characters." }),
-  images: z.any()
-    .refine((files) => files?.length >= 1, "At least one image is required.")
-    .refine((files) => files?.length <= MAX_FILES, `You can upload a maximum of ${MAX_FILES} images.`)
-    .refine(
-        (files) => Array.from(files).every((file: any) => file.size <= MAX_FILE_SIZE),
-        `Each file size must be less than 3MB.`
-    ).optional(), // Optional for edit mode where images might exist
+  images: z.any().optional(), // We'll handle image validation manually
 });
 
 
@@ -89,13 +83,11 @@ export function SellForm({ existingProduct }: SellFormProps) {
   
   useEffect(() => {
     if (isEditMode && existingProduct?.image) {
-        // In edit mode, existingProduct.image contains paths. We need to convert them to full URLs for preview.
-        const fullUrls = existingProduct.image.map(path => {
-            // Check if it's already a full URL
+        const fullUrls = (existingProduct.image as string[]).map(path => {
+            if (!path) return null;
             if (path.startsWith('http')) return path;
-            // Construct the full URL from the path
             return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
-        });
+        }).filter(Boolean) as string[];
         setImagePreviews(fullUrls);
     }
   }, [existingProduct, isEditMode, supabase]);
@@ -134,20 +126,17 @@ export function SellForm({ existingProduct }: SellFormProps) {
   
   const removeImage = (index: number) => {
     const newPreviews = [...imagePreviews];
+    const newFiles = [...imageFiles];
     
     const removedPreview = newPreviews.splice(index, 1)[0];
-    // If the removed preview is a blob URL, it means it's a new file.
-    // We need to find and remove the corresponding file from the imageFiles array.
-    if (removedPreview.startsWith('blob:')) {
-      const fileIndex = imageFiles.findIndex(file => URL.createObjectURL(file) === removedPreview);
-      if(fileIndex > -1) {
-        const newFiles = [...imageFiles];
-        newFiles.splice(fileIndex, 1);
-        setImageFiles(newFiles);
-      }
-    }
-    
     setImagePreviews(newPreviews);
+    
+    // If the removed preview is a blob URL, it's a new file we need to remove from the files state.
+    const fileIndexToRemove = imageFiles.findIndex(file => URL.createObjectURL(file) === removedPreview);
+    if(fileIndexToRemove > -1) {
+        newFiles.splice(fileIndexToRemove, 1);
+        setImageFiles(newFiles);
+    }
   }
 
   const onSubmit = async (data: ProductFormValues) => {
@@ -156,46 +145,41 @@ export function SellForm({ existingProduct }: SellFormProps) {
         return;
     }
 
-    // This gets existing images that are not local blob previews, by getting their paths.
     const existingImagePaths = imagePreviews
-      .filter(p => !p.startsWith('blob:'))
-      .map(url => {
-        const urlParts = url.split('/');
-        return urlParts.slice(urlParts.indexOf('product-images') + 1).join('/');
-      });
+        .filter(p => !p.startsWith('blob:'))
+        .map(url => {
+            const urlParts = new URL(url).pathname.split('/');
+            return urlParts.slice(urlParts.indexOf('product-images') + 1).join('/');
+        });
 
-    if (!isEditMode && imageFiles.length === 0) {
+    if (existingImagePaths.length + imageFiles.length === 0) {
         form.setError("images", { type: "manual", message: "At least one image is required." });
         return;
-    }
-
-    if ((existingImagePaths.length + imageFiles.length) === 0) {
-      form.setError("images", { type: "manual", message: "At least one image is required." });
-      return;
     }
 
     try {
         let newImagePaths: string[] = [];
         
         if (imageFiles.length > 0) {
-            const formData = new FormData();
-            imageFiles.forEach(file => {
-                formData.append('images', file);
+            const uploadPromises = imageFiles.map(file => {
+                const fileName = `${user.id}/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+                return supabase.storage.from('product-images').upload(fileName, file);
             });
-            
-            const result = await uploadImagesAction(formData);
 
-            if (result.error) {
-              throw new Error(result.error);
-            }
-            if(result.paths) {
-                newImagePaths = result.paths;
+            const uploadResults = await Promise.all(uploadPromises);
+
+            for (const result of uploadResults) {
+                if (result.error) {
+                    throw new Error(`Failed to upload an image: ${result.error.message}`);
+                }
+                newImagePaths.push(result.data.path);
             }
         }
         
         const finalImagePaths = [...existingImagePaths, ...newImagePaths];
 
         const productData = {
+            id: existingProduct?.id, // Include ID for updates
             user_id: user.id,
             name: data.name,
             description: data.description,
@@ -204,20 +188,14 @@ export function SellForm({ existingProduct }: SellFormProps) {
             condition: data.condition,
             location: data.location,
             city: data.city,
-            image_url: finalImagePaths, // Save paths, not URLs
+            image_url: finalImagePaths,
             delivery_fee: data.deliveryFee,
         };
+        
+        const result = await createOrUpdateProductAction(productData);
 
-        if (isEditMode && existingProduct) {
-            const { error } = await supabase
-                .from('products')
-                .update(productData)
-                .eq('id', existingProduct.id);
-
-            if (error) throw error;
-        } else {
-            const { error } = await supabase.from('products').insert(productData);
-            if (error) throw error;
+        if (result.error) {
+            throw new Error(result.error);
         }
 
         toast({
@@ -225,7 +203,7 @@ export function SellForm({ existingProduct }: SellFormProps) {
             description: `Your product has been successfully ${isEditMode ? 'updated' : 'listed'}.`,
         });
 
-        router.replace('/profile');
+        router.push('/profile');
         router.refresh();
         
     } catch (error: any) {
