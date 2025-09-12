@@ -60,15 +60,19 @@ export async function generateMetadata(
   
   const previousImages = (await parent).openGraph?.images || []
   const displayImage = Array.isArray(product.image) && product.image.length > 0 ? product.image[0] : (product.image as string || '');
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.teemart.ng';
 
   return {
     title: `${product.name} | TeeMart Marketplace`,
     description: product.description.substring(0, 160),
+    alternates: {
+      canonical: `${siteUrl}/product/${product.id}`,
+    },
     openGraph: {
       title: `${product.name} on TeeMart`,
       description: product.description.substring(0, 160),
       images: [displayImage, ...previousImages],
-      url: `/product/${product.id}`,
+      url: `${siteUrl}/product/${product.id}`,
       type: 'article',
     },
     twitter: {
@@ -80,6 +84,71 @@ export async function generateMetadata(
   }
 }
 
+function ProductJsonLd({ product }: { product: ProductWithSeller }) {
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.teemart.ng';
+  const productUrl = `${siteUrl}/product/${product.id}`;
+  const displayImage = Array.isArray(product.image) && product.image.length > 0 ? product.image[0] : (product.image as string || '');
+
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: displayImage,
+    description: product.description,
+    sku: product.id,
+    offers: {
+      '@type': 'Offer',
+      url: productUrl,
+      priceCurrency: 'NGN',
+      price: product.price.toString(),
+      availability: 'https://schema.org/InStock',
+      itemCondition: `https://schema.org/${product.condition}Condition`,
+      seller: {
+        '@type': 'Organization',
+        name: product.seller.full_name,
+      }
+    },
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: siteUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: product.category,
+        item: `${siteUrl}?category=${encodeURIComponent(product.category)}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+    </>
+  );
+}
+
+
 export default async function ProductDetailPage({ params }: Props) {
     const product = await getProduct(params.id);
 
@@ -87,5 +156,11 @@ export default async function ProductDetailPage({ params }: Props) {
         notFound();
     }
 
-    return <ProductDetailClient product={product} />;
+    return (
+      <>
+        <ProductJsonLd product={product} />
+        <ProductDetailClient product={product} />
+      </>
+    );
 }
+

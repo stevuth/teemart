@@ -1,7 +1,6 @@
 
 import { MetadataRoute } from 'next';
 import { createSupabaseServerClient } from '@/utils/supabase/server';
-import type { Product } from '@/lib/types';
 
 // Revalidate this page every 24 hours
 export const revalidate = 86400; 
