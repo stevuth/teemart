@@ -84,6 +84,15 @@ export async function verifyOrderTransaction(reference: string) {
         }
         
         const metadata = data.metadata;
+        
+        // ** FIX STARTS HERE **
+        // Ignore verification payments in this function, as they are handled by verifyVerificationFeeTransaction
+        if (metadata?.type === 'verification_payment') {
+            console.log('[Action] verifyOrderTransaction received a verification payment, skipping order creation.');
+            return { success: true, message: 'Verification payment processed elsewhere.' };
+        }
+        // ** FIX ENDS HERE **
+        
         const cartItem = metadata.cartItems?.[0]; // Assuming one seller per transaction for now
         
         if (!cartItem) {
