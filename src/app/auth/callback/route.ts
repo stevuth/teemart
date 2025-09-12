@@ -6,9 +6,8 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // The 'next' param is used for server-side auth flows, which we aren't using for email verification.
-  // We'll set a default redirect path to the homepage.
-  const redirectTo = origin + '/'
+  // The default redirect path is the homepage.
+  const redirectTo = origin
 
   if (code) {
     const cookieStore = cookies()
@@ -30,20 +29,15 @@ export async function GET(request: Request) {
       }
     )
     
-    // Check for password recovery flow first
-    const type = searchParams.get('type');
-    if (type === 'recovery') {
-        // For password recovery, redirect to the reset password page.
-        // Supabase sends the session in the URL fragment (#), which Next.js middleware handles.
-        return NextResponse.redirect(`${origin}/reset-password`);
-    }
-
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    // After a successful code exchange, redirect to the homepage.
     if (!error) {
       return NextResponse.redirect(redirectTo)
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  // If there's an error or no code, redirect to an error page.
+  // This helps diagnose issues if the link is broken or expired.
+  return NextResponse.redirect(`${redirectTo}/auth/auth-code-error`)
 }
