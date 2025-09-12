@@ -1,0 +1,20 @@
+# robots.txt for TeeMart - Tell search engines how to crawl your site.
+
+# Allow all reputable search engines full access.
+User-agent: *
+Allow: /
+
+# Disallow crawling of specific private paths.
+Disallow: /admin/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /profile/
+Disallow: /sell
+Disallow: /product/edit/
+Disallow: /verify-payment
+Disallow: /verify-verification-payment
+Disallow: /auth/
+
+# Specify the location of the sitemap.
+# Replace the URL with your actual production domain.
+Sitemap: https://www.teemart.ng/sitemap.xml
