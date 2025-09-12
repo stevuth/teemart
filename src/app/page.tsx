@@ -54,7 +54,7 @@ export default function Home() {
       } else {
         const transformedData = (data as any[]).map(item => ({
           ...item,
-          image: item.image_url || [],
+          image: item.image_url || [], // Now holds paths
           postedDate: item.created_at,
           deliveryFee: item.delivery_fee,
           price: item.price || 0,

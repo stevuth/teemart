@@ -23,10 +23,19 @@ async function getProduct(id: string): Promise<ProductWithSeller | null> {
         return null;
     }
     
+    const getPublicUrl = (path: string) => {
+        // If it's already a full URL, return it
+        if (path.startsWith('http')) return path;
+        // Otherwise, construct the public URL
+        return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    };
+    
+    const imageUrls = (data.image_url || []).map(getPublicUrl);
+
     const sellerData = data.seller as any;
     return {
         ...data,
-        image: data.image_url || [],
+        image: imageUrls,
         postedDate: data.created_at,
         deliveryFee: data.delivery_fee,
         price: data.price || 0,
@@ -163,4 +172,3 @@ export default async function ProductDetailPage({ params }: Props) {
       </>
     );
 }
-

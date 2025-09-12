@@ -35,18 +35,16 @@ export function DeleteProductDialog({ product, isOpen, onClose, onDeleted }: Del
 
     try {
       // 1. Delete images from storage
-      const imageUrls = product.image;
-      if (imageUrls && imageUrls.length > 0) {
-        const filePaths = imageUrls.map(url => {
-            const parts = url.split('/');
-            // Assumes URL structure is .../product-images/user_id/filename.jpg
-            return parts.slice(parts.indexOf('product-images') + 1).join('/');
-        });
-        const { error: storageError } = await supabase.storage.from('product-images').remove(filePaths);
+      const imagePaths = product.image; // This now correctly gets the array of paths
+      if (imagePaths && imagePaths.length > 0) {
+        // The `image` field now correctly contains paths, not full URLs.
+        // We can use the array of paths directly.
+        const { error: storageError } = await supabase.storage.from('product-images').remove(imagePaths);
         if (storageError) {
-          console.error("Storage Error:", storageError);
-          // Non-fatal, we can still delete the DB record.
-          toast({ title: "Warning", description: "Could not delete product images, but removed listing.", variant: "destructive" });
+          // Log the error but don't stop the DB deletion.
+          // This prevents the user from being stuck if a file is already deleted or path is wrong.
+          console.error("Storage Deletion Error:", storageError);
+          toast({ title: "Image Deletion Warning", description: "Could not delete all product images from storage. They may have been removed already.", variant: "destructive" });
         }
       }
 

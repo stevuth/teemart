@@ -11,6 +11,7 @@ import { useCart } from '@/hooks/use-cart';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './ui/carousel';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 type ProductCardProps = {
   product: Product;
@@ -21,6 +22,7 @@ type ProductCardProps = {
 export function ProductCard({ product, actions, isClickable = true }: ProductCardProps) {
   const { addToCart } = useCart();
   const router = useRouter();
+  const { supabase } = useAuth(); // Get supabase instance
 
   const handleAddToCartClick = (e: React.MouseEvent) => {
     e.preventDefault(); 
@@ -34,7 +36,19 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
     router.push(`/profile/${product.user_id}`);
   }
   
-  const images = Array.isArray(product.image) ? product.image : [product.image];
+  // Function to convert paths to full URLs if they are not already
+  const getImageUrls = (imagePaths: string[]): string[] => {
+      if (!supabase) return imagePaths; // Return paths if supabase is not available
+      return imagePaths.map(path => {
+          if (path.startsWith('http')) {
+              return path; // It's already a full URL
+          }
+          // It's a path, so construct the full URL
+          return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+      });
+  };
+
+  const images = Array.isArray(product.image) ? getImageUrls(product.image) : [product.image];
   const hasMultipleImages = images.length > 1;
 
   const CardContentComponent = (
