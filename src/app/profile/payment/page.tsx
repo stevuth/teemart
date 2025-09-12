@@ -56,9 +56,9 @@ export default function PaymentDetailsPage() {
         <div className="max-w-2xl mx-auto">
             <div className="mb-8">
                 <BackButton />
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-left sm:text-center">
                     <h1 className="text-3xl font-bold tracking-tight">Payment Details</h1>
-                    <p className="text-muted-foreground mt-2">Manage the bank account where you receive payouts for your sales.</p>
+                    <p className="text-muted-foreground mt-2 text-sm sm:text-base">Manage the bank account where you receive payouts for your sales.</p>
                 </div>
             </div>
             <PaymentDetailsForm />
