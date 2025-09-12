@@ -35,7 +35,6 @@ function VerificationContent() {
                 setStatus('success');
                 // Refetch profile to update verification status UI immediately
                 await refetchProfile();
-                router.push('/profile/verify');
             } else {
                 setError(result.error || "An unknown verification error occurred.");
                 setStatus('failed');
@@ -45,6 +44,13 @@ function VerificationContent() {
         verify();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        // This effect runs when status changes to 'success'
+        if (status === 'success') {
+            router.push('/profile/verify');
+        }
+    }, [status, router]);
 
 
     return (
