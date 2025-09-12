@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { MailWarning, ShieldCheck, MapPin, CalendarDays, Star, ChevronRight, MessageSquare, User, Package, Pencil, Trash2, ShoppingBag, Fingerprint, HelpCircle, Banknote, AlertTriangle, RotateCw, LogOut, History, ShoppingCart, Check, RefreshCw, Phone, Home, CheckCheck, CircleDollarSign, MessageCircleWarning, ArrowLeft, Info, List, BarChart } from 'lucide-react';
-import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -54,9 +53,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { StarRatingDisplay } from '@/components/star-rating-display';
+import { AppLoader } from '@/components/app-loader';
+import { Loader } from '@/components/ui/loader';
 
 const PaymentDetailsForm = dynamic(() => import('@/components/payment-details-form'), {
-    loading: () => <div className="flex justify-center p-8"><Loader /></div>,
+    loading: () => <div className="flex justify-center p-8"><AppLoader /></div>,
     ssr: false,
 });
 
@@ -269,7 +270,7 @@ export function ProfilePageContent() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
-            <div className="flex-grow flex justify-center items-center"><Loader /></div>
+            <div className="flex-grow flex justify-center items-center"><AppLoader /></div>
             <Footer />
         </div>
     );
@@ -354,7 +355,7 @@ export function ProfilePageContent() {
   }
 
   const renderSales = () => (
-    loadingData ? <div className="flex justify-center p-8"><Loader /></div> : sales.length > 0 ? 
+    loadingData ? <div className="flex justify-center p-8"><AppLoader /></div> : sales.length > 0 ? 
     <div className="space-y-6">
         <Alert>
             <Info className="h-4 w-4" />
@@ -393,7 +394,7 @@ export function ProfilePageContent() {
   );
   
   const renderPurchases = () => (
-     loadingData ? <div className="flex justify-center p-8"><Loader /></div> : purchases.length > 0 ? 
+     loadingData ? <div className="flex justify-center p-8"><AppLoader /></div> : purchases.length > 0 ? 
      <div className="space-y-6">
         <Alert>
           <Info className="h-4 w-4" />
@@ -433,7 +434,7 @@ export function ProfilePageContent() {
   
     const renderReviews = () => {
         if (loadingData) {
-            return <div className="flex justify-center items-center py-16"><Loader className="text-muted-foreground" /></div>;
+            return <div className="flex justify-center items-center py-16"><AppLoader /></div>;
         }
 
         if (reviews.length === 0) {

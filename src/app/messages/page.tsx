@@ -11,10 +11,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ChatInterface } from '@/components/chat-interface';
 import { MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { Loader2 } from 'lucide-react';
 import { useScrollToTop } from '@/hooks/use-scroll-to-top';
 import { useNotifications } from '@/hooks/use-notifications';
 import Link from 'next/link';
+import { AppLoader } from '@/components/app-loader';
 
 type Conversation = {
     id: string;
@@ -76,7 +76,7 @@ function MessagingPage() {
     }
 
     if (authLoading) {
-        return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+        return <div className="flex h-screen items-center justify-center"><AppLoader /></div>;
     }
     
     if (!user) {
@@ -167,7 +167,7 @@ function MessagingPage() {
 
 export default function MessagesPage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen"><AppLoader /></div>}>
             <MessagingPage />
         </Suspense>
     )
