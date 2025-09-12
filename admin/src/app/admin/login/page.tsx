@@ -123,9 +123,9 @@ export default function LoginPage() {
       </div>
       <div className="hidden bg-muted lg:block relative">
         <Image
-          src="https://i.postimg.cc/jjTR9xMT/Gemini-Generated-Image-r38x30r38x30r38x.png"
-          alt="Modern architecture"
-          data-ai-hint="modern architecture"
+          src="https://i.postimg.cc/qR8fbXLk/Gemini-Generated-Image-r38x30r38x30r38x.png"
+          alt="Abstract art"
+          data-ai-hint="abstract art"
           fill
           className="object-cover"
         />
