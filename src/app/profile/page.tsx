@@ -1,15 +1,16 @@
+
 import { Suspense } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { Loader } from '@/components/ui/loader';
 import { ProfilePageContent } from './content';
+import { AppLoader } from '@/components/app-loader';
 
 function ProfilePageFallback() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
             <div className="flex-grow flex justify-center items-center">
-                <Loader />
+                <AppLoader />
             </div>
             <Footer />
         </div>

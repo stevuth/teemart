@@ -7,11 +7,11 @@ import { CheckoutForm } from '@/components/checkout-form';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
-import { Loader } from '@/components/ui/loader';
 import Link from 'next/link';
 import { BackButton } from '@/components/back-button';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthGate } from '@/components/auth-gate';
+import { AppLoader } from '@/components/app-loader';
 
 export default function CheckoutPage() {
   const { cartItems } = useCart();
@@ -37,7 +37,7 @@ export default function CheckoutPage() {
     if (authLoading) {
       return (
         <div className="flex justify-center items-center h-64">
-          <Loader />
+          <AppLoader />
         </div>
       );
     }

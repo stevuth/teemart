@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AppLoader } from '@/components/app-loader';
 
 type Message = {
     id: string;
@@ -265,7 +266,7 @@ function ChatPageContent() {
         <div className="flex-grow p-4 overflow-y-auto">
             {loading ? (
                 <div className="flex justify-center items-center h-full">
-                    <Loader />
+                    <AppLoader />
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -395,7 +396,7 @@ export default function ChatPage() {
                             <Skeleton className="h-6 w-32" />
                         </div>
                         <div className="flex justify-center items-center h-full">
-                            <Loader />
+                            <AppLoader />
                         </div>
                     </div>
                 }>
