@@ -11,10 +11,12 @@ import { useCart } from '@/hooks/use-cart';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { BackButton } from '@/components/back-button';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
+  const { supabase } = useAuth(); // Get supabase instance
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = cartItems.reduce((acc, item) => acc + (item.deliveryFee || 0) * item.quantity, 0);
@@ -27,6 +29,19 @@ export default function CartPage() {
         description: "All items have been removed from your cart.",
     })
   }
+
+  // Function to convert paths to full URLs if they are not already
+  const getImageUrl = (imagePath: string | string[] | null | undefined): string => {
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    if (!path) return 'https://placehold.co/100x100.png'; // Fallback image
+
+    if (!supabase) return path; // Return path if supabase is not available
+    if (path.startsWith('http')) {
+        return path; // It's already a full URL
+    }
+    // It's a path, so construct the full URL
+    return supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -42,40 +57,43 @@ export default function CartPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
                 <div className="lg:col-span-2">
                     <div className="border-b">
-                        {cartItems.map((item, index) => (
-                            <div key={item.id}>
-                                <div className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4 flex-1">
-                                        <Image src={Array.isArray(item.image) ? item.image[0] : item.image} alt={item.name} width={100} height={100} className="rounded-lg object-cover" data-ai-hint={item['data-ai-hint']} />
-                                        <div className="flex-grow">
-                                            <p className="font-semibold text-lg">{item.name}</p>
-                                            <p className="text-muted-foreground mt-1">₦{item.price.toLocaleString()}</p>
-                                            {item.deliveryFee && item.deliveryFee > 0 && (
-                                                <div className="flex items-center text-xs text-muted-foreground mt-1">
-                                                    <Truck className="h-4 w-4 mr-1.5" />
-                                                    <span>Delivery: ₦{item.deliveryFee.toLocaleString()}</span>
-                                                </div>
-                                            )}
+                        {cartItems.map((item, index) => {
+                            const imageUrl = getImageUrl(item.image);
+                            return (
+                                <div key={item.id}>
+                                    <div className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <Image src={imageUrl} alt={item.name} width={100} height={100} className="rounded-lg object-cover" data-ai-hint={item['data-ai-hint']} />
+                                            <div className="flex-grow">
+                                                <p className="font-semibold text-lg">{item.name}</p>
+                                                <p className="text-muted-foreground mt-1">₦{item.price.toLocaleString()}</p>
+                                                {item.deliveryFee && item.deliveryFee > 0 && (
+                                                    <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                                        <Truck className="h-4 w-4 mr-1.5" />
+                                                        <span>Delivery: ₦{item.deliveryFee.toLocaleString()}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-center">
+                                            <div className="flex items-center gap-2 border rounded-full p-1">
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
+                                                    <Minus className="h-4 w-4"/>
+                                                </Button>
+                                                <span className="w-6 text-center font-medium">{item.quantity}</span>
+                                                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                                                    <Plus className="h-4 w-4"/>
+                                                </Button>
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full group" onClick={() => removeFromCart(item.id)}>
+                                                <Trash2 className="h-5 w-5 text-muted-foreground group-hover:text-destructive transition-colors" />
+                                            </Button>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-center">
-                                        <div className="flex items-center gap-2 border rounded-full p-1">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
-                                                <Minus className="h-4 w-4"/>
-                                            </Button>
-                                            <span className="w-6 text-center font-medium">{item.quantity}</span>
-                                             <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                                                <Plus className="h-4 w-4"/>
-                                            </Button>
-                                        </div>
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full group" onClick={() => removeFromCart(item.id)}>
-                                            <Trash2 className="h-5 w-5 text-muted-foreground group-hover:text-destructive transition-colors" />
-                                        </Button>
-                                    </div>
+                                    {index < cartItems.length - 1 && <Separator />}
                                 </div>
-                                {index < cartItems.length - 1 && <Separator />}
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                     <Button variant="outline" className="mt-6" onClick={handleClearCart}>Clear Cart</Button>
                 </div>

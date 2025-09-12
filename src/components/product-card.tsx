@@ -37,7 +37,10 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
   }
   
   // Function to convert paths to full URLs if they are not already
-  const getImageUrls = (imagePaths: string[]): string[] => {
+  const getImageUrls = (imagePaths: string[] | null | undefined): string[] => {
+      if (!imagePaths || !Array.isArray(imagePaths)) {
+        return [];
+      }
       if (!supabase) return imagePaths; // Return paths if supabase is not available
       return imagePaths.map(path => {
           if (path.startsWith('http')) {
@@ -48,7 +51,7 @@ export function ProductCard({ product, actions, isClickable = true }: ProductCar
       });
   };
 
-  const images = Array.isArray(product.image) ? getImageUrls(product.image) : [product.image];
+  const images = getImageUrls(product.image);
   const hasMultipleImages = images.length > 1;
 
   const CardContentComponent = (
